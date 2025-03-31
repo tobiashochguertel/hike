@@ -98,6 +98,41 @@ class ViewerTitle(Label):
 
 
 ##############################################################################
+class MarkdownScroll(VerticalScroll):
+    """A vertical scrolling widget with more bindings."""
+
+    HELP = """
+    ## Movement
+
+    As well as using the common set of cursor and page keys, the following
+    keys are available for movement within the markdown document:
+    """
+
+    BINDINGS = [
+        HelpfulBinding("j, e, enter", "scroll_down", tooltip="Scroll down one line"),
+        HelpfulBinding("k, y", "scroll_up", tooltip="Scroll up one line"),
+        HelpfulBinding("f, space, z", "page_down", tooltip="Scroll down one page"),
+        HelpfulBinding("b, w", "page_up", tooltip="Scroll up one page"),
+        HelpfulBinding(
+            "shift+pageup, u", "scroll_half_page(-1)", tooltip="Scroll up half a page"
+        ),
+        HelpfulBinding(
+            "shift+pagedown, d",
+            "scroll_half_page(1)",
+            tooltip="Scroll down half a page",
+        ),
+    ]
+
+    def action_scroll_half_page(self, direction: Literal[-1, 1]) -> None:
+        """Scroll the view half a page in the given direction.
+
+        Args:
+            direction: The direction to scroll in.
+        """
+        self.scroll_relative(y=(self.size.height // 2) * direction)
+
+
+##############################################################################
 class Viewer(Vertical, can_focus=False):
     """The Markdown viewer widget."""
 
@@ -139,14 +174,6 @@ class Viewer(Vertical, can_focus=False):
 
     BINDINGS = [
         ("escape", "bounce_out"),
-        HelpfulBinding(
-            "shift+pageup", "scroll_half_page(-1)", tooltip="Scroll up half a page"
-        ),
-        HelpfulBinding(
-            "space, shift+pagedown",
-            "scroll_half_page(1)",
-            tooltip="Scroll down half a page",
-        ),
     ]
 
     location: var[HikeLocation | None] = var(None)
@@ -162,7 +189,7 @@ class Viewer(Vertical, can_focus=False):
         """Compose the content of the viewer."""
         yield ViewerTitle()
         yield Rule(line_style="heavy")
-        with VerticalScroll(id="document"):
+        with MarkdownScroll(id="document"):
             yield Markdown(
                 open_links=False,
                 parser_factory=lambda: MarkdownIt("gfm-like").use(
@@ -508,16 +535,6 @@ class Viewer(Vertical, can_focus=False):
             self.app.push_screen(
                 Editor(self.location), callback=lambda _: self.reload()
             )
-
-    def action_scroll_half_page(self, direction: Literal[-1, 1]) -> None:
-        """Scroll the Markdown half a page in the given direction.
-
-        Args:
-            direction: The direction to scroll in.
-        """
-        (view := self.get_child_by_type(VerticalScroll)).scroll_relative(
-            y=(view.size.height // 2) * direction
-        )
 
 
 ### viewer.py ends here
