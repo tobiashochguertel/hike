@@ -5,6 +5,7 @@
 **Released: WiP**
 
 - Unpinned Textual. ([#50](https://github.com/davep/hike/pull/50))
+- Added `local_start_location` to the configuration file.
 
 ## v0.7.0
 

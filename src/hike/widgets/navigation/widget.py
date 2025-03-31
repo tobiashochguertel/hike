@@ -26,7 +26,7 @@ from textual_enhanced.binding import HelpfulBinding
 ##############################################################################
 # Local imports.
 from ...commands import JumpToCommandLine
-from ...data import Bookmark, Bookmarks
+from ...data import Bookmark, Bookmarks, load_configuration
 from ...types import HikeHistory, HikeLocation
 from .bookmarks_view import BookmarksView
 from .history_view import HistoryView
@@ -166,7 +166,9 @@ class Navigation(Vertical):
             with TabPane("Content", id="content"):
                 yield MarkdownTableOfContents(Markdown())
             with TabPane("Local", id="local"):
-                yield LocalView(Path("~").expanduser())
+                yield LocalView(
+                    Path(load_configuration().local_start_location).expanduser()
+                )
             with TabPane("Bookmarks", id="bookmarks"):
                 yield BookmarksView()
             with TabPane("History", id="history"):
