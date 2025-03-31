@@ -11,6 +11,7 @@ from functools import singledispatchmethod
 from os import getenv
 from pathlib import Path
 from subprocess import run
+from typing import Literal
 
 ##############################################################################
 # httpx imports.
@@ -30,6 +31,10 @@ from textual.events import Click
 from textual.message import Message
 from textual.reactive import var
 from textual.widgets import Label, Markdown, Rule
+
+##############################################################################
+# Textual enhanced imports.
+from textual_enhanced.binding import HelpfulBinding
 
 ##############################################################################
 # Typing extensions imports.
@@ -128,9 +133,21 @@ class Viewer(Vertical, can_focus=False):
     while holding down <kbd>ctrl</kbd>, or click 3 times. Doing so on the
     location will copy the location, doing so on the main document will copy
     the markdown's source.
+
+    Locally-useful keys include:
     """
 
-    BINDINGS = [("escape", "bounce_out")]
+    BINDINGS = [
+        ("escape", "bounce_out"),
+        HelpfulBinding(
+            "shift+pageup", "scroll_half_page(-1)", tooltip="Scroll up half a page"
+        ),
+        HelpfulBinding(
+            "space, shift+pagedown",
+            "scroll_half_page(1)",
+            tooltip="Scroll down half a page",
+        ),
+    ]
 
     location: var[HikeLocation | None] = var(None)
     """The location of the markdown being displayed."""
@@ -491,6 +508,16 @@ class Viewer(Vertical, can_focus=False):
             self.app.push_screen(
                 Editor(self.location), callback=lambda _: self.reload()
             )
+
+    def action_scroll_half_page(self, direction: Literal[-1, 1]) -> None:
+        """Scroll the Markdown half a page in the given direction.
+
+        Args:
+            direction: The direction to scroll in.
+        """
+        (view := self.get_child_by_type(VerticalScroll)).scroll_relative(
+            y=(view.size.height // 2) * direction
+        )
 
 
 ### viewer.py ends here
