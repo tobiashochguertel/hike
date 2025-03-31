@@ -1,8 +1,8 @@
 # Hike ChangeLog
 
-## Unreleased
+## v0.8.0
 
-**Released: WiP**
+**Released: 2025-03-31**
 
 - Unpinned Textual. ([#50](https://github.com/davep/hike/pull/50))
 - Added `local_start_location` to the configuration file.
