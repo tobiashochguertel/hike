@@ -10,6 +10,7 @@
 - Added <kbd>ctrl</kbd>+<kbd>r</kbd> as an alternative binding for jumping
   to the document. ([#60](https://github.com/davep/hike/pull/60))
 - Added support for scrolling the markdown up/down half a page.
+  ([#62](https://github.com/davep/hike/pull/62))
 
 ## v0.7.0
 
