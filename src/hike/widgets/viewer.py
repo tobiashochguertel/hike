@@ -26,7 +26,7 @@ from mdit_py_plugins import front_matter
 # Textual imports.
 from textual import on, work
 from textual.app import ComposeResult
-from textual.containers import Vertical, VerticalScroll
+from textual.containers import Vertical
 from textual.events import Click
 from textual.message import Message
 from textual.reactive import var
@@ -35,6 +35,7 @@ from textual.widgets import Label, Markdown, Rule
 ##############################################################################
 # Textual enhanced imports.
 from textual_enhanced.binding import HelpfulBinding
+from textual_enhanced.containers import EnhancedVerticalScroll
 
 ##############################################################################
 # Typing extensions imports.
@@ -98,8 +99,8 @@ class ViewerTitle(Label):
 
 
 ##############################################################################
-class MarkdownScroll(VerticalScroll):
-    """A vertical scrolling widget with more bindings."""
+class MarkdownScroll(EnhancedVerticalScroll):
+    """The scrolling container for the Markdown document."""
 
     HELP = """
     ## Movement
@@ -107,29 +108,6 @@ class MarkdownScroll(VerticalScroll):
     As well as using the common set of cursor and page keys, the following
     keys are available for movement within the markdown document:
     """
-
-    BINDINGS = [
-        HelpfulBinding("j, e, enter", "scroll_down", tooltip="Scroll down one line"),
-        HelpfulBinding("k, y", "scroll_up", tooltip="Scroll up one line"),
-        HelpfulBinding("f, space, z", "page_down", tooltip="Scroll down one page"),
-        HelpfulBinding("b, w", "page_up", tooltip="Scroll up one page"),
-        HelpfulBinding(
-            "shift+pageup, u", "scroll_half_page(-1)", tooltip="Scroll up half a page"
-        ),
-        HelpfulBinding(
-            "shift+pagedown, d",
-            "scroll_half_page(1)",
-            tooltip="Scroll down half a page",
-        ),
-    ]
-
-    def action_scroll_half_page(self, direction: Literal[-1, 1]) -> None:
-        """Scroll the view half a page in the given direction.
-
-        Args:
-            direction: The direction to scroll in.
-        """
-        self.scroll_relative(y=(self.size.height // 2) * direction)
 
 
 ##############################################################################
@@ -142,7 +120,7 @@ class Viewer(Vertical, can_focus=False):
         &.empty {
             display: none;
         }
-        &> VerticalScroll {
+        EnhancedVerticalScroll {
             background: transparent;
         }
         Markdown {
