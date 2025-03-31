@@ -45,6 +45,9 @@ class Configuration:
     obsidian_vaults: str = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents"
     """The path to the root of all Obsidian vaults."""
 
+    local_start_location: str = "~"
+    """The start location for the local file system browser."""
+
 
 ##############################################################################
 def configuration_file() -> Path:
