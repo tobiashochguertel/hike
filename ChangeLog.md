@@ -11,6 +11,9 @@
   to the document. ([#60](https://github.com/davep/hike/pull/60))
 - Added support for scrolling the markdown up/down half a page.
   ([#62](https://github.com/davep/hike/pull/62))
+- Added some movement key bindings to the markdown document that might be
+  familiar to users of things like `vim` and `less`.
+  ([#63](https://github.com/davep/hike/pull/63))
 
 ## v0.7.0
 
