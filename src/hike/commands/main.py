@@ -32,7 +32,7 @@ class JumpToCommandLine(Command):
 class JumpToDocument(Command):
     """Jump to the markdown document"""
 
-    BINDING_KEY = "ctrl+slash"
+    BINDING_KEY = "ctrl+slash, ctrl+r"
 
 
 ##############################################################################
