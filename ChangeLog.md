@@ -13,6 +13,7 @@
   ([#62](https://github.com/davep/hike/pull/62))
 - Added some movement key bindings to the markdown document that might be
   familiar to users of things like `vim` and `less`.
+  ([#63](https://github.com/davep/hike/pull/63))
 
 ## v0.7.0
 
