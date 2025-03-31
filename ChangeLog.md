@@ -8,7 +8,7 @@
 - Added `local_start_location` to the configuration file.
   ([#59](https://github.com/davep/hike/pull/59))  
 - Added <kbd>ctrl</kbd>+<kbd>r</kbd> as an alternative binding for jumping
-  to the document.
+  to the document. ([#60](https://github.com/davep/hike/pull/60))
 
 ## v0.7.0
 
