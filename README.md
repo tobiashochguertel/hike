@@ -24,33 +24,35 @@ that make it easy to view Markdown files on popular git forges.
 The application can be installed using [`pipx`](https://pypa.github.io/pipx/):
 
 ```sh
-$ pipx install hike
+pipx install hike
 ```
-
-Once installed run the `hike` command.
 
 ### Homebrew
 
 The package is available via Homebrew. Use the following commands to install:
 
 ```sh
-$ brew tap davep/homebrew
-$ brew install hike
+brew tap davep/homebrew
+brew install hike
 ```
 
-Once installed run the `hike` command.
+### Other installation methods
 
-### X-CMD
+The following installation methods have been provided by third parties;
+please note that I can't vouch for them myself so use them at your own risk.
+
+#### X-CMD
 
 The application can be installed using [`x-cmd`](https://x-cmd.com):
 
 ```sh
-$ x install hike
+x install hike
 ```
 
-Once installed run the `hike` command.
-
 ## Using Hike
+
+Once you've installed Hike using one of the above methods, you can run the
+application using the `hike` command.
 
 The best way to get to know Hike is to read the help screen. Once in the
 application you can see this by pressing <kbd>F1</kbd>.
