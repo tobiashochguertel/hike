@@ -4,6 +4,7 @@
 # Python imports.
 from argparse import ArgumentParser, Namespace
 from inspect import cleandoc
+from operator import attrgetter
 
 ##############################################################################
 # Local imports.
@@ -43,6 +44,14 @@ def get_args() -> Namespace:
         action="store_true",
     )
 
+    # Add --bindings
+    parser.add_argument(
+        "-b",
+        "--bindings",
+        help="List commands that can have their bindings changed",
+        action="store_true",
+    )
+
     # The remainder is going to be the initial command.
     parser.add_argument(
         "command",
@@ -55,10 +64,32 @@ def get_args() -> Namespace:
 
 
 ##############################################################################
+def show_bindable_commands() -> None:
+    """Show the commands that can have bindings applied."""
+    from rich.console import Console
+    from rich.markup import escape
+
+    from .screens import Main
+
+    console = Console(highlight=False)
+    for command in sorted(Main.COMMAND_MESSAGES, key=attrgetter("__name__")):
+        if command().has_binding:
+            console.print(
+                f"[bold]{escape(command.__name__)}[/] [dim italic]- {escape(command.tooltip())}[/]"
+            )
+            console.print(
+                f"    [dim italic]Default: {escape(command.binding().key)}[/]"
+            )
+
+
+##############################################################################
 def main() -> None:
     """The main entry point."""
-    if (args := get_args()).license:
+    args = get_args()
+    if args.license:
         print(cleandoc(Hike.HELP_LICENSE))
+    elif args.bindings:
+        show_bindable_commands()
     else:
         Hike(args).run()
 
