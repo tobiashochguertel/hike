@@ -8,6 +8,10 @@
   <kbd>ctrl</kbd>+<kbd>g</kbd> (<kbd>ctrl</kbd>+<kbd>r</kbd> was already
   used for reloading the document).
   ([#68](https://github.com/davep/hike/pull/68))
+- Added support for changing the keyboard bindings of the main application
+  commands. ([#69](https://github.com/davep/hike/pull/69))
+- Added `--bindings` as a command line switch; which lists all the commands
+  ([#69](https://github.com/davep/hike/pull/69))
 
 ## v0.8.0
 
