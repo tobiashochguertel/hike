@@ -1,5 +1,14 @@
 # Hike ChangeLog
 
+## Unreleased
+
+**Released: WiP**
+
+- Changed the alternative binding for jumping to the document to
+  <kbd>ctrl</kbd>+<kbd>g</kbd> (<kbd>ctrl</kbd>+<kbd>r</kbd> was already
+  used for reloading the document).
+  ([#68](https://github.com/davep/hike/pull/68))
+
 ## v0.8.0
 
 **Released: 2025-03-31**
