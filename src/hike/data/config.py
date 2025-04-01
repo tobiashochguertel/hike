@@ -48,6 +48,9 @@ class Configuration:
     local_start_location: str = "~"
     """The start location for the local file system browser."""
 
+    bindings: dict[str, str] = field(default_factory=dict)
+    """Command keyboard binding overrides."""
+
 
 ##############################################################################
 def configuration_file() -> Path:
