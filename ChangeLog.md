@@ -1,8 +1,8 @@
 # Hike ChangeLog
 
-## Unreleased
+## v0.9.0
 
-**Released: WiP**
+**Released: 2025-04-01**
 
 - Changed the alternative binding for jumping to the document to
   <kbd>ctrl</kbd>+<kbd>g</kbd> (<kbd>ctrl</kbd>+<kbd>r</kbd> was already
@@ -19,7 +19,7 @@
 
 - Unpinned Textual. ([#50](https://github.com/davep/hike/pull/50))
 - Added `local_start_location` to the configuration file.
-  ([#59](https://github.com/davep/hike/pull/59))  
+  ([#59](https://github.com/davep/hike/pull/59))
 - Added <kbd>ctrl</kbd>+<kbd>r</kbd> as an alternative binding for jumping
   to the document. ([#60](https://github.com/davep/hike/pull/60))
 - Added support for scrolling the markdown up/down half a page.
