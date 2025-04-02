@@ -64,7 +64,7 @@ class Hike(EnhancedApp[None]):
         configuration = load_configuration()
         if configuration.theme is not None:
             try:
-                self.theme = configuration.theme
+                self.theme = arguments.theme or configuration.theme
             except InvalidThemeError:
                 pass
         self.update_keymap(configuration.bindings)

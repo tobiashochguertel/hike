@@ -1,5 +1,12 @@
 # Hike ChangeLog
 
+## Unreleased
+
+**Released: WiP**
+
+- Added `--theme` as a command line switch; which lets the user configure
+  the theme via the command line.
+
 ## v0.9.0
 
 **Released: 2025-04-01**
