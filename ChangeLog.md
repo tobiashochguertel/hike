@@ -9,6 +9,7 @@
   ([#74](https://github.com/davep/hike/pull/74))
 - Added `--navigation`/`--no-navigation` as command line switches; which
   lets the user control if he navigation panel is visible on startup.
+  ([#75](https://github.com/davep/hike/pull/75)).
 
 ## v0.9.0
 
