@@ -1,5 +1,5 @@
 site_name: Hike
-docs_dir: docs/
+docs_dir: docs/source/
 repo_url: https://github.com/davep/hike
 
 nav:
