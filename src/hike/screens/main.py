@@ -187,7 +187,11 @@ class Main(EnhancedScreen[None]):
     def on_mount(self) -> None:
         """Configure the screen once the DOM is mounted."""
         config = load_configuration()
-        self.navigation_visible = config.navigation_visible
+        self.navigation_visible = (
+            config.navigation_visible
+            if self._arguments.navigation is None
+            else self._arguments.navigation
+        )
         self.query_one(Navigation).dock_right = config.navigation_on_right
         self.query_one(Navigation).bookmarks = (bookmarks := load_bookmarks())
         BookmarkCommands.bookmarks = bookmarks
