@@ -6,6 +6,7 @@
 
 - Added `--theme` as a command line switch; which lets the user configure
   the theme via the command line.
+  ([#74](https://github.com/davep/hike/pull/74))
 
 ## v0.9.0
 
