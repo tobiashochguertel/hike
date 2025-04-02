@@ -118,7 +118,7 @@ tidy: delint pep8ify		# Tidy up the code, fixing lint and format issues.
 
 .PHONY: clean
 clean:				# Clean the build directories
-	rm -rf dist
+	rm -rf dist site
 
 .PHONY: realclean
 realclean: clean		# Clean the venv and build directories
