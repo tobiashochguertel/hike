@@ -52,6 +52,13 @@ def get_args() -> Namespace:
         action="store_true",
     )
 
+    # Add --theme
+    parser.add_argument(
+        "-t",
+        "--theme",
+        help="Set the theme for the application (set to ? to list available themes)",
+    )
+
     # The remainder is going to be the initial command.
     parser.add_argument(
         "command",
@@ -83,6 +90,14 @@ def show_bindable_commands() -> None:
 
 
 ##############################################################################
+def show_themes() -> None:
+    """Show the available themes."""
+    for theme in sorted(Hike(Namespace(theme=None)).available_themes):
+        if theme != "textual-ansi":
+            print(theme)
+
+
+##############################################################################
 def main() -> None:
     """The main entry point."""
     args = get_args()
@@ -90,6 +105,8 @@ def main() -> None:
         print(cleandoc(Hike.HELP_LICENSE))
     elif args.bindings:
         show_bindable_commands()
+    elif args.theme == "?":
+        show_themes()
     else:
         Hike(args).run()
 
