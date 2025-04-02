@@ -7,6 +7,7 @@ python := $(run) python
 lint   := rye lint -- --select I
 fmt    := rye fmt
 mypy   := $(run) mypy
+mkdocs := $(run) mkdocs
 
 ##############################################################################
 # Local "interactive testing" of the code.
@@ -65,6 +66,20 @@ test:				# Run the unit tests
 
 .PHONY: checkall
 checkall: codestyle lint stricttypecheck test # Check all the things
+
+##############################################################################
+# Documentation.
+.PHONY: docs
+docs:                           # Generate the system documentation
+	$(mkdocs) build
+
+.PHONY: rtfm
+rtfm:                           # Locally read the library documentation
+	$(mkdocs) serve
+
+.PHONY: publishdocs
+publishdocs:			# Set up the docs for publishing
+	$(mkdocs) gh-deploy
 
 ##############################################################################
 # Package/publish.
