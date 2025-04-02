@@ -106,7 +106,8 @@ class HistoryView(EnhancedOptionList):
         # added to the start; so in that case we jump the highlight to the
         # top.
         if self.option_count:
-            self.highlighted = 0
+            with self.prevent(EnhancedOptionList.OptionHighlighted):
+                self.highlighted = 0
 
     @on(EnhancedOptionList.OptionHighlighted)
     def visit_from_history(self, message: EnhancedOptionList.OptionHighlighted) -> None:
