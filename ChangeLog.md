@@ -7,6 +7,8 @@
 - Added `--theme` as a command line switch; which lets the user configure
   the theme via the command line.
   ([#74](https://github.com/davep/hike/pull/74))
+- Added `--navigation`/`--no-navigation` as command line switches; which
+  lets the user control if he navigation panel is visible on startup.
 
 ## v0.9.0
 

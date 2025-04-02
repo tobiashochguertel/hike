@@ -2,7 +2,7 @@
 
 ##############################################################################
 # Python imports.
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, BooleanOptionalAction, Namespace
 from inspect import cleandoc
 from operator import attrgetter
 
@@ -50,6 +50,13 @@ def get_args() -> Namespace:
         "--bindings",
         help="List commands that can have their bindings changed",
         action="store_true",
+    )
+
+    # Add --navigation
+    parser.add_argument(
+        "--navigation",
+        help="Show or hide the navigation panel on startup",
+        action=BooleanOptionalAction,
     )
 
     # Add --theme
