@@ -1,8 +1,8 @@
 # Hike ChangeLog
 
-## Unreleased
+## v0.10.0
 
-**Released: WiP**
+**Released: 2025-04-03**
 
 - Added `--theme` as a command line switch; which lets the user configure
   the theme via the command line.
@@ -12,6 +12,13 @@
   ([#75](https://github.com/davep/hike/pull/75))
 - Fixed correct document not being shown when a command is given on the
   command line. ([#76](https://github.com/davep/hike/issues/76))
+- Added an unattractive but better-than-nothing workaround for [yet another
+  Textual `OptionList`
+  borkage](https://github.com/Textualize/textual/issues/5701).
+  ([#77](https://github.com/davep/hike/issues/77))
+- Added some more movement key bindings (relating to going home and end) to
+  the markdown document that might be familiar to users of things like `vim`
+  and `less`. ([#82](https://github.com/davep/hike/pull/82))
 
 ## v0.9.0
 
