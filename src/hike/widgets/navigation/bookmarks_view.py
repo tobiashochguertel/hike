@@ -16,6 +16,7 @@ from rich.text import Text
 ##############################################################################
 # Textual imports.
 from textual import on, work
+from textual.content import Content
 from textual.message import Message
 from textual.widgets.option_list import Option
 
@@ -44,10 +45,23 @@ class BookmarkView(Option):
         self.bookmark = bookmark
         """The bookmark."""
         super().__init__(
-            Text.from_markup(
-                f":{'globe_with_meridians' if isinstance(bookmark.location, URL) else 'page_facing_up'}: "
-                f"[bold]{bookmark.title}[/]\n[dim]{bookmark.location}[/]",
-                overflow="ellipsis",
+            # From Textual 2.x onwards overflow="ellipsis" is broken in the
+            # "improved" OptionList.
+            #
+            # https://github.com/Textualize/textual/issues/5701
+            #
+            # The result is ugly as fuck, and as best as I can tell I can't
+            # achieve the originally-intended layout; at least it isn't as
+            # obvious and accessible as simply using a `Text` was. So for
+            # now I'm going to wrap this in Textual's new `Content` -- which
+            # seems to be Rich-like only worse -- and accept it looks as
+            # ugly as fuck but less ugly than without this workaround.
+            Content.from_rich_text(
+                Text.from_markup(
+                    f":{'globe_with_meridians' if isinstance(bookmark.location, URL) else 'page_facing_up'}: "
+                    f"[bold]{bookmark.title}[/]\n[dim]{bookmark.location}[/]",
+                    overflow="ellipsis",
+                )
             ),
             id=str(bookmark.location),
         )
