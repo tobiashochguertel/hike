@@ -16,6 +16,9 @@
   Textual `OptionList`
   borkage](https://github.com/Textualize/textual/issues/5701).
   ([#77](https://github.com/davep/hike/issues/77))
+- Added some more movement key bindings (relating to going home and end) to
+  the markdown document that might be familiar to users of things like `vim`
+  and `less`. ([#82](https://github.com/davep/hike/pull/82))
 
 ## v0.9.0
 

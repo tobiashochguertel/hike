@@ -12,7 +12,7 @@
 -e file:.
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.11.15
+aiohttp==3.11.16
     # via aiohttp-jinja2
     # via textual-dev
     # via textual-serve
@@ -69,7 +69,7 @@ mdurl==0.1.2
     # via markdown-it-py
 msgpack==1.1.0
     # via textual-dev
-multidict==6.3.0
+multidict==6.2.0
     # via aiohttp
     # via yarl
 mypy==1.15.0
@@ -107,7 +107,7 @@ textual==3.0.1
     # via textual-fspicker
     # via textual-serve
 textual-dev==1.7.0
-textual-enhanced==0.10.0
+textual-enhanced==0.11.0
     # via hike
 textual-fspicker==0.4.1
     # via hike
