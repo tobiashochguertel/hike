@@ -130,6 +130,23 @@ hike --version
 hike --version
 ```
 
+#### The startup command
+
+Hike can also take a command on the command line, which will be processed
+via its own internal command line. This means that you have access to the
+full array of Hike features. This means you can do something as simple as
+give the name of a file to view:
+
+```sh
+hike view-this.md
+```
+
+or you can view a README file hosted on a forge:
+
+```sh
+hike gh davep/org-davep-2bit
+```
+
 ## Getting help
 
 A great way to get to know Hike is to read the help screen. Once in the
