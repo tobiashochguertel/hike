@@ -22,6 +22,8 @@ markdown_extensions:
 
 theme:
   name: material
+  icon:
+    logo: fontawesome/brands/markdown
   features:
     - content.code.copy
     - navigation.top
