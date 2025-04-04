@@ -16,6 +16,26 @@ configured; but by default it is looked for in
 in a `hike` subdirectory. Mostly this will translate to the file being
 called `~/.config/hike/configuration.json`.
 
+## Markdown content types
+
+When deciding what remote content is likely a Markdown document Hike
+considers the following content types as good candidates:
+
+- text/plain
+- text/markdown
+- text/x-markdown
+
+If you wish to change this list you can edit this option in the
+configuration file and add to the list:
+
+```json
+"markdown_content_types": [
+    "text/plain",
+    "text/markdown",
+    "text/x-markdown"
+],
+```
+
 ## Markdown file extensions
 
 By default Hike considers files with either a `.md` or a `.markdown`
