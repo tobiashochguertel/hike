@@ -139,6 +139,23 @@ Here is Hike with the navigation panel visible on the right:
 ```{.textual path="docs/screenshots/basic_app.py" title="Navigation panel on the right" lines=40 columns=120 press="tab,d,ctrl+t,shift+f2"}
 ```
 
+## Obsidian vaults location
+
+The command for quickly browsing [Obsidian](https://obsidian.md) vaults in
+the local filesystem will, by default, look in `~/Library/Mobile
+Documents/iCloud~md~obsidian/Documents`.
+
+!!! note
+
+    I use Obsidian in the Apple ecosystem and use iCloud to sync my vaults; hence this default.
+
+If you wish to change this to a default that makes sense for you, edit this
+setting in the configuration file:
+
+```json
+"obsidian_vaults": "~/Library/Mobile Documents/iCloud~md~obsidian/Documents",
+```
+
 ## Theme
 
 Hike has a number of themes available. You can select a theme using the
