@@ -1,5 +1,8 @@
 # Introduction
 
+```{.textual path="docs/screenshots/basic_app.py" title="Hike" lines=40 columns=120}
+```
+
 Hike is a [Markdown](https://commonmark.org/help/) browser for the terminal.
 It provides the ability to browse for and view local Markdown files, as well
 as Markdown files that can be downloaded from the web. It also has shortcuts
@@ -47,7 +50,7 @@ application using the `hike` command.
 The best way to get to know Hike is to read the help screen. Once in the
 application you can see this by pressing <kbd>F1</kbd>.
 
-TODO: Screenshot here.
-
+```{.textual path="docs/screenshots/basic_app.py" title="The Hike Help Screen" press="f1" lines=50 columns=120}
+```
 
 [//]: # (index.md ends here)

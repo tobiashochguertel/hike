@@ -8,6 +8,12 @@ nav:
 markdown_extensions:
   - admonition
   - pymdownx.snippets
+  - markdown.extensions.attr_list
+  - pymdownx.superfences:
+      custom_fences:
+        - name: textual
+          class: textual
+          format: !!python/name:textual._doc.format_svg
 
 theme:
   name: material
