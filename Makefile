@@ -7,6 +7,7 @@ python := $(run) python
 lint   := rye lint -- --select I
 fmt    := rye fmt
 mypy   := $(run) mypy
+mkdocs := $(run) mkdocs
 
 ##############################################################################
 # Local "interactive testing" of the code.
@@ -67,6 +68,20 @@ test:				# Run the unit tests
 checkall: codestyle lint stricttypecheck test # Check all the things
 
 ##############################################################################
+# Documentation.
+.PHONY: docs
+docs:                           # Generate the system documentation
+	$(mkdocs) build
+
+.PHONY: rtfm
+rtfm:                           # Locally read the library documentation
+	$(mkdocs) serve
+
+.PHONY: publishdocs
+publishdocs:			# Set up the docs for publishing
+	$(mkdocs) gh-deploy
+
+##############################################################################
 # Package/publish.
 .PHONY: package
 package:			# Package the library
@@ -103,7 +118,7 @@ tidy: delint pep8ify		# Tidy up the code, fixing lint and format issues.
 
 .PHONY: clean
 clean:				# Clean the build directories
-	rm -rf dist
+	rm -rf dist site
 
 .PHONY: realclean
 realclean: clean		# Clean the venv and build directories

@@ -1,6 +1,6 @@
 # Hike
 
-![Hike](https://raw.githubusercontent.com/davep/hike/refs/heads/main/.images/hike-social-banner.png)
+[![Hike](https://raw.githubusercontent.com/davep/hike/refs/heads/main/.images/hike-social-banner.png)](https://blog.davep.org/hike/)
 
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/davep/hike/style-lint-and-test.yaml)](https://github.com/davep/hike/actions)
 [![GitHub commits since latest release](https://img.shields.io/github/commits-since/davep/hike/latest)](https://github.com/davep/hike/commits/main/)
@@ -63,6 +63,9 @@ Commands can also be discovered via the command palette
 (<kbd>ctrl</kbd>+<kbd>p</kbd>):
 
 ![The command palette](https://raw.githubusercontent.com/davep/hike/refs/heads/main/.images/hike-command-palette.png)
+
+For more information and details on configuring Hike, see [the online
+documentation](https://blog.davep.org/hike/).
 
 ## Features
 
