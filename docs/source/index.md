@@ -108,7 +108,7 @@ the saved state of the navigation panel.
 #### `-t`, `--theme`
 
 Sets Hike's theme; this overrides and changes any previous theme choice made
-via the user interface.
+[via the user interface](configuration.md#theme).
 
 To see a list of available themes use `?` as the theme name:
 
