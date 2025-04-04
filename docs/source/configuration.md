@@ -27,6 +27,23 @@ Arrow</kbd> by default).
 ```{.textual path="docs/screenshots/basic_app.py" title="Command line on top" lines=40 columns=120 press="tab,d,ctrl+up,tab"}
 ```
 
+## Local file system start location
+
+By default Hike's local file system browser (the tree that appears in the
+navigation panel) will always start out browsing the user's home directory.
+If you prefer that it starts viewing somewhere else, you can change this
+value in the configuration file.
+
+```json
+"local_start_location": "~",
+```
+
+For example, if you wanted it to always start with the current directory, you could change it to this:
+
+```json
+"local_start_location": ".",
+```
+
 ## Main forge branches
 
 When Hike looks for the README file of a repository in a git forge, by
