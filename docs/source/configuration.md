@@ -27,6 +27,34 @@ Arrow</kbd> by default).
 ```{.textual path="docs/screenshots/basic_app.py" title="Command line on top" lines=40 columns=120 press="tab,d,ctrl+up,tab"}
 ```
 
+## Main forge branches
+
+When Hike looks for the README file of a repository in a git forge, by
+default it first looks in the branch `main` and then as a backup in
+`master`. If you wish to change this you can edit the list in the
+configuration file.
+
+For example, if you wanted to add `staging` and `production` to the list of
+branches checked, you could change this:
+
+```json
+"main_branches": [
+    "main",
+    "master"
+],
+```
+
+to be this:
+
+```json
+"main_branches": [
+    "main",
+    "master",
+    "staging",
+    "production"
+],
+```
+
 ## Markdown content types
 
 When deciding what remote content is likely a Markdown document Hike
