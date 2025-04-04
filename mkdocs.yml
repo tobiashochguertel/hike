@@ -5,6 +5,7 @@ repo_url: https://github.com/davep/hike
 nav:
   - "Getting Started": index.md
   - "Configuration": configuration.md
+  - "Change Log": changelog.md
 
 markdown_extensions:
   - admonition
