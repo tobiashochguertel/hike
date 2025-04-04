@@ -75,7 +75,7 @@ hike --bindings
 
 #### `-h`, `--help`
 
-Prints the help for the Hike command.
+Prints the help for the `hike` command.
 
 ```sh
 hike --help
