@@ -22,7 +22,7 @@ By default Hike's command line appears at the bottom of the screen, above
 the footer of the application. It can be moved to the top of the screen,
 below the application header, with the `Change Command Line Location`
 command ([`ChangeCommandLineLocation`](#bindable-commands), bound to
-<kbd>Ctrl</kbd>+<kbd>Up Arrow</kbd> by default).
+<kbd>Ctrl</kbd>+<kbd>Up</kbd> by default).
 
 ```{.textual path="docs/screenshots/basic_app.py" title="Command line on top" lines=40 columns=120 press="tab,d,ctrl+up,tab"}
 ```
