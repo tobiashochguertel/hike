@@ -155,4 +155,18 @@ palette (by default you can call it with <kbd>ctrl</kbd>+<kbd>p</kbd> or
 ```{.textual path="docs/screenshots/basic_app.py" title="The Hike Command Palette" press="ctrl+p" lines=50 columns=120}
 ```
 
+## Questions and feedback
+
+If you have any questions about Hike, or you have ideas for how it might be
+improved, do please feel free to [visit the discussion
+area](https://github.com/davep/hike/discussions) and [ask your
+question](https://github.com/davep/hike/discussions/categories/q-a) or
+[suggest an
+improvement](https://github.com/davep/hike/discussions/categories/ideas).
+
+When doing so, please do search past discussions and also [issues current
+and previous](https://github.com/davep/hike/issues) to make sure I've not
+already dealt with this, or don't have your proposed change already flagged
+as something to do.
+
 [//]: # (index.md ends here)
