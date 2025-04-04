@@ -3,7 +3,7 @@ docs_dir: docs/source/
 repo_url: https://github.com/davep/hike
 
 nav:
-  - "Guide": index.md
+  - "Getting Started": index.md
 
 markdown_extensions:
   - admonition
