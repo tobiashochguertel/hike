@@ -21,8 +21,8 @@ called `~/.config/hike/configuration.json`.
 By default Hike's command line appears at the bottom of the screen, above
 the footer of the application. It can be moved to the top of the screen,
 below the application header, with the `Change Command Line Location`
-command (`ChangeCommandLineLocation`, bound to <kbd>Ctrl</kbd>+<kbd>Up
-Arrow</kbd> by default).
+command ([`ChangeCommandLineLocation`](#bindable-commands), bound to
+<kbd>Ctrl</kbd>+<kbd>Up Arrow</kbd> by default).
 
 ```{.textual path="docs/screenshots/basic_app.py" title="Command line on top" lines=40 columns=120 press="tab,d,ctrl+up,tab"}
 ```
@@ -58,7 +58,8 @@ change the binding used to create a bookmark, changing it from
 ```
 
 The designations used for keys is based on the internal system used by
-Textual; as such [its caveats about what works where
+[Textual](https://textual.textualize.io); as such [its caveats about what
+works where
 apply](https://textual.textualize.io/FAQ/#why-do-some-key-combinations-never-make-it-to-my-app).
 The main modifier keys to know are `shift`, `ctrl`, `alt`, `meta`, `super`
 and `hyper`; letter keys are their own letters; shifted letter keys are
@@ -172,8 +173,8 @@ to be this:
 ### Visibility
 
 You can show or hide the navigation panel. This can be done in Hike with the
-`Toggle Navigation` (`ToggleNavigation`) command (bound to <kbd>F2</kbd> by
-default).
+`Toggle Navigation` ([`ToggleNavigation`](#bindable-commands)) command
+(bound to <kbd>F2</kbd> by default).
 
 !!! tip
 
@@ -197,8 +198,8 @@ and with it hidden:
 
 When [visible](#visibility), the navigation panel can be located on the left
 or the right of the screen; this is toggled using the `Change Navigation
-Side` command (`ChangeNavigationSide`) which is found to
-<kbd>Shift</kbd>+<kbd>F2</kbd> by default.
+Side` command ([`ChangeNavigationSide`](#bindable-commands)) which is found
+to <kbd>Shift</kbd>+<kbd>F2</kbd> by default.
 
 Here is Hike with the navigation panel visible on the right:
 
@@ -225,7 +226,7 @@ setting in the configuration file:
 ## Theme
 
 Hike has a number of themes available. You can select a theme using the
-`Change Theme` (`ChangeTheme`) command (bound to <kbd>F9</kbd> by default).
+`Change Theme` ([`ChangeTheme`](#bindable-commands)) command (bound to <kbd>F9</kbd> by default).
 The available themes include:
 
 ```bash exec="on"
