@@ -27,6 +27,55 @@ Arrow</kbd> by default).
 ```{.textual path="docs/screenshots/basic_app.py" title="Command line on top" lines=40 columns=120 press="tab,d,ctrl+up,tab"}
 ```
 
+## Keyboard bindings
+
+Hike allows for a degree of configuration of its keyboard bindings;
+providing a method for setting up replacement bindings for the commands that
+appear in the [command palette](index.md#the-command-palette).
+
+### Bindable commands
+
+The following commands can have their keyboard bindings set:
+
+```bash exec="on"
+hike --bindings | sed -e 's/^\([A-Z].*\) - \(.*\)$/- `\1` - *\2*/' -e 's/^    \(Default:\) \(.*\)$/    - *\1* `\2`/'
+```
+
+### Changing a binding
+
+If you wish to change the binding for a command, edit the configuration file
+and add the binding to the `bindings` value. For example, if you wanted to
+change the binding used to create a bookmark, changing it from
+<kbd>ctrl</kbd>+<kbd>b</kbd> to <kbd>F6</kbd>, and you also wanted to use
+<kbd>Shift</kbd>+<kbd>F6</kbd> to jump to the bookmarks, you would set
+`bindings` to this:
+
+```json
+"bindings": {
+    "BookmarkLocation": "f6",
+    "JumpToBookmarks": "shift+f6"
+}
+```
+
+The designations used for keys is based on the internal system used by
+Textual; as such [its caveats about what works where
+apply](https://textual.textualize.io/FAQ/#why-do-some-key-combinations-never-make-it-to-my-app).
+The main modifier keys to know are `shift`, `ctrl`, `alt`, `meta`, `super`
+and `hyper`; letter keys are their own letters; shifted letter keys are
+their upper-case versions; function keys are simply <kbd>f1</kbd>,
+<kbd>f2</kbd>, etc; symbol keys (the likes of `#`, `@`, `*`, etc...)
+generally use a name (`number_sign`, `at`, `asterisk`).
+
+!!! tip
+
+    If you want to test and discover all of the key names and combiantions
+    that will work you may want to install
+    [`textual-dev`](https://github.com/Textualize/textual-dev) and use the
+    `textual keys` command.
+
+    If you need help with keyboard bindings [please feel free to
+    ask](index.md#questions-and-feedback).
+
 ## Local file system start location
 
 By default Hike's local file system browser (the tree that appears in the
