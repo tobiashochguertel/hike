@@ -14,6 +14,10 @@ markdown_extensions:
         - name: textual
           class: textual
           format: !!python/name:textual._doc.format_svg
+        - name: bash
+          class: bash
+          validator: !!python/name:markdown_exec.validator
+          format: !!python/name:markdown_exec.formatter
 
 theme:
   name: material
