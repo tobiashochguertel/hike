@@ -91,12 +91,12 @@ default).
 
 Here is Hike with the navigation panel visible:
 
-```{.textual path="docs/screenshots/basic_app.py" title="Hike" lines=40 columns=120 press="tab,d,ctrl+t"}
+```{.textual path="docs/screenshots/basic_app.py" title="Visible navigation panel" lines=40 columns=120 press="tab,d,ctrl+t"}
 ```
 
 and with it hidden:
 
-```{.textual path="docs/screenshots/basic_app.py" title="Hike" lines=40 columns=120 press="tab,d"}
+```{.textual path="docs/screenshots/basic_app.py" title="Hidden navigation panel" lines=40 columns=120 press="tab,d"}
 ```
 
 ### Location
@@ -108,7 +108,7 @@ Side` command (`ChangeNavigationSide`) which is found to
 
 Here is Hike with the navigation panel visible on the right:
 
-```{.textual path="docs/screenshots/basic_app.py" title="Hike" lines=40 columns=120 press="tab,d,ctrl+t,shift+f2"}
+```{.textual path="docs/screenshots/basic_app.py" title="Navigation panel on the right" lines=40 columns=120 press="tab,d,ctrl+t,shift+f2"}
 ```
 
 ## Theme
