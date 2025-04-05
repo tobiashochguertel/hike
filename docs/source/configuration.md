@@ -101,7 +101,7 @@ default it first looks in the `main` branch and then as a backup in
 `master`. If you wish to change this you can edit the list in the
 configuration file.
 
-For example, if you wanted to add `staging` and `production` to the list of
+For example: if you wanted to add `staging` and `production` to the list of
 branches checked, you could change this:
 
 ```json
