@@ -10,8 +10,8 @@ section will describe what can be configured and how.
     editor. Eventually I aim to make everything that can be configured
     configurable within Hike itself.
 
-The location of the configuration file will depend on how your system is
-configured; but by default it is looked for in
+The location of the configuration file will depend on how your operating
+system and its settings; but by default it is looked for in
 [`$XDG_CONFIG_HOME`](https://specifications.freedesktop.org/basedir-spec/latest/),
 in a `hike` subdirectory. Mostly this will translate to the file being
 called `~/.config/hike/configuration.json`.
@@ -65,12 +65,12 @@ The main modifier keys to know are `shift`, `ctrl`, `alt`, `meta`, `super`
 and `hyper`; letter keys are their own letters; shifted letter keys are
 their upper-case versions; function keys are simply <kbd>f1</kbd>,
 <kbd>f2</kbd>, etc; symbol keys (the likes of `#`, `@`, `*`, etc...)
-generally use a name (`number_sign`, `at`, `asterisk`).
+generally use a name (`number_sign`, `at`, `asterisk`, etc...).
 
 !!! tip
 
     If you want to test and discover all of the key names and combiantions
-    that will work you may want to install
+    that will work, you may want to install
     [`textual-dev`](https://github.com/Textualize/textual-dev) and use the
     `textual keys` command.
 
@@ -97,11 +97,11 @@ For example, if you wanted it to always start with the current directory, you co
 ## Main forge branches
 
 When Hike looks for the README file of a repository in a git forge, by
-default it first looks in the branch `main` and then as a backup in
+default it first looks in the `main` branch and then as a backup in
 `master`. If you wish to change this you can edit the list in the
 configuration file.
 
-For example, if you wanted to add `staging` and `production` to the list of
+For example: if you wanted to add `staging` and `production` to the list of
 branches checked, you could change this:
 
 ```json
@@ -173,8 +173,8 @@ to be this:
 ### Visibility
 
 You can show or hide the navigation panel. This can be done in Hike with the
-`Toggle Navigation` ([`ToggleNavigation`](#bindable-commands)) command
-(bound to <kbd>F2</kbd> by default).
+`Toggle Navigation` ([`ToggleNavigation`](#bindable-commands), bound to
+<kbd>F2</kbd> by default) command.
 
 !!! tip
 
@@ -198,8 +198,8 @@ and with it hidden:
 
 When [visible](#visibility), the navigation panel can be located on the left
 or the right of the screen; this is toggled using the `Change Navigation
-Side` command ([`ChangeNavigationSide`](#bindable-commands)) which is found
-to <kbd>Shift</kbd>+<kbd>F2</kbd> by default.
+Side` command ([`ChangeNavigationSide`](#bindable-commands), bound to
+<kbd>Shift</kbd>+<kbd>F2</kbd> by default).
 
 Here is Hike with the navigation panel visible on the right:
 
@@ -226,8 +226,8 @@ setting in the configuration file:
 ## Theme
 
 Hike has a number of themes available. You can select a theme using the
-`Change Theme` ([`ChangeTheme`](#bindable-commands)) command (bound to <kbd>F9</kbd> by default).
-The available themes include:
+`Change Theme` ([`ChangeTheme`](#bindable-commands), bound to <kbd>F9</kbd>
+by default) command. The available themes include:
 
 ```bash exec="on"
 hike --theme=? | sed 's/^/- /'
