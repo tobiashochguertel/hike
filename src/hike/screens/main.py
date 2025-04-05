@@ -50,6 +50,7 @@ from ..commands import (
     Reload,
     SaveCopy,
     SearchBookmarks,
+    SearchHistory,
     ToggleNavigation,
 )
 from ..data import (
@@ -74,7 +75,7 @@ from ..messages import (
     RemoveHistoryEntry,
     SetLocalViewRoot,
 )
-from ..providers import BookmarkCommands, MainCommands
+from ..providers import BookmarkCommands, HistoryCommands, MainCommands
 from ..support import view_in_browser
 from ..widgets import CommandLine, Navigation, Viewer
 
@@ -154,6 +155,7 @@ class Main(EnhancedScreen[None]):
         Reload,
         SaveCopy,
         SearchBookmarks,
+        SearchHistory,
     )
 
     BINDINGS = Command.bindings(*COMMAND_MESSAGES)
@@ -390,6 +392,11 @@ class Main(EnhancedScreen[None]):
         """Search the bookmarks in the command palette."""
         self.show_palette(BookmarkCommands)
 
+    @on(SearchHistory)
+    def action_search_history_command(self) -> None:
+        """search the history in the command palette."""
+        self.show_palette(HistoryCommands)
+
     @on(ToggleNavigation)
     def action_toggle_navigation_command(self) -> None:
         """Toggle the display of the navigation panel."""
@@ -523,6 +530,7 @@ class Main(EnhancedScreen[None]):
         Args:
             message: The message to say that history changed.
         """
+        HistoryCommands.history = message.viewer.history
         self.query_one(Navigation).update_history(message.viewer.history)
         save_history(message.viewer.history)
 
