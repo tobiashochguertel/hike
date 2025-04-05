@@ -198,8 +198,8 @@ and with it hidden:
 
 When [visible](#visibility), the navigation panel can be located on the left
 or the right of the screen; this is toggled using the `Change Navigation
-Side` command ([`ChangeNavigationSide`](#bindable-commands)) which is bound
-to <kbd>Shift</kbd>+<kbd>F2</kbd> by default.
+Side` command ([`ChangeNavigationSide`](#bindable-commands), bound to
+<kbd>Shift</kbd>+<kbd>F2</kbd> by default).
 
 Here is Hike with the navigation panel visible on the right:
 
