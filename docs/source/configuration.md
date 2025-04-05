@@ -10,8 +10,8 @@ section will describe what can be configured and how.
     editor. Eventually I aim to make everything that can be configured
     configurable within Hike itself.
 
-The location of the configuration file will depend on how your system is
-configured; but by default it is looked for in
+The location of the configuration file will depend on how your operating
+system and its settings; but by default it is looked for in
 [`$XDG_CONFIG_HOME`](https://specifications.freedesktop.org/basedir-spec/latest/),
 in a `hike` subdirectory. Mostly this will translate to the file being
 called `~/.config/hike/configuration.json`.
