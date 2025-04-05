@@ -133,15 +133,15 @@ hike --version
 #### The startup command
 
 Hike can also take a command on the command line, which will be processed
-via its own internal command line. This means that you have access to the
-full array of Hike features. This means you can do something as simple as
-give the name of a file to view:
+via its own [internal command line](commands.md). This means that you have
+access to the full array of Hike features. This means you can do something
+as simple as give the name of a file to view:
 
 ```sh
 hike view-this.md
 ```
 
-or you can view a README file hosted on a forge:
+or you can [view a README file hosted on a forge](commands.md#viewing-files-on-forges):
 
 ```sh
 hike gh davep/org-davep-2bit
@@ -157,8 +157,8 @@ application you can see this by pressing <kbd>F1</kbd>.
 
 The help will adapt to which part of the screen has focus, providing extra
 detail where appropriate; so while the example shown above shows the help
-related to Hike's command line, here's the help when the markdown document
-has focus:
+related to [Hike's command line](commands.md), here's the help when the
+markdown document has focus:
 
 ```{.textual path="docs/screenshots/basic_app.py" title="Markdown Document Help" press="tab,f1" lines=50 columns=120}
 ```
