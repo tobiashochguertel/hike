@@ -173,8 +173,8 @@ to be this:
 ### Visibility
 
 You can show or hide the navigation panel. This can be done in Hike with the
-`Toggle Navigation` ([`ToggleNavigation`](#bindable-commands)) command
-(bound to <kbd>F2</kbd> by default).
+`Toggle Navigation` ([`ToggleNavigation`](#bindable-commands), bound to
+<kbd>F2</kbd> by default) command.
 
 !!! tip
 
