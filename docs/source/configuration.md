@@ -226,8 +226,8 @@ setting in the configuration file:
 ## Theme
 
 Hike has a number of themes available. You can select a theme using the
-`Change Theme` ([`ChangeTheme`](#bindable-commands)) command (bound to <kbd>F9</kbd> by default).
-The available themes include:
+`Change Theme` ([`ChangeTheme`](#bindable-commands), bound to <kbd>F9</kbd>
+by default) command. The available themes include:
 
 ```bash exec="on"
 hike --theme=? | sed 's/^/- /'
