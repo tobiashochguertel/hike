@@ -70,7 +70,7 @@ generally use a name (`number_sign`, `at`, `asterisk`, etc...).
 !!! tip
 
     If you want to test and discover all of the key names and combiantions
-    that will work you may want to install
+    that will work, you may want to install
     [`textual-dev`](https://github.com/Textualize/textual-dev) and use the
     `textual keys` command.
 
