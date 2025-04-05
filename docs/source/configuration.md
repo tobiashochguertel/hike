@@ -97,7 +97,7 @@ For example, if you wanted it to always start with the current directory, you co
 ## Main forge branches
 
 When Hike looks for the README file of a repository in a git forge, by
-default it first looks in the branch `main` and then as a backup in
+default it first looks in the `main` branch and then as a backup in
 `master`. If you wish to change this you can edit the list in the
 configuration file.
 
