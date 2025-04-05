@@ -65,7 +65,7 @@ The main modifier keys to know are `shift`, `ctrl`, `alt`, `meta`, `super`
 and `hyper`; letter keys are their own letters; shifted letter keys are
 their upper-case versions; function keys are simply <kbd>f1</kbd>,
 <kbd>f2</kbd>, etc; symbol keys (the likes of `#`, `@`, `*`, etc...)
-generally use a name (`number_sign`, `at`, `asterisk`).
+generally use a name (`number_sign`, `at`, `asterisk`, etc...).
 
 !!! tip
 
