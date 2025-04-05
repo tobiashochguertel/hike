@@ -7,7 +7,7 @@ to accept a suggestion).
 
 !!! tip
 
-    Full help for all of the commands is available inside Hike itself by
+    Full help for all of the commands is [available inside Hike itself](index.md#getting-help) by
     pressing <kbd>F1</kbd> while the command line has focus.
 
 ## The commands
