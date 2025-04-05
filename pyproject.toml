@@ -53,9 +53,9 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://blog.davep.org/hike/"
+Homepage = "https://hike.davep.dev/"
 Repository = "https://github.com/davep/hike"
-Documentation = "https://blog.davep.org/hike/"
+Documentation = "https://hike.davep.dev/"
 Source = "https://github.com/davep/hike"
 Issues = "https://github.com/davep/hike/issues"
 Discussions = "https://github.com/davep/hike/discussions"
