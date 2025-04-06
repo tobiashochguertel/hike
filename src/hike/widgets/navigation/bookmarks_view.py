@@ -10,10 +10,6 @@ from typing import cast
 from httpx import URL
 
 ##############################################################################
-# Rich imports.
-from rich.text import Text
-
-##############################################################################
 # Textual imports.
 from textual import on, work
 from textual.content import Content
@@ -46,23 +42,9 @@ class BookmarkView(Option):
         self.bookmark = bookmark
         """The bookmark."""
         super().__init__(
-            # From Textual 2.x onwards overflow="ellipsis" is broken in the
-            # "improved" OptionList.
-            #
-            # https://github.com/Textualize/textual/issues/5701
-            #
-            # The result is ugly as fuck, and as best as I can tell I can't
-            # achieve the originally-intended layout; at least it isn't as
-            # obvious and accessible as simply using a `Text` was. So for
-            # now I'm going to wrap this in Textual's new `Content` -- which
-            # seems to be Rich-like only worse -- and accept it looks as
-            # ugly as fuck but less ugly than without this workaround.
-            Content.from_rich_text(
-                Text.from_markup(
-                    f"{REMOTE_FILE_ICON if isinstance(bookmark.location, URL) else LOCAL_FILE_ICON} "
-                    f"[bold]{bookmark.title}[/]\n[dim]{bookmark.location}[/]",
-                    overflow="ellipsis",
-                )
+            Content.from_markup(
+                f"{REMOTE_FILE_ICON if isinstance(bookmark.location, URL) else LOCAL_FILE_ICON} "
+                f"[bold]{bookmark.title}[/]\n[dim]{bookmark.location}[/]",
             ),
             id=str(bookmark.location),
         )
@@ -76,6 +58,8 @@ class BookmarksView(EnhancedOptionList):
     BookmarksView {
         height: 1fr;
         border: none;
+        text-wrap: nowrap;
+        text-overflow: ellipsis;
         &:focus {
             border: none;
         }
