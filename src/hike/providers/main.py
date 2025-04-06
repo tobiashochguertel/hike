@@ -30,6 +30,7 @@ from ..commands import (
     Reload,
     SaveCopy,
     SearchBookmarks,
+    SearchHistory,
     ToggleNavigation,
 )
 
@@ -64,6 +65,7 @@ class MainCommands(CommandsProvider):
         yield from self.maybe(Reload)
         yield from self.maybe(SaveCopy)
         yield SearchBookmarks()
+        yield SearchHistory()
         yield ToggleNavigation()
 
 

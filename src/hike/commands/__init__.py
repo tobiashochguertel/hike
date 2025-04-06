@@ -14,6 +14,7 @@ from .main import (
     Reload,
     SaveCopy,
     SearchBookmarks,
+    SearchHistory,
     ToggleNavigation,
 )
 from .navigation import (
@@ -45,6 +46,7 @@ __all__ = [
     "Reload",
     "SaveCopy",
     "SearchBookmarks",
+    "SearchHistory",
     "ToggleNavigation",
 ]
 

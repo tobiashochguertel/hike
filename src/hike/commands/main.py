@@ -64,6 +64,13 @@ class SearchBookmarks(Command):
 
 
 ##############################################################################
+class SearchHistory(Command):
+    """Search the history"""
+
+    BINDING_KEY = "shift+f3"
+
+
+##############################################################################
 class CopyLocationToClipboard(Command):
     """Copy the location to the clipboard"""
 
