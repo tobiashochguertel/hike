@@ -23,6 +23,7 @@ from textual_enhanced.widgets import EnhancedOptionList
 
 ##############################################################################
 # Local imports.
+from ...icons import LOCAL_FILE_ICON, REMOTE_FILE_ICON
 from ...messages import ClearHistory, OpenFromHistory, RemoveHistoryEntry
 from ...types import HikeHistory, HikeLocation
 
@@ -54,9 +55,9 @@ class Location(Option):
             # ugly as fuck but less ugly than without this workaround.
             Content.from_rich_text(
                 Text.from_markup(
-                    f":page_facing_up: [bold]{location.name}[/]\n[dim]{location.parent}[/]"
+                    f"{LOCAL_FILE_ICON} [bold]{location.name}[/]\n[dim]{location.parent}[/]"
                     if isinstance(location, Path)
-                    else f":globe_with_meridians: [bold]{Path(location.path).name}[/]"
+                    else f"{REMOTE_FILE_ICON} [bold]{Path(location.path).name}[/]"
                     f"\n[dim]{Path(location.path).parent}\n{location.host}[/]",
                     overflow="ellipsis",
                 )

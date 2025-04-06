@@ -11,24 +11,14 @@ from typing import Final
 from httpx import URL
 
 ##############################################################################
-# Rich imports.
-from rich.emoji import Emoji
-
-##############################################################################
 # Textual enhanced imports.
 from textual_enhanced.commands import CommandHit, CommandHits, CommandsProvider
 
 ##############################################################################
 # Local imports.
+from ..icons import LOCAL_FILE_ICON, REMOTE_FILE_ICON
 from ..messages import OpenLocation
 from ..types import HikeHistory, HikeLocation
-
-##############################################################################
-# Icons.
-LOCAL_FILE: Final[str] = Emoji.replace(":page_facing_up:")
-"""Icon to use for a local file."""
-REMOTE_FILE: Final[str] = Emoji.replace(":globe_with_meridians:")
-"""icon to sue for a remote file."""
 
 
 ##############################################################################
@@ -51,8 +41,8 @@ class Historical:
     def context(self) -> str:
         """The context for the location."""
         if isinstance(self.location, URL):
-            return f"{REMOTE_FILE} Remote on {self.location.host}"
-        return f"{LOCAL_FILE} Local file"
+            return f"{REMOTE_FILE_ICON} Remote on {self.location.host}"
+        return f"{LOCAL_FILE_ICON} Local file"
 
     def __gt__(self, value: object, /) -> bool:
         if isinstance(value, Historical):

@@ -29,6 +29,7 @@ from textual_enhanced.widgets import EnhancedOptionList
 ##############################################################################
 # Local imports.
 from ...data import Bookmark, Bookmarks
+from ...icons import LOCAL_FILE_ICON, REMOTE_FILE_ICON
 from ...messages import OpenLocation
 
 
@@ -58,7 +59,7 @@ class BookmarkView(Option):
             # ugly as fuck but less ugly than without this workaround.
             Content.from_rich_text(
                 Text.from_markup(
-                    f":{'globe_with_meridians' if isinstance(bookmark.location, URL) else 'page_facing_up'}: "
+                    f"{REMOTE_FILE_ICON if isinstance(bookmark.location, URL) else LOCAL_FILE_ICON} "
                     f"[bold]{bookmark.title}[/]\n[dim]{bookmark.location}[/]",
                     overflow="ellipsis",
                 )
