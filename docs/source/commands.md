@@ -150,7 +150,7 @@ Or if you want to view Hike's change-log:
 gh davep/hike ChangeLog.md
 ```
 
-If you wanted to view the README file but in a feature branch called `reamp-readme`:
+If you wanted to view the README file but in a feature branch called `revamp-readme`:
 
 ```
 gh davep/hike:revamp-readme
