@@ -67,7 +67,7 @@ class SearchBookmarks(Command):
 class SearchHistory(Command):
     """Search the history"""
 
-    BINDING_KEY = "ctrl+shift+y"
+    BINDING_KEY = "shift+f3"
 
 
 ##############################################################################
