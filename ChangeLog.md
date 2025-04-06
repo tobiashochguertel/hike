@@ -1,5 +1,12 @@
 # Hike ChangeLog
 
+## Unreleased
+
+**Released: WiP**
+
+- Added an application command for searching history.
+  ([#90](https://github.com/davep/hike/pull/90))
+
 ## v0.10.0
 
 **Released: 2025-04-03**
