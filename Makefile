@@ -74,11 +74,11 @@ docs:                           # Generate the system documentation
 	$(mkdocs) build
 
 .PHONY: rtfm
-rtfm:                           # Locally read the library documentation
+rtfm:				# Locally read the library documentation
 	$(mkdocs) serve
 
 .PHONY: publishdocs
-publishdocs:			# Set up the docs for publishing
+publishdocs: clean-docs	# Set up the docs for publishing
 	$(mkdocs) gh-deploy
 
 ##############################################################################
@@ -102,23 +102,30 @@ dist: package			# Upload to pypi
 ##############################################################################
 # Utility.
 .PHONY: repl
-repl:				# Start a Python REPL in the venv.
+repl:				# Start a Python REPL in the venv
 	$(python)
 
 .PHONY: delint
-delint:			# Fix linting issues.
+delint:			# Fix linting issues
 	$(lint) --fix  $(src) $(tests)
 
 .PHONY: pep8ify
-pep8ify:			# Reformat the code to be as PEP8 as possible.
+pep8ify:			# Reformat the code to be as PEP8 as possible
 	$(fmt) $(src) $(tests)
 
 .PHONY: tidy
-tidy: delint pep8ify		# Tidy up the code, fixing lint and format issues.
+tidy: delint pep8ify		# Tidy up the code, fixing lint and format issues
+
+.PHONY: clean-packaging
+clean-packaging:		# Clean the package building files
+	rm -rf dist
+
+.PHONY: clean-docs
+clean-docs:			# Clean up the documentation building files
+	rm -rf site .screenshot_cache
 
 .PHONY: clean
-clean:				# Clean the build directories
-	rm -rf dist site
+clean: clean-packaging clean-docs # Clean the build directories
 
 .PHONY: realclean
 realclean: clean		# Clean the venv and build directories
