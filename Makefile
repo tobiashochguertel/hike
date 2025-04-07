@@ -8,6 +8,7 @@ lint   := rye lint -- --select I
 fmt    := rye fmt
 mypy   := $(run) mypy
 mkdocs := $(run) mkdocs
+spell  := $(run) codespell
 
 ##############################################################################
 # Local "interactive testing" of the code.
@@ -64,8 +65,12 @@ stricttypecheck:	        # Perform a strict static type checks with mypy
 test:				# Run the unit tests
 	$(test) -v
 
+.PHONY: spellcheck
+spellcheck:			# Spell check the code
+	$(spell) $(src) docs/
+
 .PHONY: checkall
-checkall: codestyle lint stricttypecheck test # Check all the things
+checkall: spellcheck codestyle lint stricttypecheck test # Check all the things
 
 ##############################################################################
 # Documentation.
