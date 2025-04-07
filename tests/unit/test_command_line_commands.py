@@ -32,7 +32,7 @@ class ExampleCommand(InputCommand):
         ("  TEstER  ", True),
         ("  TESting  ", True),
         ("", False),
-        ("te", False),
+        ("te", False),  # codespell:ignore
     ),
 )
 def test_is_command(look_for: str, found: bool) -> None:

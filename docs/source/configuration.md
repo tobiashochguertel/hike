@@ -69,7 +69,7 @@ generally use a name (`number_sign`, `at`, `asterisk`, etc...).
 
 !!! tip
 
-    If you want to test and discover all of the key names and combiantions
+    If you want to test and discover all of the key names and combinations
     that will work, you may want to install
     [`textual-dev`](https://github.com/Textualize/textual-dev) and use the
     `textual keys` command.
@@ -178,10 +178,10 @@ You can show or hide the navigation panel. This can be done in Hike with the
 
 !!! tip
 
-    You can force nagivation [visible](index.md#-navigation) or
+    You can force navigation [visible](index.md#-navigation) or
     [hidden](index.md#-no-navigation) via [the command
     line](index.md#command-line-options).
-    Note that this *also* configures the visability of the navigation panel
+    Note that this *also* configures the visibility of the navigation panel
     for future runs of Hike.
 
 Here is Hike with the navigation panel visible:
