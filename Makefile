@@ -1,6 +1,7 @@
 app    := hike
 src    := src/
 tests  := tests/
+docs   := docs/
 run    := rye run
 test   := rye test
 python := $(run) python
@@ -67,7 +68,7 @@ test:				# Run the unit tests
 
 .PHONY: spellcheck
 spellcheck:			# Spell check the code
-	$(spell) $(src) docs/
+	$(spell) *.md $(src) $(docs) $(tests)
 
 .PHONY: checkall
 checkall: spellcheck codestyle lint stricttypecheck test # Check all the things
