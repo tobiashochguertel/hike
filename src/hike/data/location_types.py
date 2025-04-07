@@ -55,7 +55,7 @@ def looks_urllike(candidate: str) -> bool:
     """Does the given value look like a URL?
 
     Args:
-        candiate: The candidate to test.
+        candidate: The candidate to test.
 
     Returns:
         `True` if the string looks like a URL, `False` if not.

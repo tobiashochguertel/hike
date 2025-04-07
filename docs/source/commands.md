@@ -57,7 +57,7 @@ There are some commands that interact with the navigation panel. These are:
 
 Ensures that the navigation panel is opened and then jumps to the bookmarks.
 
-#### `conents`
+#### `contents`
 
 !!! aliases
 
