@@ -77,7 +77,6 @@ class HistoryCommands(CommandsProvider):
             The commands for the command palette.
         """
         for location in sorted(set(Historical(location) for location in self.history)):
-            # TODO: Improve what's shown in the palette.
             yield CommandHit(
                 location.name,
                 location.context,
