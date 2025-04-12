@@ -1,5 +1,12 @@
 # Hike ChangeLog
 
+## Unreleased
+
+**Released: WiP**
+
+- Work around
+  [textual#5742](https://github.com/Textualize/textual/issues/5742).
+
 ## v0.11.0
 
 **Released: 2025-04-06**
