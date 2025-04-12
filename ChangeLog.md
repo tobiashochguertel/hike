@@ -1,11 +1,12 @@
 # Hike ChangeLog
 
-## Unreleased
+## v0.11.1
 
-**Released: WiP**
+**Released: 2025-04-12**
 
 - Work around
   [textual#5742](https://github.com/Textualize/textual/issues/5742).
+  ([#99](https://github.com/davep/hike/pull/99))
 
 ## v0.11.0
 
