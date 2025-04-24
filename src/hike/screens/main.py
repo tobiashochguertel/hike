@@ -382,27 +382,22 @@ class Main(EnhancedScreen[None]):
             return self.query_one(Viewer).location is not None
         return True
 
-    @on(Reload)
     def action_reload_command(self) -> None:
         """Reload the current document."""
         self.query_one(Viewer).reload()
 
-    @on(SearchBookmarks)
     def action_search_bookmarks_command(self) -> None:
         """Search the bookmarks in the command palette."""
         self.show_palette(BookmarkCommands)
 
-    @on(SearchHistory)
     def action_search_history_command(self) -> None:
         """search the history in the command palette."""
         self.show_palette(HistoryCommands)
 
-    @on(ToggleNavigation)
     def action_toggle_navigation_command(self) -> None:
         """Toggle the display of the navigation panel."""
         self.navigation_visible = not self.navigation_visible
 
-    @on(ChangeNavigationSide)
     def action_change_navigation_side_command(self) -> None:
         """Change the side that the navigation panel lives on."""
         navigation = self.query_one(Navigation)
@@ -410,7 +405,6 @@ class Main(EnhancedScreen[None]):
         with update_configuration() as config:
             config.navigation_on_right = navigation.dock_right
 
-    @on(ChangeCommandLineLocation)
     def action_change_command_line_location_command(self) -> None:
         """Change the location of the command line."""
         command_line = self.query_one(CommandLine)
@@ -418,28 +412,23 @@ class Main(EnhancedScreen[None]):
         with update_configuration() as config:
             config.command_line_on_top = command_line.dock_top
 
-    @on(JumpToCommandLine)
     def action_jump_to_command_line_command(self) -> None:
         """Jump to the command line."""
         if self.AUTO_FOCUS:
             self.query_one(self.AUTO_FOCUS).focus()
 
-    @on(JumpToDocument)
     def action_jump_to_document_command(self) -> None:
         """Jump to the document."""
         self.query_one(Viewer).focus()
 
-    @on(Backward)
     def action_backward_command(self) -> None:
         """Move backward through history."""
         self.query_one(Viewer).backward()
 
-    @on(Forward)
     def action_forward_command(self) -> None:
         """Move forward through history."""
         self.query_one(Viewer).forward()
 
-    @on(BookmarkLocation)
     @work
     async def action_bookmark_location_command(self) -> None:
         """Add the current location to the bookmarks."""
@@ -468,42 +457,34 @@ class Main(EnhancedScreen[None]):
         self.navigation_visible = True
         return self.query_one(Navigation)
 
-    @on(JumpToTableOfContents)
     def action_jump_to_table_of_contents_command(self) -> None:
         """Jump to the table of contents."""
         self._with_navigation_visible().jump_to_content()
 
-    @on(JumpToLocalBrowser)
     def action_jump_to_local_browser_command(self) -> None:
         """Jump to the local browser."""
         self._with_navigation_visible().jump_to_local()
 
-    @on(JumpToBookmarks)
     def action_jump_to_bookmarks_command(self) -> None:
         """Jump to the bookmarks."""
         self._with_navigation_visible().jump_to_bookmarks()
 
-    @on(JumpToHistory)
     def action_jump_to_history_command(self) -> None:
         """Jump to the history."""
         self._with_navigation_visible().jump_to_history()
 
-    @on(CopyLocationToClipboard)
     def action_copy_location_to_clipboard_command(self) -> None:
         """Copy the current location to the clipboard."""
         self.post_message(CopyToClipboard(str(self.query_one(Viewer).location)))
 
-    @on(CopyMarkdownToClipboard)
     def action_copy_markdown_to_clipboard_command(self) -> None:
         """Copy the current markdown to the clipboard."""
         self.post_message(CopyToClipboard(self.query_one(Viewer).source))
 
-    @on(Edit)
     def action_edit_command(self) -> None:
         """Edit the current markdown document, if possible."""
         self.query_one(Viewer).edit()
 
-    @on(SaveCopy)
     @work
     async def action_save_copy_command(self) -> None:
         """Save a copy of the current document to a new file."""

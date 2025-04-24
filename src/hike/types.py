@@ -10,8 +10,8 @@ from typing import TypeAlias
 from httpx import URL
 
 ##############################################################################
-# Local imports.
-from .support import History
+# Textual enhanced imports.
+from textual_enhanced.tools import History
 
 ##############################################################################
 HikeLocation: TypeAlias = Path | URL
