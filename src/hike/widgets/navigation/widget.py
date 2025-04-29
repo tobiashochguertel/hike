@@ -83,6 +83,10 @@ class Navigation(Vertical):
             "switch('next_tab')",
             tooltip="Move to the next navigation tab",
         ),
+        ("h", "tab_left"),
+        ("j", "also_down"),
+        ("k", "also_up"),
+        ("l", "tab_right"),
     ]
 
     HELP = """
@@ -282,6 +286,28 @@ class Navigation(Vertical):
         """Jump into the history panel, if possible."""
         if self.query_one(HistoryView).option_count:
             self._activate("history")
+
+    async def action_also_down(self) -> None:
+        """Hack in some extra cursor down support."""
+        if isinstance(self.screen.focused, Tree):
+            await self.screen.focused.run_action("cursor_down")
+        else:
+            await self.run_action("move_into_panel")
+
+    async def action_also_up(self) -> None:
+        """Hack in some extra cursor up support."""
+        if isinstance(self.screen.focused, Tree):
+            await self.screen.focused.run_action("cursor_up")
+
+    async def action_tab_left(self) -> None:
+        """Hack in some extra cursor left support."""
+        if query := self.query("Tabs:focus"):
+            await query[0].run_action("previous_tab")
+
+    async def action_tab_right(self) -> None:
+        """Hack in some extra cursor right support."""
+        if query := self.query("Tabs:focus"):
+            await query[0].run_action("next_tab")
 
 
 ### navigation.py ends here

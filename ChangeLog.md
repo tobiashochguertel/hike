@@ -1,5 +1,11 @@
 # Hike ChangeLog
 
+## Unreleased
+
+**Released: WiP**
+
+- Added some vi-friendly navigation to the navigation panel.
+
 ## v0.11.1
 
 **Released: 2025-04-12**
