@@ -46,7 +46,8 @@ class GeneralCommand(InputCommand):
             `True` if the command was handled; `False` if not.
         """
         if cls.is_command(text):
-            for_widget.post_message(cls.MESSAGE())
+            if (message := getattr(cls, "MESSAGE", None)) is not None:
+                for_widget.post_message(message())
             return True
         return False
 

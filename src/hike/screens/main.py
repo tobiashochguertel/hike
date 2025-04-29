@@ -457,18 +457,27 @@ class Main(EnhancedScreen[None]):
         self.navigation_visible = True
         return self.query_one(Navigation)
 
+    @on(Quit)
+    def action_quit_command(self) -> None:
+        """Quit the application."""
+        self.app.exit()
+
+    @on(JumpToTableOfContents)
     def action_jump_to_table_of_contents_command(self) -> None:
         """Jump to the table of contents."""
         self._with_navigation_visible().jump_to_content()
 
+    @on(JumpToLocalBrowser)
     def action_jump_to_local_browser_command(self) -> None:
         """Jump to the local browser."""
         self._with_navigation_visible().jump_to_local()
 
+    @on(JumpToBookmarks)
     def action_jump_to_bookmarks_command(self) -> None:
         """Jump to the bookmarks."""
         self._with_navigation_visible().jump_to_bookmarks()
 
+    @on(JumpToHistory)
     def action_jump_to_history_command(self) -> None:
         """Jump to the history."""
         self._with_navigation_visible().jump_to_history()
