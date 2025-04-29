@@ -457,6 +457,11 @@ class Main(EnhancedScreen[None]):
         self.navigation_visible = True
         return self.query_one(Navigation)
 
+    @on(Quit)
+    def action_quit_command(self) -> None:
+        """Quit the application."""
+        self.app.exit()
+
     @on(JumpToTableOfContents)
     def action_jump_to_table_of_contents_command(self) -> None:
         """Jump to the table of contents."""
