@@ -5,6 +5,7 @@
 **Released: WiP**
 
 - Added some vi-friendly navigation to the navigation panel.
+  ([#102](https://github.com/davep/hike/pull/102))
 
 ## v0.11.1
 
