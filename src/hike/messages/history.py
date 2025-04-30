@@ -23,4 +23,9 @@ class ClearHistory(Message):
     """Clear all items from history."""
 
 
+##############################################################################
+class DeduplicateHistory(Message):
+    """Deduplicate the history."""
+
+
 ### history.py ends here

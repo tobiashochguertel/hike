@@ -20,7 +20,12 @@ from textual_enhanced.widgets import EnhancedOptionList
 ##############################################################################
 # Local imports.
 from ...icons import LOCAL_FILE_ICON, REMOTE_FILE_ICON
-from ...messages import ClearHistory, OpenFromHistory, RemoveHistoryEntry
+from ...messages import (
+    ClearHistory,
+    DeduplicateHistory,
+    OpenFromHistory,
+    RemoveHistoryEntry,
+)
 from ...types import HikeHistory, HikeLocation
 
 
@@ -86,6 +91,13 @@ class HistoryView(EnhancedOptionList):
             show=False,
             tooltip="Clear all locations from history",
         ),
+        HelpfulBinding(
+            "d",
+            "deduplicate",
+            "Deduplicate",
+            show=False,
+            tooltip="Deduplicate the history",
+        ),
     ]
 
     def update(self, history: HikeHistory) -> None:
@@ -136,7 +148,7 @@ class HistoryView(EnhancedOptionList):
         """
         if action == "remove":
             return bool(self.option_count) and self.highlighted is not None
-        if action == "clear":
+        if action in ("clear", "deduplicate"):
             return bool(self.option_count)
         return True
 
@@ -165,6 +177,16 @@ class HistoryView(EnhancedOptionList):
             )
         ):
             self.post_message(ClearHistory())
+
+    @work
+    async def action_deduplicate(self) -> None:
+        """Deduplicate history."""
+        if not self.check_action("deduplicate", ()):
+            return
+        if await self.app.push_screen_wait(
+            Confirm("Deduplicate?", "Are you sure you want to deduplicate the history?")
+        ):
+            self.post_message(DeduplicateHistory())
 
 
 ### history.py ends here
