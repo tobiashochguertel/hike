@@ -4,7 +4,7 @@
 # Local imports.
 from .clipboard import CopyToClipboard
 from .command_line import HandleInput
-from .history import ClearHistory, RemoveHistoryEntry
+from .history import ClearHistory, DeduplicateHistory, RemoveHistoryEntry
 from .local_view import SetLocalViewRoot
 from .opening import OpenFrom, OpenFromForge, OpenFromHistory, OpenLocation
 
@@ -13,6 +13,7 @@ from .opening import OpenFrom, OpenFromForge, OpenFromHistory, OpenLocation
 __all__ = [
     "ClearHistory",
     "CopyToClipboard",
+    "DeduplicateHistory",
     "HandleInput",
     "OpenFrom",
     "OpenFromForge",

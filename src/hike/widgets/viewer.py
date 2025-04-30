@@ -421,6 +421,10 @@ class Viewer(Vertical, can_focus=False):
         """Clear all locations from history."""
         self.history = HikeHistory()
 
+    def deduplicate_history(self) -> None:
+        """Squish history down so that there are no duplicates."""
+        self.history = HikeHistory(list(dict.fromkeys(self.history)))
+
     @on(Markdown.LinkClicked)
     def _handle_link(self, message: Markdown.LinkClicked) -> None:
         """Handle a link being clicked in the Markdown widget.

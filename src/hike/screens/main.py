@@ -67,6 +67,7 @@ from ..data import (
 from ..messages import (
     ClearHistory,
     CopyToClipboard,
+    DeduplicateHistory,
     HandleInput,
     OpenFrom,
     OpenFromForge,
@@ -316,6 +317,11 @@ class Main(EnhancedScreen[None]):
     def _clear_down_history(self) -> None:
         """Clear all items from history."""
         self.query_one(Viewer).clear_history()
+
+    @on(DeduplicateHistory)
+    def _deduplicate_history(self) -> None:
+        """Deduplicate the history."""
+        self.query_one(Viewer).deduplicate_history()
 
     @on(SetLocalViewRoot)
     def _set_local_root(self, message: SetLocalViewRoot) -> None:
