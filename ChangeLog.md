@@ -5,6 +5,7 @@
 **Released: WiP**
 
 - Added the ability to deduplicate the history.
+  ([#105](https://github.com/davep/hike/pull/105))
 
 ## v0.12.0
 
