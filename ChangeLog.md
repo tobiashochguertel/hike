@@ -1,8 +1,8 @@
 # Hike ChangeLog
 
-## Unreleased
+## v0.12.0
 
-**Released: WiP**
+**Released: 2025-04-30**
 
 - Added some vi-friendly navigation to the navigation panel.
   ([#102](https://github.com/davep/hike/pull/102))
