@@ -1,8 +1,8 @@
 # Hike ChangeLog
 
-## Unreleased
+## v1.0.0
 
-**Released: WiP**
+**Released: 2025-05-02**
 
 - Added the ability to deduplicate the history.
   ([#105](https://github.com/davep/hike/pull/105))
