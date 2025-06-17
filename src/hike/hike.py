@@ -26,7 +26,7 @@ from .screens import Main
 class Hike(EnhancedApp[None]):
     """The main application class."""
 
-    HELP_TITLE = f"Hike {__version__}"
+    HELP_TITLE = f"Hike v{__version__}"
     HELP_ABOUT = """
     `Hike` is a terminal-based Markdown viewer; it was created
     by and is maintained by [Dave Pearson](https://www.davep.org/); it is
