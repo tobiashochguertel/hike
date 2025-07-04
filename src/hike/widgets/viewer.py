@@ -11,7 +11,6 @@ from functools import singledispatchmethod
 from os import getenv
 from pathlib import Path
 from subprocess import run
-from typing import Literal
 
 ##############################################################################
 # httpx imports.
@@ -34,7 +33,6 @@ from textual.widgets import Label, Markdown, Rule
 
 ##############################################################################
 # Textual enhanced imports.
-from textual_enhanced.binding import HelpfulBinding
 from textual_enhanced.containers import EnhancedVerticalScroll
 
 ##############################################################################
