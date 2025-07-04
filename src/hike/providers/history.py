@@ -4,7 +4,6 @@
 # Python imports.
 from dataclasses import dataclass
 from functools import total_ordering
-from typing import Final
 
 ##############################################################################
 # httpx imports.
