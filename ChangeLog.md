@@ -1,8 +1,8 @@
 # Hike ChangeLog
 
-## Unreleased
+## v1.1.0
 
-**Released: WiP**
+**Released: 2025-07-09**
 
 - By default the loading of a document now sets focus to the document
   viewer. ([#114](https://github.com/davep/hike/pull/114))
