@@ -5,7 +5,7 @@
 **Released: WiP**
 
 - By default the loading of a document now sets focus to the document
-  viewer.
+  viewer. ([#114](https://github.com/davep/hike/pull/114))
 
 ## v1.0.0
 
