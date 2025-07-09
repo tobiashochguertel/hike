@@ -51,6 +51,9 @@ class Configuration:
     bindings: dict[str, str] = field(default_factory=dict)
     """Command keyboard binding overrides."""
 
+    focus_viewer_on_load: bool = True
+    """Should the viewer get focus when a file is loaded?"""
+
 
 ##############################################################################
 def configuration_file() -> Path:

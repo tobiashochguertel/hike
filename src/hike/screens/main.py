@@ -249,6 +249,8 @@ class Main(EnhancedScreen[None]):
         """
         if maybe_markdown(message.to_open):
             self.query_one(Viewer).location = message.to_open
+            if load_configuration().focus_viewer_on_load:
+                self.query_one(Viewer).focus()
         else:
             view_in_browser(message.to_open)
 
