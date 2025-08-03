@@ -1,5 +1,12 @@
 # Hike ChangeLog
 
+## v1.1.1
+
+**Released: 2025-08-03**
+
+- Pinned Textual to <5.0.0 due to breaking and broken changes to the
+  `Markdown` widget.
+
 ## v1.1.0
 
 **Released: 2025-07-09**
