@@ -7,6 +7,7 @@ from hike.hike import Hike
 with update_configuration() as config:
     config.navigation_on_right = False
     config.command_line_on_top = False
+    config.focus_viewer_on_load = False
 
 app = Hike(Namespace(theme="textual-mono", navigation=False, command=["README.md"]))
 if __name__ == "__main__":
