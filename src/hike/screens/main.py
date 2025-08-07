@@ -210,6 +210,11 @@ class Main(EnhancedScreen[None]):
         with update_configuration() as config:
             config.navigation_visible = self.navigation_visible
 
+    @on(Help)
+    async def _show_help(self) -> None:
+        """Handle the help action."""
+        await self.run_action("help_command")
+
     @on(HandleInput)
     def _handle_input(self, message: HandleInput) -> None:
         """Handle input as if the user had typed it in.

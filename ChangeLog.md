@@ -1,5 +1,12 @@
 # Hike ChangeLog
 
+## Unreleased
+
+**Released: WiP**
+
+- Fixed the `help` command in the command line widget not pulling up the
+  help dialog. ([#117](https://github.com/davep/hike/pull/117))
+
 ## v1.1.1
 
 **Released: 2025-08-03**
