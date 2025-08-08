@@ -131,6 +131,7 @@ pygments==2.19.2
     # via mkdocs-material
     # via pytest
     # via rich
+    # via textual
 pymdown-extensions==10.16.1
     # via markdown-exec
     # via mkdocs-material
@@ -156,7 +157,7 @@ six==1.17.0
     # via python-dateutil
 sniffio==1.3.1
     # via anyio
-textual==4.0.0
+textual==5.3.0
     # via hike
     # via textual-dev
     # via textual-enhanced
