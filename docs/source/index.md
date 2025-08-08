@@ -22,6 +22,14 @@ The application can be installed using [`pipx`](https://pypa.github.io/pipx/):
 pipx install hike
 ```
 
+### uv
+
+The package can be install using [`uv`](https://docs.astral.sh/uv/getting-started/installation/):
+
+```sh
+uv tool install hike
+```
+
 ### Homebrew
 
 The package is available via [Homebrew](https://brew.sh). Use the following
