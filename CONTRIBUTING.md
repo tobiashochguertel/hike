@@ -34,5 +34,9 @@ Pull requests are very welcome; but when making one I suggest the following:
 - For any non-trivial PR I'd suggest starting a
   [discussion](https://github.com/davep/hike/discussions) first to propose
   and review the change you want to make.
+- If a PR was made using some form of LLM or "AI", **PLEASE DECLARE IT AS
+  SUCH**. Please note that I'm highly likely to reject any PR made in such a
+  way for various reasons relating to licensing problems and how
+  maintainable the code likely won't be.
 
 [//]: # (CONTRIBUTING.md ends here)
