@@ -94,7 +94,7 @@ publishdocs: clean-docs	# Set up the docs for publishing
 ##############################################################################
 # Package/publish.
 .PHONY: package
-package:			# Package the library
+package: clean-packaging		# Package the library
 	$(build)
 
 .PHONY: spackage
