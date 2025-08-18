@@ -2,11 +2,11 @@ app    := hike
 src    := src/
 tests  := tests/
 docs   := docs/
-run    := rye run
-test   := rye test
+run    := uv run
+test   := uv run pytest
 python := $(run) python
-lint   := rye lint -- --select I
-fmt    := rye fmt
+lint   := uv run ruff check --select I
+fmt    := uv run ruff format
 mypy   := $(run) mypy
 mkdocs := $(run) mkdocs
 spell  := $(run) codespell
@@ -33,12 +33,12 @@ console:			# Run the textual console
 # Setup/update packages the system requires.
 .PHONY: setup
 setup:				# Set up the repository for development
-	rye sync
+	uv sync
 	$(run) pre-commit install
 
 .PHONY: update
 update:				# Update all dependencies
-	rye sync --update-all
+	uv sync --update-all
 
 .PHONY: resetup
 resetup: realclean		# Recreate the virtual environment from scratch
@@ -91,19 +91,19 @@ publishdocs: clean-docs	# Set up the docs for publishing
 # Package/publish.
 .PHONY: package
 package:			# Package the library
-	rye build
+	uv build
 
 .PHONY: spackage
 spackage:			# Create a source package for the library
-	rye build --sdist
+	uv build --sdist
 
 .PHONY: testdist
 testdist: package			# Perform a test distribution
-	rye publish --yes --skip-existing --repository testpypi --repository-url https://test.pypi.org/legacy/
+	uv publish --yes --skip-existing --repository testpypi --repository-url https://test.pypi.org/legacy/
 
 .PHONY: dist
 dist: package			# Upload to pypi
-	rye publish --yes --skip-existing
+	uv publish --yes --skip-existing
 
 ##############################################################################
 # Utility.
