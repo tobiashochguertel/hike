@@ -42,7 +42,7 @@ setup:				# Set up the repository for development
 
 .PHONY: update
 update:				# Update all dependencies
-	$(sync) --update-all
+	$(sync) --upgrade
 
 .PHONY: resetup
 resetup: realclean		# Recreate the virtual environment from scratch
