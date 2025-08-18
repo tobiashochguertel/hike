@@ -69,7 +69,7 @@ requires = ["hatchling==1.26.3", "hatch-vcs"]
 # requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.uv]
+[tool.rye]
 managed = true
 dev-dependencies = [
     "mypy>=1.15.0",
@@ -79,7 +79,6 @@ dev-dependencies = [
     "mkdocs-material>=9.6.11",
     "markdown-exec>=1.10.3",
     "codespell>=2.4.1",
-    "ruff>=0.12.9",
 ]
 
 [tool.hatch.metadata]
