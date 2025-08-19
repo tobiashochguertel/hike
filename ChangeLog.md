@@ -1,8 +1,8 @@
 # Hike ChangeLog
 
-## Unreleased
+## v1.1.3
 
-**Released: WiP**
+**Released: 2025-08-19**
 
 - Migrated from `rye` to `uv` for development management.
   ([#123](https://github.com/davep/hike/pull/123)/[#128](https://github.com/davep/hike/pull/128)
