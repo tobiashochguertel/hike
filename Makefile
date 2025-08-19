@@ -107,7 +107,7 @@ testdist: package			# Perform a test distribution
 
 .PHONY: dist
 dist: package			# Upload to pypi
-	echo $(publish)
+	$(publish)
 
 ##############################################################################
 # Utility.
