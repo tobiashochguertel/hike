@@ -1,5 +1,16 @@
 # Hike ChangeLog
 
+## Unreleased
+
+**Released: WiP**
+
+- Migrated from `rye` to `uv` for development management.
+  ([#123](https://github.com/davep/hike/pull/123)/[#128](https://github.com/davep/hike/pull/128)
+  with thanks to [@hugovk](https://github.com/hugovk))
+- Added Python 3.14 as a tested/supported Python version.
+  ([#124](https://github.com/davep/hike/pull/124) with thanks to
+  [@hugovk](https://github.com/hugovk))
+
 ## v1.1.2
 
 **Released: 2025-08-08**
