@@ -1,8 +1,8 @@
 # Hike ChangeLog
 
-## Unreleased
+## v1.1.4
 
-**Released: WiP**
+**Released: 2025-09-09**
 
 - Fixed a problem with the ToC getting out of sync in some circumstances.
   ([#132](https://github.com/davep/hike/issues/132))
