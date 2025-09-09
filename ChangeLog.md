@@ -1,5 +1,12 @@
 # Hike ChangeLog
 
+## Unreleased
+
+**Released: WiP**
+
+- Fixed a problem with the ToC getting out of sync in some circumstances.
+  ([#132](https://github.com/davep/hike/issues/132))
+
 ## v1.1.3
 
 **Released: 2025-08-19**

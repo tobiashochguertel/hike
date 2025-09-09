@@ -354,7 +354,7 @@ class Viewer(Vertical, can_focus=False):
             self._visit(self.location)
 
     @on(Loaded)
-    def _update_markdown(self, message: Loaded) -> None:
+    async def _update_markdown(self, message: Loaded) -> None:
         """Update the markdown once some new content is loaded.
 
         Args:
@@ -362,14 +362,15 @@ class Viewer(Vertical, can_focus=False):
         """
         self.query_one(ViewerTitle).location = self.location
         self._source = message.markdown
-        self.query_one(Markdown).update(message.markdown)
+        await self.query_one(Markdown).update(message.markdown)
         if (
             message.remember
             and self.location
             and self.location != self.history.current_item
         ):
             self.history.add(self.location)
-            self.post_message(self.HistoryUpdated(self))
+            if self.parent is not None:
+                self.parent.post_message(self.HistoryUpdated(self))
 
     def _visit_from_history(self) -> None:
         """Visit the current location in history."""
