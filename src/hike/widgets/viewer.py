@@ -369,7 +369,8 @@ class Viewer(Vertical, can_focus=False):
             and self.location != self.history.current_item
         ):
             self.history.add(self.location)
-            self.post_message(self.HistoryUpdated(self))
+            if self.parent is not None:
+                self.parent.post_message(self.HistoryUpdated(self))
 
     def _visit_from_history(self) -> None:
         """Visit the current location in history."""
