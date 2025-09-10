@@ -126,12 +126,20 @@ class FrontMatter(Collapsible):
             display: block;
         }
 
+        &.-collapsed {
+            margin-bottom: 1;
+        }
+
         CollapsibleTitle {
             padding: 0;
             color: $accent;
         }
+
         Contents {
-            padding: 0 0 0 2;
+            padding: 0;
+            Label {
+                padding: 0 0 0 2;
+            }
         }
     }
     """
