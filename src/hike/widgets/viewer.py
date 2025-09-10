@@ -168,7 +168,7 @@ class HikeDown(Markdown):
     front_matter: var[str | None] = var(None)
     """The content of any front matter found in the Markdown file."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialise the widget."""
         super().__init__(
             open_links=False,
