@@ -1,5 +1,11 @@
 # Hike ChangeLog
 
+## Unreleased
+
+**Released: WiP**
+
+- Added a simple YAML front matter display.
+
 ## v1.1.4
 
 **Released: 2025-09-09**
