@@ -117,11 +117,21 @@ class FrontMatter(Collapsible):
 
     DEFAULT_CSS = """
     FrontMatter {
+        padding: 0;
+        border-top: none;
         display: none;
         background: transparent;
 
         &.--exists {
             display: block;
+        }
+
+        CollapsibleTitle {
+            padding: 0;
+            color: $accent;
+        }
+        Contents {
+            padding: 0 0 0 2;
         }
     }
     """
@@ -130,7 +140,7 @@ class FrontMatter(Collapsible):
     """The front matter to show."""
 
     def __init__(self) -> None:
-        super().__init__(Label(), title="Front matter")
+        super().__init__(Label(), Rule(), title="Front matter")
 
     def _watch_front_matter(self) -> None:
         self.set_class(bool(self.front_matter), "--exists")
