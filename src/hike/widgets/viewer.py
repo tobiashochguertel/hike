@@ -441,9 +441,12 @@ class Viewer(Vertical, can_focus=False):
         Args:
             message: The message requesting the update.
         """
+        front_matter_had_focus = self.query_one(FrontMatter).has_focus_within
         self.query_one(ViewerTitle).location = self.location
         self._source = message.markdown
         await (hikedown := self.query_one(HikeDown)).update(message.markdown)
+        if front_matter_had_focus and not hikedown.front_matter:
+            self.query_one(MarkdownScroll).focus()
         self.query_one(FrontMatter).front_matter = hikedown.front_matter
         if (
             message.remember
