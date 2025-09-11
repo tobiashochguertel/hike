@@ -1,8 +1,8 @@
 # Hike ChangeLog
 
-## Unreleased
+## v1.2.0
 
-**Released: WiP**
+**Released: 2025-09-11**
 
 - Added a simple YAML front matter display.
   ([#136](https://github.com/davep/hike/pull/136))
