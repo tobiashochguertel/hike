@@ -19,17 +19,20 @@ from httpx import URL, AsyncClient, HTTPStatusError, RequestError
 ##############################################################################
 # MarkdownIt imports.
 from markdown_it import MarkdownIt
+from markdown_it.token import Token
 from mdit_py_plugins import front_matter
 
 ##############################################################################
 # Textual imports.
 from textual import on, work
 from textual.app import ComposeResult
+from textual.await_complete import AwaitComplete
 from textual.containers import Vertical
 from textual.events import Click
 from textual.message import Message
 from textual.reactive import var
-from textual.widgets import Label, Markdown, Rule
+from textual.widgets import Collapsible, Label, Markdown, Rule
+from textual.widgets.markdown import MarkdownBlock
 
 ##############################################################################
 # Textual enhanced imports.
@@ -109,6 +112,94 @@ class MarkdownScroll(EnhancedVerticalScroll):
 
 
 ##############################################################################
+class FrontMatter(Collapsible):
+    """A widget to show the front matter of Markdown document."""
+
+    DEFAULT_CSS = """
+    FrontMatter {
+        padding: 0;
+        border-top: none;
+        display: none;
+        background: transparent;
+
+        &.--exists {
+            display: block;
+        }
+
+        &.-collapsed {
+            margin-bottom: 1;
+        }
+
+        CollapsibleTitle {
+            padding: 0;
+            color: $accent;
+        }
+
+        Contents {
+            padding: 0;
+            Label {
+                padding: 0 0 0 2;
+            }
+        }
+    }
+    """
+
+    front_matter: var[str | None] = var(None)
+    """The front matter to show."""
+
+    def __init__(self) -> None:
+        super().__init__(Label(), Rule(), title="Front matter")
+
+    def _watch_front_matter(self) -> None:
+        self.set_class(
+            bool(self.front_matter) and load_configuration().show_front_matter,
+            "--exists",
+        )
+        self.query_one(Label).update(self.front_matter or "")
+
+
+##############################################################################
+class HikeDown(Markdown):
+    """Hike's `Markdown` wrapper widget."""
+
+    DEFAULT_CSS = """
+    HikeDown {
+        background: transparent;
+    }
+    """
+
+    front_matter: var[str | None] = var(None)
+    """The content of any front matter found in the Markdown file."""
+
+    def __init__(self) -> None:
+        """Initialise the widget."""
+        super().__init__(
+            open_links=False,
+            parser_factory=lambda: MarkdownIt("gfm-like").use(
+                front_matter.front_matter_plugin
+            ),
+        )
+
+    def update(self, markdown: str) -> AwaitComplete:
+        self.front_matter = None
+        return super().update(markdown)
+
+    def unhandled_token(self, token: Token) -> MarkdownBlock | None:
+        """Handle tokens that Textual's Markdown didn't.
+
+        Args:
+            token: The token to handle.
+
+        Returns:
+            `None` or a `MarkdownBlock`.
+        """
+        if token.type == "front_matter":
+            self.front_matter = token.content
+            return None
+        return super().unhandled_token(token)
+
+
+##############################################################################
 class Viewer(Vertical, can_focus=False):
     """The Markdown viewer widget."""
 
@@ -119,9 +210,6 @@ class Viewer(Vertical, can_focus=False):
             display: none;
         }
         EnhancedVerticalScroll {
-            background: transparent;
-        }
-        Markdown {
             background: transparent;
         }
         Rule {
@@ -165,13 +253,9 @@ class Viewer(Vertical, can_focus=False):
         """Compose the content of the viewer."""
         yield ViewerTitle()
         yield Rule(line_style="heavy")
+        yield FrontMatter()
         with MarkdownScroll(id="document"):
-            yield Markdown(
-                open_links=False,
-                parser_factory=lambda: MarkdownIt("gfm-like").use(
-                    front_matter.front_matter_plugin
-                ),
-            )
+            yield HikeDown()
 
     def focus(self, scroll_visible: bool = True) -> Self:
         """Focus the viewer.
@@ -360,9 +444,13 @@ class Viewer(Vertical, can_focus=False):
         Args:
             message: The message requesting the update.
         """
+        front_matter_had_focus = self.query_one(FrontMatter).has_focus_within
         self.query_one(ViewerTitle).location = self.location
         self._source = message.markdown
-        await self.query_one(Markdown).update(message.markdown)
+        await (hikedown := self.query_one(HikeDown)).update(message.markdown)
+        if front_matter_had_focus and not hikedown.front_matter:
+            self.query_one(MarkdownScroll).focus()
+        self.query_one(FrontMatter).front_matter = hikedown.front_matter
         if (
             message.remember
             and self.location

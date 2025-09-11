@@ -27,6 +27,17 @@ command ([`ChangeCommandLineLocation`](#bindable-commands), bound to
 ```{.textual path="docs/screenshots/basic_app.py" title="Command line on top" lines=40 columns=120 press="tab,d,ctrl+up,tab"}
 ```
 
+## Front matter display
+
+By default Hike will show an expandable display of [YAML front
+matter](https://jekyllrb.com/docs/front-matter/), if it exists in the
+document being viewed. If you aren't ever interested in seeing the front
+matter this can be turned off with:
+
+```json
+"show_front_matter": false
+```
+
 ## Keyboard bindings
 
 Hike allows for a degree of configuration of its keyboard bindings;
