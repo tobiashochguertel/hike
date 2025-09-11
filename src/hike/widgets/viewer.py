@@ -151,7 +151,10 @@ class FrontMatter(Collapsible):
         super().__init__(Label(), Rule(), title="Front matter")
 
     def _watch_front_matter(self) -> None:
-        self.set_class(bool(self.front_matter), "--exists")
+        self.set_class(
+            bool(self.front_matter) and load_configuration().show_front_matter,
+            "--exists",
+        )
         self.query_one(Label).update(self.front_matter or "")
 
 

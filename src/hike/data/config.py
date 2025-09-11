@@ -54,6 +54,9 @@ class Configuration:
     focus_viewer_on_load: bool = True
     """Should the viewer get focus when a file is loaded?"""
 
+    show_front_matter: bool = True
+    """Should the viewer allow for the viewing of front matter?"""
+
 
 ##############################################################################
 def configuration_file() -> Path:
