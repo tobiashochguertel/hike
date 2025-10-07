@@ -5,6 +5,7 @@
 **Released: WiP**
 
 - Fixed a typo in the internal editor close confirmation dialog.
+  ([#139](https://github.com/davep/hike/pull/139))
 
 ## v1.2.0
 
