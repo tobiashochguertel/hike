@@ -120,7 +120,7 @@ class Editor(EnhancedScreen[None]):
             if not await self.app.push_screen_wait(
                 Confirm(
                     "Unsaved changes",
-                    "You have unsaved changed in your document. Are you sure you want to quit?",
+                    "You have unsaved changes in your document. Are you sure you want to quit?",
                 )
             ):
                 return
