@@ -1,8 +1,8 @@
 # Hike ChangeLog
 
-## Unrealised
+## v1.2.1
 
-**Released: WiP**
+**Released: 2025-10-08**
 
 - Fixed a typo in the internal editor close confirmation dialog.
   ([#139](https://github.com/davep/hike/pull/139))
