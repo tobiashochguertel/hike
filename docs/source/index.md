@@ -30,14 +30,17 @@ The package can be install using [`uv`](https://docs.astral.sh/uv/getting-starte
 uv tool install hike
 ```
 
-### Homebrew
-
-The package is available via [Homebrew](https://brew.sh). Use the following
-commands to install:
+If you don't have `uv` installed you can use [uvx.sh](https://uvx.sh) to
+perform the installation. For GNU/Linux or macOS or similar:
 
 ```sh
-brew tap davep/homebrew
-brew install hike
+curl -LsSf uvx.sh/hike/install.sh | sh
+```
+
+or on Windows:
+
+```sh
+powershell -ExecutionPolicy ByPass -c "irm https://uvx.sh/hike/install.ps1 | iex"
 ```
 
 ### Other installation methods
