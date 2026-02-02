@@ -116,14 +116,13 @@ class Editor(EnhancedScreen[None]):
     @work
     async def action_close_command(self) -> None:
         """Close the editor."""
-        if self._dirty:
-            if not await self.app.push_screen_wait(
-                Confirm(
-                    "Unsaved changes",
-                    "You have unsaved changes in your document. Are you sure you want to quit?",
-                )
-            ):
-                return
+        if self._dirty and not await self.app.push_screen_wait(
+            Confirm(
+                "Unsaved changes",
+                "You have unsaved changes in your document. Are you sure you want to quit?",
+            )
+        ):
+            return
         self.dismiss()
 
 
