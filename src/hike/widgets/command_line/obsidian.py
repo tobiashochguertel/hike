@@ -33,11 +33,14 @@ class ObsidianCommand(InputCommand):
         Returns:
             `True` if the command was handled; `False` if not.
         """
-        if cls.is_command(text):
-            if vaults := Path(load_configuration().obsidian_vaults).expanduser():
-                if vaults.exists() and vaults.is_dir():
-                    for_widget.post_message(SetLocalViewRoot(vaults.resolve()))
-                    return True
+        if (
+            cls.is_command(text)
+            and (vaults := Path(load_configuration().obsidian_vaults).expanduser())
+            and vaults.exists()
+            and vaults.is_dir()
+        ):
+            for_widget.post_message(SetLocalViewRoot(vaults.resolve()))
+            return True
         return False
 
 
