@@ -95,7 +95,7 @@ class Editor(EnhancedScreen[None]):
         """Mark that the document is dirty."""
         # We'll get a Changed event on startup, so we start with None, then
         # go to False, then go to True otherwise.
-        self._dirty = False if self._dirty is None else True
+        self._dirty = self._dirty is not None
 
     @on(Save)
     def action_save_command(self) -> None:
