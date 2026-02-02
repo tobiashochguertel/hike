@@ -382,13 +382,13 @@ class Viewer(Vertical, can_focus=False):
         # At this point we've got a good response. Now let's be sure that
         # what we got back is something that admits to being markdown, or at
         # least a form of plain text we can render.
-        if content_type := response.headers.get("content-type"):
-            if any(
-                content_type.startswith(allowed_type)
-                for allowed_type in load_configuration().markdown_content_types
-            ):
-                self.post_message(self.Loaded(self, response.text, remember))
-                return
+        markdown_content_types = load_configuration().markdown_content_types
+        if (content_type := response.headers.get("content-type")) and any(
+            content_type.startswith(allowed_type)
+            for allowed_type in markdown_content_types
+        ):
+            self.post_message(self.Loaded(self, response.text, remember))
+            return
 
         # It doesn't look like Markdown, so let's open it in the browser.
         self.notify(

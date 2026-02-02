@@ -78,7 +78,7 @@ class Editor(EnhancedScreen[None]):
         """Configure the screen when the DOM is mounted."""
         try:
             self.query_one(TextArea).text = self._location.read_text(encoding="utf-8")
-        except IOError as error:
+        except OSError as error:
             self.notify(
                 str(error),
                 title=f"Error reading from {self._location}",
@@ -95,14 +95,14 @@ class Editor(EnhancedScreen[None]):
         """Mark that the document is dirty."""
         # We'll get a Changed event on startup, so we start with None, then
         # go to False, then go to True otherwise.
-        self._dirty = False if self._dirty is None else True
+        self._dirty = self._dirty is not None
 
     @on(Save)
     def action_save_command(self) -> None:
         """Save the editor content."""
         try:
             self._location.write_text(self.query_one(TextArea).text, encoding="utf-8")
-        except IOError as error:
+        except OSError as error:
             self.notify(
                 str(error),
                 title=f"Error writing to {self._location}",
@@ -116,14 +116,13 @@ class Editor(EnhancedScreen[None]):
     @work
     async def action_close_command(self) -> None:
         """Close the editor."""
-        if self._dirty:
-            if not await self.app.push_screen_wait(
-                Confirm(
-                    "Unsaved changes",
-                    "You have unsaved changes in your document. Are you sure you want to quit?",
-                )
-            ):
-                return
+        if self._dirty and not await self.app.push_screen_wait(
+            Confirm(
+                "Unsaved changes",
+                "You have unsaved changes in your document. Are you sure you want to quit?",
+            )
+        ):
+            return
         self.dismiss()
 
 
