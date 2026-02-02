@@ -2,8 +2,8 @@
 
 ##############################################################################
 # Python imports.
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 ##############################################################################
 # Textual imports.

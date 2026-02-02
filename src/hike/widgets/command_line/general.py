@@ -2,8 +2,8 @@
 
 ##############################################################################
 # Python imports.
+from collections.abc import Callable
 from functools import partial
-from typing import Callable
 
 ##############################################################################
 # Textual imports.
