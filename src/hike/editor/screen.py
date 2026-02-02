@@ -78,7 +78,7 @@ class Editor(EnhancedScreen[None]):
         """Configure the screen when the DOM is mounted."""
         try:
             self.query_one(TextArea).text = self._location.read_text(encoding="utf-8")
-        except IOError as error:
+        except OSError as error:
             self.notify(
                 str(error),
                 title=f"Error reading from {self._location}",
@@ -102,7 +102,7 @@ class Editor(EnhancedScreen[None]):
         """Save the editor content."""
         try:
             self._location.write_text(self.query_one(TextArea).text, encoding="utf-8")
-        except IOError as error:
+        except OSError as error:
             self.notify(
                 str(error),
                 title=f"Error writing to {self._location}",

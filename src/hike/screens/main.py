@@ -520,7 +520,7 @@ class Main(EnhancedScreen[None]):
         ):
             try:
                 save_to.write_text(self.query_one(Viewer).source, encoding="utf-8")
-            except IOError as error:
+            except OSError as error:
                 self.notify(str(error), title="Save Error", severity="error", timeout=8)
                 return
             self.notify(f"Saved {save_to}")
