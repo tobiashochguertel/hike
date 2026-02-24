@@ -88,6 +88,24 @@ generally use a name (`number_sign`, `at`, `asterisk`, etc...).
     If you need help with keyboard bindings [please feel free to
     ask](index.md#questions-and-feedback).
 
+## Allow for traditional quit keystroke
+
+Because Hike is built with Textual, and some of Textual's widgets use
+<kbd>ctrl</kbd>+<kbd>c</kbd> to copy text to the clipboard, in all other
+situations <kbd>ctrl</kbd>+<kbd>c</kbd> will pop up a notification reminding
+you what the actual binding is to quit the application.
+
+For those who really need to lean into their muscle memory you can enable
+<kbd>ctrl</kbd>+<kbd>c</kbd> as a quit key combination:
+
+```json
+"allow_traditional_quit": true
+```
+
+If this is set *and* if you aren't in a widget with marked text that can be
+copied, Hike will quit. If set to `false` (the default) the default
+behaviour for Hike (and most Textual applications) will happen.
+
 ## Local file system start location
 
 By default Hike's local file system browser (the tree that appears in the

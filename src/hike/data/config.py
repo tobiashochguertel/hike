@@ -57,6 +57,9 @@ class Configuration:
     show_front_matter: bool = True
     """Should the viewer allow for the viewing of front matter?"""
 
+    allow_traditional_quit: bool = False
+    """Ignore Textual's safety net for Ctrl+c?"""
+
 
 ##############################################################################
 def configuration_file() -> Path:

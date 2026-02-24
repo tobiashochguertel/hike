@@ -1,5 +1,11 @@
 # Hike ChangeLog
 
+## Unrealsed
+
+**Released: WiP**
+
+- Add a configuration option to allow for "traditional quit".
+
 ## v1.2.1
 
 **Released: 2025-10-08**
