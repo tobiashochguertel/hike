@@ -85,5 +85,12 @@ class Hike(EnhancedApp[None]):
         """
         return Main(self._arguments)
 
+    def action_help_quit(self) -> None:
+        """Override Textual's default handling of ctrl+c."""
+        if load_configuration().allow_traditional_quit:
+            self.exit()
+        else:
+            super().action_help_quit()
+
 
 ### hike.py ends here
