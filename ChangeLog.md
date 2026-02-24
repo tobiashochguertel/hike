@@ -5,6 +5,7 @@
 **Released: WiP**
 
 - Add a configuration option to allow for "traditional quit".
+  ([#148](https://github.com/davep/hike/pull/148))
 
 ## v1.2.1
 
