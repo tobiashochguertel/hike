@@ -7,7 +7,7 @@ from pathlib import Path
 
 ##############################################################################
 # httpx imports.
-from httpx import URL, AsyncClient, RequestError
+from httpx import URL, AsyncClient, HTTPStatusError, RequestError
 
 ##############################################################################
 from typing_extensions import TypeIs
@@ -78,6 +78,10 @@ async def can_be_negotiated_to_markdown(location: HikeLocation) -> bool:
             )
         except RequestError:
             return False
+    try:
+        response.raise_for_status()
+    except HTTPStatusError:
+        return False
     if content_type := response.headers.get("content-type"):
         return any(
             content_type.startswith(accepted_type)
