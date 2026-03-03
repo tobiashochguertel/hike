@@ -1,8 +1,8 @@
 # Hike ChangeLog
 
-## Unrealsed
+## v1.3.0
 
-**Released: WiP**
+**Released: 2026-03-03**
 
 - Added a configuration option to allow for "traditional quit".
   ([#148](https://github.com/davep/hike/pull/148))
