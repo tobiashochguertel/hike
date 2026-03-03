@@ -7,13 +7,14 @@ from pathlib import Path
 
 ##############################################################################
 # httpx imports.
-from httpx import URL
+from httpx import URL, AsyncClient, RequestError
 
 ##############################################################################
 from typing_extensions import TypeIs
 
 ##############################################################################
 # Local imports.
+from .. import USER_AGENT
 from ..types import HikeLocation
 from .config import load_configuration
 
@@ -48,6 +49,38 @@ def _(location: str) -> bool:
 @maybe_markdown.register
 def _(location: URL) -> bool:
     return maybe_markdown(location.path)
+
+
+##############################################################################
+async def can_be_negotiated_to_markdown(location: HikeLocation) -> bool:
+    """Can the given location be negotiated to Markdown?
+
+    Args:
+        location: The location to test.
+
+    Returns:
+        `True` if the location can be negotiated to Markdown, `False` if
+        not.
+    """
+    if isinstance(location, Path):
+        return False
+    async with AsyncClient() as client:
+        try:
+            response = await client.head(
+                location,
+                follow_redirects=True,
+                headers={
+                    "user-agent": USER_AGENT,
+                    "Accept": ",".join(load_configuration().markdown_content_types),
+                },
+            )
+        except RequestError:
+            return False
+    content_type = response.headers.get("content-type", "")
+    for accepted_type in load_configuration().markdown_content_types:
+        if content_type.startswith(accepted_type):
+            return True
+    return False
 
 
 ##############################################################################

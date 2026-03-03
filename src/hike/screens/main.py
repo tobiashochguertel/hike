@@ -54,6 +54,7 @@ from ..commands import (
     ToggleNavigation,
 )
 from ..data import (
+    can_be_negotiated_to_markdown,
     load_bookmarks,
     load_command_history,
     load_configuration,
@@ -246,13 +247,15 @@ class Main(EnhancedScreen[None]):
         self.notify("Copied")
 
     @on(OpenLocation)
-    def _open_markdown(self, message: OpenLocation) -> None:
+    async def _open_markdown(self, message: OpenLocation) -> None:
         """Open a file for viewing.
 
         Args:
             message: The message requesting the file be opened.
         """
-        if maybe_markdown(message.to_open):
+        if maybe_markdown(message.to_open) or await can_be_negotiated_to_markdown(
+            message.to_open
+        ):
             self.query_one(Viewer).location = message.to_open
             if load_configuration().focus_viewer_on_load:
                 self.query_one(Viewer).focus()
