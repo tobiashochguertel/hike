@@ -366,7 +366,12 @@ class Viewer(Vertical, can_focus=False):
                 response = await client.get(
                     location,
                     follow_redirects=True,
-                    headers={"user-agent": USER_AGENT},
+                    headers={
+                        "user-agent": USER_AGENT,
+                        "Accept": ",".join(
+                            load_configuration().markdown_content_types + ["*/*;q=0.1"]
+                        ),
+                    },
                 )
         except RequestError as error:
             self.notify(str(error), title="Request error", severity="error", timeout=8)

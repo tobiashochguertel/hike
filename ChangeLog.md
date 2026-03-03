@@ -4,8 +4,11 @@
 
 **Released: WiP**
 
-- Add a configuration option to allow for "traditional quit".
+- Added a configuration option to allow for "traditional quit".
   ([#148](https://github.com/davep/hike/pull/148))
+- Added support for requesting a Markdown version of a URL before deciding
+  it can't be handled in Hike.
+  ([#150](https://github.com/davep/hike/pull/150))
 
 ## v1.2.1
 
