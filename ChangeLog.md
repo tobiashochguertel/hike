@@ -8,6 +8,7 @@
   ([#148](https://github.com/davep/hike/pull/148))
 - Added support for requesting a Markdown version of a URL before deciding
   it can't be handled in Hike.
+  ([#150](https://github.com/davep/hike/pull/150))
 
 ## v1.2.1
 
