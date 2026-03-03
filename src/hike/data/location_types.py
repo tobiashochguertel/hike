@@ -71,7 +71,9 @@ async def can_be_negotiated_to_markdown(location: HikeLocation) -> bool:
                 follow_redirects=True,
                 headers={
                     "user-agent": USER_AGENT,
-                    "Accept": ",".join(load_configuration().markdown_content_types),
+                    "Accept": ",".join(
+                        load_configuration().markdown_content_types + ["*/*;q=0.1"]
+                    ),
                 },
             )
         except RequestError:
