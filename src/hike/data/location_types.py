@@ -76,10 +76,11 @@ async def can_be_negotiated_to_markdown(location: HikeLocation) -> bool:
             )
         except RequestError:
             return False
-    content_type = response.headers.get("content-type", "")
-    for accepted_type in load_configuration().markdown_content_types:
-        if content_type.startswith(accepted_type):
-            return True
+    if content_type := response.headers.get("content-type"):
+        return any(
+            content_type.startswith(accepted_type)
+            for accepted_type in load_configuration().markdown_content_types
+        )
     return False
 
 
