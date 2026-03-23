@@ -545,6 +545,11 @@ class Viewer(Vertical, can_focus=False):
         # off, on the off-chance that there's an anchor involved still...
         file_name, _, anchor = message.href.partition("#")
 
+        # Some sort of internal anchor perhaps?
+        if anchor and not file_name:
+            message.markdown.goto_anchor(anchor)
+            return
+
         # A local file that exists?
         if (local_file := Path(file_name).expanduser()).exists():
             self.post_message(OpenLocation(local_file.resolve()))
@@ -558,10 +563,6 @@ class Viewer(Vertical, can_focus=False):
             .exists()
         ):
             self.post_message(OpenLocation(local_file))
-            return
-
-        # Some sort of internal anchor perhaps?
-        if anchor and message.markdown.goto_anchor(anchor):
             return
 
         # TODO: One case that isn't yet handled is a file name that also has
