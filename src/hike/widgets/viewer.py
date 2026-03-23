@@ -541,15 +541,19 @@ class Viewer(Vertical, can_focus=False):
             )
             return
 
+        # Having eliminated URLs, it's likely something more local. First
+        # off, on the off-chance that there's an anchor involved still...
+        file_name, _, anchor = message.href.partition("#")
+
         # A local file that exists?
-        if (local_file := Path(message.href).expanduser()).exists():
+        if (local_file := Path(file_name).expanduser()).exists():
             self.post_message(OpenLocation(local_file.resolve()))
             return
 
         # A local file relative to the current location?
         if (
             isinstance(self.location, Path)
-            and (local_file := self.location.parent / Path(message.href))
+            and (local_file := self.location.parent / Path(file_name))
             .absolute()
             .exists()
         ):
@@ -557,10 +561,12 @@ class Viewer(Vertical, can_focus=False):
             return
 
         # Some sort of internal anchor perhaps?
-        if message.href.startswith("#") and message.markdown.goto_anchor(
-            message.href[1:]
-        ):
+        if anchor and message.markdown.goto_anchor(anchor):
             return
+
+        # TODO: One case that isn't yet handled is a file name that also has
+        # an anchor: `some-file.md#some-anchor`. We should handle that too
+        # at some point.
 
         self.notify(
             f"The clicked link could not be handled:\n\n{message.href}",
