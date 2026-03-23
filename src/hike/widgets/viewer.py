@@ -48,6 +48,7 @@ from .. import USER_AGENT
 from ..commands import JumpToCommandLine
 from ..data import is_editable, load_configuration, looks_urllike
 from ..editor import Editor
+from ..markdown import wikilink_plugin
 from ..messages import CopyToClipboard, OpenLocation
 from ..support import is_copy_request_click, view_in_browser
 from ..types import HikeHistory, HikeLocation
@@ -175,8 +176,10 @@ class HikeDown(Markdown):
         """Initialise the widget."""
         super().__init__(
             open_links=False,
-            parser_factory=lambda: MarkdownIt("gfm-like").use(
-                front_matter.front_matter_plugin
+            parser_factory=lambda: (
+                MarkdownIt("gfm-like")
+                .use(front_matter.front_matter_plugin)
+                .use(wikilink_plugin)
             ),
         )
 
