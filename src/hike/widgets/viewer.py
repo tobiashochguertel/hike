@@ -48,6 +48,7 @@ from .. import USER_AGENT
 from ..commands import JumpToCommandLine
 from ..data import is_editable, load_configuration, looks_urllike
 from ..editor import Editor
+from ..markdown import wikilink_plugin
 from ..messages import CopyToClipboard, OpenLocation
 from ..support import is_copy_request_click, view_in_browser
 from ..types import HikeHistory, HikeLocation
@@ -175,8 +176,10 @@ class HikeDown(Markdown):
         """Initialise the widget."""
         super().__init__(
             open_links=False,
-            parser_factory=lambda: MarkdownIt("gfm-like").use(
-                front_matter.front_matter_plugin
+            parser_factory=lambda: (
+                MarkdownIt("gfm-like")
+                .use(front_matter.front_matter_plugin)
+                .use(wikilink_plugin)
             ),
         )
 
@@ -248,6 +251,9 @@ class Viewer(Vertical, can_focus=False):
 
     _source: var[str] = var("")
     """The source of the Markdown we're viewing."""
+
+    _seek_anchor: var[str | None] = var(None)
+    """An optional anchor to seek to once the document is loaded."""
 
     def compose(self) -> ComposeResult:
         """Compose the content of the viewer."""
@@ -456,6 +462,9 @@ class Viewer(Vertical, can_focus=False):
         if front_matter_had_focus and not hikedown.front_matter:
             self.query_one(MarkdownScroll).focus()
         self.query_one(FrontMatter).front_matter = hikedown.front_matter
+        if self._seek_anchor:
+            self.query_one(HikeDown).goto_anchor(self._seek_anchor)
+            self._seek_anchor = None
         if (
             message.remember
             and self.location
@@ -475,6 +484,18 @@ class Viewer(Vertical, can_focus=False):
     def reload(self) -> None:
         """Reload the current document."""
         self._visit(self.location, remember=False, preserve_position=True)
+
+    def goto_anchor_after_load(self, anchor: str | None) -> Self:
+        """Go to an anchor after the document is loaded.
+
+        Args:
+            anchor: The anchor to go to.
+
+        Returns:
+            Self.
+        """
+        self._seek_anchor = anchor
+        return self
 
     def goto(self, history_location: int) -> None:
         """Go to a specific location in history."""
@@ -538,25 +559,28 @@ class Viewer(Vertical, can_focus=False):
             )
             return
 
+        # Having eliminated URLs, it's likely something more local. First
+        # off, on the off-chance that there's an anchor involved still...
+        file_name, _, anchor = message.href.partition("#")
+
+        # Some sort of internal anchor perhaps?
+        if anchor and not file_name:
+            message.markdown.goto_anchor(anchor)
+            return
+
         # A local file that exists?
-        if (local_file := Path(message.href).expanduser()).exists():
-            self.post_message(OpenLocation(local_file.resolve()))
+        if (local_file := Path(file_name).expanduser()).exists():
+            self.post_message(OpenLocation(local_file.resolve(), anchor))
             return
 
         # A local file relative to the current location?
         if (
             isinstance(self.location, Path)
-            and (local_file := self.location.parent / Path(message.href))
+            and (local_file := self.location.parent / Path(file_name))
             .absolute()
             .exists()
         ):
-            self.post_message(OpenLocation(local_file))
-            return
-
-        # Some sort of internal anchor perhaps?
-        if message.href.startswith("#") and message.markdown.goto_anchor(
-            message.href[1:]
-        ):
+            self.post_message(OpenLocation(local_file, anchor))
             return
 
         self.notify(

@@ -256,7 +256,9 @@ class Main(EnhancedScreen[None]):
         if maybe_markdown(message.to_open) or await can_be_negotiated_to_markdown(
             message.to_open
         ):
-            self.query_one(Viewer).location = message.to_open
+            self.query_one(Viewer).goto_anchor_after_load(
+                message.anchor
+            ).location = message.to_open
             if load_configuration().focus_viewer_on_load:
                 self.query_one(Viewer).focus()
         else:
