@@ -1,8 +1,8 @@
 # Hike ChangeLog
 
-## Unreleased
+## v1.4.0
 
-**Released: WiP**
+**Released: 2026-03-25**
 
 - Added basic support for wikilink style links.
   ([#153](https://github.com/davep/hike/pull/153))
