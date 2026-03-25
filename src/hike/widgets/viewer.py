@@ -252,6 +252,9 @@ class Viewer(Vertical, can_focus=False):
     _source: var[str] = var("")
     """The source of the Markdown we're viewing."""
 
+    _seek_anchor: var[str | None] = var(None)
+    """An optional anchor to seek to once the document is loaded."""
+
     def compose(self) -> ComposeResult:
         """Compose the content of the viewer."""
         yield ViewerTitle()
@@ -459,6 +462,9 @@ class Viewer(Vertical, can_focus=False):
         if front_matter_had_focus and not hikedown.front_matter:
             self.query_one(MarkdownScroll).focus()
         self.query_one(FrontMatter).front_matter = hikedown.front_matter
+        if self._seek_anchor:
+            self.query_one(HikeDown).goto_anchor(self._seek_anchor)
+            self._seek_anchor = None
         if (
             message.remember
             and self.location
@@ -478,6 +484,18 @@ class Viewer(Vertical, can_focus=False):
     def reload(self) -> None:
         """Reload the current document."""
         self._visit(self.location, remember=False, preserve_position=True)
+
+    def goto_anchor_after_load(self, anchor: str | None) -> Self:
+        """Go to an anchor after the document is loaded.
+
+        Args:
+            anchor: The anchor to go to.
+
+        Returns:
+            Self.
+        """
+        self._seek_anchor = anchor
+        return self
 
     def goto(self, history_location: int) -> None:
         """Go to a specific location in history."""
@@ -552,7 +570,7 @@ class Viewer(Vertical, can_focus=False):
 
         # A local file that exists?
         if (local_file := Path(file_name).expanduser()).exists():
-            self.post_message(OpenLocation(local_file.resolve()))
+            self.post_message(OpenLocation(local_file.resolve(), anchor))
             return
 
         # A local file relative to the current location?
@@ -562,12 +580,8 @@ class Viewer(Vertical, can_focus=False):
             .absolute()
             .exists()
         ):
-            self.post_message(OpenLocation(local_file))
+            self.post_message(OpenLocation(local_file, anchor))
             return
-
-        # TODO: One case that isn't yet handled is a file name that also has
-        # an anchor: `some-file.md#some-anchor`. We should handle that too
-        # at some point.
 
         self.notify(
             f"The clicked link could not be handled:\n\n{message.href}",

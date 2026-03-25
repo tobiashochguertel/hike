@@ -37,6 +37,9 @@ class OpenLocation(Message):
     to_open: HikeLocation
     """The location to open."""
 
+    anchor: str | None = None
+    """An optional anchor to scroll to."""
+
 
 ##############################################################################
 @dataclass
