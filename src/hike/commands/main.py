@@ -30,7 +30,7 @@ class JumpToCommandLine(Command):
 
 ##############################################################################
 class JumpToDocument(Command):
-    """Jump to the markdown document"""
+    """Jump to the markdown document / content view"""
 
     BINDING_KEY = "ctrl+slash, ctrl+g"
 

@@ -26,6 +26,7 @@ from ..commands import (
     JumpToDocument,
     JumpToHistory,
     JumpToLocalBrowser,
+    JumpToSidebarView,
     JumpToTableOfContents,
     Reload,
     SaveCopy,
@@ -60,6 +61,7 @@ class MainCommands(CommandsProvider):
         yield JumpToDocument()
         yield JumpToHistory()
         yield JumpToLocalBrowser()
+        yield JumpToSidebarView()
         yield JumpToTableOfContents()
         yield Quit()
         yield from self.maybe(Reload)

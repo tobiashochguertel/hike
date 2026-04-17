@@ -51,6 +51,7 @@ from ..commands import (
     JumpToDocument,
     JumpToHistory,
     JumpToLocalBrowser,
+    JumpToSidebarView,
     JumpToTableOfContents,
     Reload,
     SaveCopy,
@@ -165,6 +166,7 @@ class Main(EnhancedScreen[None]):
         JumpToDocument,
         JumpToHistory,
         JumpToLocalBrowser,
+        JumpToSidebarView,
         JumpToTableOfContents,
         Reload,
         SaveCopy,
@@ -295,6 +297,11 @@ class Main(EnhancedScreen[None]):
             self._set_navigation_visible(False, persist_navigation=False)
         if focus:
             self._viewer().focus()
+
+    def _show_sidebar_view(self) -> None:
+        """Ensure the active sidebar view is visible and focused."""
+        navigation = self._show_navigation()
+        navigation.call_after_refresh(navigation.run_action, "move_into_panel")
 
     def compose(self) -> ComposeResult:
         """Compose the content of the screen."""
@@ -584,9 +591,8 @@ class Main(EnhancedScreen[None]):
             if showing_sidebar:
                 self._viewer().focus()
             else:
-                self._navigation().call_after_refresh(
-                    self._navigation().run_action, "move_into_panel"
-                )
+                navigation = self._navigation()
+                navigation.call_after_refresh(navigation.run_action, "move_into_panel")
             return
         self._set_navigation_visible(not load_configuration().navigation_visible)
 
@@ -654,6 +660,11 @@ class Main(EnhancedScreen[None]):
     def action_jump_to_local_browser_command(self) -> None:
         """Jump to the local browser."""
         self._show_navigation(Navigation.jump_to_local)
+
+    @on(JumpToSidebarView)
+    def action_jump_to_sidebar_view_command(self) -> None:
+        """Jump to the currently active sidebar view."""
+        self._show_sidebar_view()
 
     @on(JumpToBookmarks)
     def action_jump_to_bookmarks_command(self) -> None:
