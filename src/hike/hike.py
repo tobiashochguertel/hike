@@ -1,9 +1,6 @@
 """The main application class."""
 
 ##############################################################################
-# Python imports.
-from argparse import Namespace
-
 ##############################################################################
 # Textual imports.
 from textual.app import InvalidThemeError, ScreenStackError
@@ -20,6 +17,7 @@ from .data import (
     update_configuration,
 )
 from .screens import Main
+from .startup import OpenOptions
 
 
 ##############################################################################
@@ -52,7 +50,7 @@ class Hike(EnhancedApp[None]):
 
     COMMANDS = set()
 
-    def __init__(self, arguments: Namespace) -> None:
+    def __init__(self, arguments: OpenOptions) -> None:
         """Initialise the application.
 
         Args:

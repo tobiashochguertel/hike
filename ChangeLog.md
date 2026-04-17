@@ -28,6 +28,16 @@
 - Added a `Taskfile.yml` workflow for validating, merging feature branches into
   `feature/all-requested-features`, and reinstalling the host tool from that
   branch.
+- Migrated the CLI from ad hoc `argparse` handling to a structured Typer-based
+  command tree with `open`, `config`, `schema`, `env`, `bindings`, and `themes`
+  commands while keeping `hike <target>` as a shortcut for `hike open <target>`.
+- Replaced the old dataclass/JSON configuration handling with typed
+  `pydantic`/`pydantic-settings` models, YAML configuration files, schema
+  export/validation commands, and environment-file support.
+- Fixed sidebar focus handoff so the visible local browser receives focus
+  instead of a hidden widget when opening directory-centric workflows.
+- Flat-list local browser mode now hides empty directories that do not contain
+  visible Markdown descendants.
 
 ## v1.4.0
 

@@ -72,10 +72,25 @@ Common startup patterns include:
 hike README.md
 hike docs/
 hike https://example.com/README.md
-hike --command gh davep/hike
-hike --config ~/.config/hike/work-docs.json --root docs
-hike --root docs --exclude generated/ --hidden
+hike open --command "gh davep/hike"
+hike open --config ~/.config/hike/work-docs.yaml --root docs
+hike open --root docs --exclude generated/ --hidden
 hike --no-ignore
+```
+
+The bare `hike <target>` form remains as a shortcut for `hike open <target>`.
+The structured CLI now also includes:
+
+```sh
+hike bindings list
+hike themes list
+hike config init
+hike config show --format yaml
+hike config set bindings.JumpToBookmarks shift+f6
+hike schema list
+hike schema export
+hike env init
+hike env validate
 ```
 
 The best way to get to know Hike is to read the help screen. Once in the
@@ -142,7 +157,7 @@ task refresh-all-requested-features SOURCE_BRANCH=feat/local-browser-modes
 - A smaller, auto-fitting navigation sidebar with responsive single-pane
   behavior for narrow terminals.
 - A switchable local browser that can render either as a tree or as a flat list
-  of relative paths.
+  of relative paths, automatically hiding empty directories in flat-list mode.
 - A simple bookmarking system.
 - A browsing history.
 - The ability to edit markdown documents in the local filesystem, either
@@ -172,7 +187,9 @@ remove those directories too.
 
 Expanding for the common locations, the files normally created are:
 
-- `~/.config/hike/configuration.json` -- The configuration file.
+- `./hike.config.yaml` -- A project-local configuration file, if present.
+- `~/.config/hike/config.yaml` -- The default user configuration file.
+- `~/.config/hike/.env` -- Optional runtime environment settings.
 - `~/.local/share/hike/*.json` -- The locally-held data.
 
 ## Getting help

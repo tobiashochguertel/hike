@@ -1,34 +1,34 @@
-"""The main entry point for the application."""
+"""Theme-related CLI commands."""
 
 ##############################################################################
 # Python imports.
 from __future__ import annotations
 
-import sys
-from collections.abc import Sequence
-
 ##############################################################################
 # Typer imports.
-from typer.main import get_command
+import typer
+
+from ..hike import Hike
 
 ##############################################################################
 # Local imports.
-from .cli.app import app, normalize_argv
+from ..startup import OpenOptions
+
+##############################################################################
+app = typer.Typer(
+    help="Inspect available Textual themes.",
+    add_completion=True,
+    no_args_is_help=True,
+)
 
 
 ##############################################################################
-def main(argv: Sequence[str] | None = None) -> None:
-    """Run the Hike CLI."""
-    command = get_command(app)
-    command.main(
-        args=normalize_argv(sys.argv[1:] if argv is None else argv),
-        prog_name="hike",
-    )
+@app.command("list")
+def list_themes() -> None:
+    """List available themes."""
+    for theme in sorted(Hike(OpenOptions()).available_themes):
+        if theme != "textual-ansi":
+            typer.echo(theme)
 
 
-##############################################################################
-if __name__ == "__main__":
-    main()
-
-
-### __main__.py ends here
+### themes_cmd.py ends here

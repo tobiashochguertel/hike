@@ -82,6 +82,25 @@ def test_flatten_local_paths_respects_discovery_filters(tmp_path: Path) -> None:
 
 
 ##############################################################################
+def test_flatten_local_paths_skips_empty_directories(tmp_path: Path) -> None:
+    """Flat-list mode should hide directories with no visible markdown descendants."""
+    root = tmp_path / "docs"
+    empty = root / "empty"
+    nested = root / "guide" / "deep"
+    empty.mkdir(parents=True)
+    nested.mkdir(parents=True)
+    (nested / "page.md").write_text("# Page\n", encoding="utf-8")
+
+    entries = flatten_local_paths(root, LocalDiscoveryOptions())
+
+    assert [entry.display_path for entry in entries] == [
+        "guide/",
+        "guide/deep/",
+        "guide/deep/page.md",
+    ]
+
+
+##############################################################################
 def test_local_browser_mode_from_configuration_rejects_invalid_values() -> None:
     """Invalid browser modes should fail fast."""
     with pytest.raises(ValueError, match="local_browser_view_mode"):

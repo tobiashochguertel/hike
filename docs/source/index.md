@@ -68,21 +68,21 @@ x install hike
 Once you've installed Hike using one of the [above methods](#installation),
 you can run the application using the `hike` command.
 
-### Command line options
+### CLI commands
 
-Hike has a number of command line options; they include:
-
-#### `-b`, `--bindings`
-
-Prints the application commands whose keyboard bindings can be modified,
-giving the defaults too.
+Hike now exposes a structured CLI. The most useful entry points are:
 
 ```sh
-hike --bindings
+hike open README.md
+hike bindings list
+hike themes list
+hike config init
+hike schema list
+hike env init
 ```
-```bash exec="on" result="text"
-hike --bindings
-```
+
+The shorthand `hike README.md` still works and is treated as
+`hike open README.md`.
 
 #### `-h`, `--help`
 
@@ -95,15 +95,12 @@ hike --help
 hike --help
 ```
 
-#### `--license`, `--licence`
+#### `license`
 
 Prints a summary of Hike's license.
 
 ```sh
-hike --license
-```
-```bash exec="on" result="text"
-hike --license
+hike license
 ```
 
 #### `--navigation`
@@ -176,7 +173,7 @@ Use this when you want startup behavior that is richer than opening a local
 file, directory or URL.
 
 ```sh
-hike --command gh davep/org-davep-2bit
+hike open --command "gh davep/org-davep-2bit"
 ```
 
 #### Startup targets
@@ -216,7 +213,8 @@ normal split layout once the terminal is wide enough again.
 The local browser can now switch between a tree and a flat list of relative
 paths. Use <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> (or `m` while the local
 browser has focus) to toggle modes. The flat list uses paths relative to the
-current local-browser root, and selecting a directory changes that root.
+current local-browser root, selecting a directory changes that root, and empty
+directories are automatically hidden in flat-list mode.
 
 ## Getting help
 

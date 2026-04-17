@@ -6,8 +6,9 @@ keys to navigate) as well as history auto-completion (use <kbd>right</kbd>
 to accept a suggestion).
 
 If you want to run one of these commands at startup, use
-`hike --command ...`. A plain positional CLI argument is treated as a startup
-file, directory or URL target instead.
+`hike open --command "..."`. A plain positional CLI argument is still treated
+as a startup file, directory or URL target, so `hike docs/` remains a shortcut
+for `hike open docs/`.
 
 !!! tip
 
