@@ -3,6 +3,7 @@
 ##############################################################################
 # Python imports.
 from argparse import ArgumentParser, BooleanOptionalAction, Namespace
+from collections.abc import Sequence
 from inspect import cleandoc
 from operator import attrgetter
 
@@ -13,7 +14,7 @@ from .hike import Hike
 
 
 ##############################################################################
-def get_args() -> Namespace:
+def get_args(argv: Sequence[str] | None = None) -> Namespace:
     """Get the command line arguments.
 
     Returns:
@@ -66,15 +67,29 @@ def get_args() -> Namespace:
         help="Set the theme for the application (set to ? to list available themes)",
     )
 
-    # The remainder is going to be the initial command.
+    # Add --command
     parser.add_argument(
-        "command",
-        help="The initial command; can be any valid input to Hike's command line.",
-        nargs="*",
+        "-c",
+        "--command",
+        help="Run an internal Hike command on startup.",
+        metavar="COMMAND",
+        nargs="+",
     )
 
+    # Add a startup target.
+    parser.add_argument(
+        "target",
+        help="A startup file, directory or URL to open.",
+        metavar="TARGET",
+        nargs="?",
+    )
+
+    args = parser.parse_args(argv)
+    if args.target is not None and args.command is not None:
+        parser.error("TARGET and --command are mutually exclusive")
+
     # Finally, parse the command line.
-    return parser.parse_args()
+    return args
 
 
 ##############################################################################

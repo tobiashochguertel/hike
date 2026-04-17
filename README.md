@@ -66,6 +66,15 @@ x install hike
 Once you've installed Hike using one of the above methods, you can run the
 application using the `hike` command.
 
+Common startup patterns include:
+
+```sh
+hike README.md
+hike docs/
+hike https://example.com/README.md
+hike --command gh davep/hike
+```
+
 The best way to get to know Hike is to read the help screen. Once in the
 application you can see this by pressing <kbd>F1</kbd>.
 

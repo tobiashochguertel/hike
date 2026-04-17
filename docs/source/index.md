@@ -141,21 +141,38 @@ hike --version
 hike --version
 ```
 
-#### The startup command
+#### `-c`, `--command`
 
-Hike can also take a command on the command line, which will be processed
-via its own [internal command line](commands.md). This means that you have
-access to the full array of Hike features. This means you can do something
-as simple as give the name of a file to view:
+Run a command through Hike's [internal command line](commands.md) on startup.
+Use this when you want startup behavior that is richer than opening a local
+file, directory or URL.
+
+```sh
+hike --command gh davep/org-davep-2bit
+```
+
+#### Startup targets
+
+Hike also accepts a plain startup target on the command line. If the target
+is a file, it is opened immediately. If it is a directory, the local browser
+is rooted there. If it is a URL, it is loaded directly.
+
+To open a file:
 
 ```sh
 hike view-this.md
 ```
 
-or you can [view a README file hosted on a forge](commands.md#viewing-files-on-forges):
+To start in a specific directory:
 
 ```sh
-hike gh davep/org-davep-2bit
+hike docs/source/
+```
+
+To open a URL directly:
+
+```sh
+hike https://example.com/README.md
 ```
 
 ## Getting help

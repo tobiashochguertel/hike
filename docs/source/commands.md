@@ -5,6 +5,10 @@ command line. It has a history (use the <kbd>up</kbd> and <kbd>down</kbd>
 keys to navigate) as well as history auto-completion (use <kbd>right</kbd>
 to accept a suggestion).
 
+If you want to run one of these commands at startup, use
+`hike --command ...`. A plain positional CLI argument is treated as a startup
+file, directory or URL target instead.
+
 !!! tip
 
     Full help for all of the commands is [available inside Hike itself](index.md#getting-help) by

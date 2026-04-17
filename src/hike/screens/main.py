@@ -4,6 +4,11 @@
 # Python imports.
 from argparse import Namespace
 from functools import partial
+from pathlib import Path
+
+##############################################################################
+# httpx imports.
+from httpx import URL
 
 ##############################################################################
 # Pyperclip imports.
@@ -78,6 +83,7 @@ from ..messages import (
     SetLocalViewRoot,
 )
 from ..providers import BookmarkCommands, HistoryCommands, MainCommands
+from ..startup import StartupTargetKind, classify_startup_target
 from ..support import view_in_browser
 from ..widgets import CommandLine, Navigation, Viewer
 
@@ -202,8 +208,41 @@ class Main(EnhancedScreen[None]):
         self.query_one(Viewer).history = load_history()
         self.query_one(CommandLine).history = load_command_history()
         self.query_one(CommandLine).dock_top = config.command_line_on_top
-        if self._arguments.command:
+        self._handle_startup_input()
+
+    def _handle_startup_input(self) -> None:
+        """Handle any startup target or startup command."""
+        if getattr(self._arguments, "command", None):
             self.post_message(HandleInput(" ".join(self._arguments.command)))
+            return
+        startup_target = classify_startup_target(
+            getattr(self._arguments, "target", None)
+        )
+        if startup_target.kind is StartupTargetKind.NONE:
+            return
+        if startup_target.kind is StartupTargetKind.FILE and isinstance(
+            startup_target.value, Path
+        ):
+            self.post_message(OpenLocation(startup_target.value))
+            return
+        if startup_target.kind is StartupTargetKind.URL and isinstance(
+            startup_target.value, URL
+        ):
+            self.post_message(OpenLocation(startup_target.value))
+            return
+        if startup_target.kind is StartupTargetKind.DIRECTORY and isinstance(
+            startup_target.value, Path
+        ):
+            navigation = self._with_navigation_visible()
+            navigation.set_local_view_root(startup_target.value)
+            navigation.jump_to_local()
+            return
+        self.notify(
+            f"Could not locate {startup_target.value!r}",
+            title="Startup target error",
+            severity="error",
+            timeout=8,
+        )
 
     def _watch_navigation_visible(self) -> None:
         """React to the navigation visible property being set."""
