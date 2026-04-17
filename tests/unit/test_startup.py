@@ -1,16 +1,12 @@
-"""Tests for startup target handling."""
+"""Tests for startup target handling and argv normalization."""
 
 ##############################################################################
 # Python imports.
 from pathlib import Path
 
 ##############################################################################
-# Pytest imports.
-import pytest
-
-##############################################################################
 # Local imports.
-from hike.__main__ import get_args
+from hike.cli.app import normalize_argv
 from hike.startup import (
     StartupTargetKind,
     classify_startup_target,
@@ -18,34 +14,34 @@ from hike.startup import (
 
 
 ##############################################################################
-def test_get_args_accepts_startup_target(tmp_path: Path) -> None:
-    """A positional argument should be treated as a startup target."""
-    target = tmp_path / "README.md"
-    target.write_text("# Hello\n")
-
-    args = get_args([str(target)])
-
-    assert args.target == str(target)
-    assert args.command is None
+def test_normalize_argv_promotes_empty_invocation_to_open() -> None:
+    """Running `hike` with no subcommand should launch the open command."""
+    assert normalize_argv([]) == ["open"]
 
 
 ##############################################################################
-def test_get_args_accepts_explicit_startup_command() -> None:
-    """An internal command should be preserved behind --command."""
-    args = get_args(["--command", "gh", "davep/hike"])
+def test_normalize_argv_promotes_positional_target_to_open(tmp_path: Path) -> None:
+    """A bare target should become `hike open TARGET`."""
+    target = tmp_path / "README.md"
+    target.write_text("# Hello\n", encoding="utf-8")
 
-    assert args.target is None
-    assert args.command == ["gh", "davep/hike"]
+    assert normalize_argv([str(target)]) == ["open", str(target)]
 
 
 ##############################################################################
-def test_get_args_rejects_target_and_command_together(tmp_path: Path) -> None:
-    """Startup targets and startup commands should be mutually exclusive."""
-    target = tmp_path / "README.md"
-    target.write_text("# Hello\n")
+def test_normalize_argv_preserves_known_subcommands() -> None:
+    """Real subcommands should not be rewritten."""
+    assert normalize_argv(["config", "show"]) == ["config", "show"]
 
-    with pytest.raises(SystemExit):
-        get_args([str(target), "--command", "gh", "davep/hike"])
+
+##############################################################################
+def test_normalize_argv_collapses_legacy_command_tail() -> None:
+    """Legacy `--command foo bar` syntax should still normalize cleanly."""
+    assert normalize_argv(["--command", "gh", "davep/hike"]) == [
+        "open",
+        "--command",
+        "gh davep/hike",
+    ]
 
 
 ##############################################################################

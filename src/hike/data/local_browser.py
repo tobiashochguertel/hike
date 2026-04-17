@@ -71,23 +71,34 @@ def flatten_local_paths(
     resolved_root = root.resolve()
     if not resolved_root.is_dir():
         return ()
-    entries: list[LocalBrowserEntry] = []
-    for current, directories, files in walk(resolved_root, topdown=True):
-        current_path = Path(current)
-        directories[:] = sorted(
-            (
-                directory
-                for directory in directories
-                if should_include_path(
-                    current_path / directory,
-                    root=resolved_root,
-                    options=options,
-                )
-            ),
-            key=str.casefold,
-        )
+
+    def visit(current_path: Path) -> list[LocalBrowserEntry]:
+        entries: list[LocalBrowserEntry] = []
+        nested_entries: list[LocalBrowserEntry] = []
+        visible_directories: list[list[LocalBrowserEntry]] = []
+        discovered: dict[Path, tuple[list[str], list[str]]] = {}
+        for walked_path, directories, files in walk(current_path, topdown=True):
+            walked = Path(walked_path)
+            filtered_directories = sorted(
+                (
+                    directory
+                    for directory in directories
+                    if should_include_path(
+                        walked / directory,
+                        root=resolved_root,
+                        options=options,
+                    )
+                ),
+                key=str.casefold,
+            )
+            discovered[walked] = (filtered_directories, sorted(files, key=str.casefold))
+            break
+        directories, files = discovered.get(current_path, ([], []))
         for directory in directories:
             path = current_path / directory
+            discovered_entries = visit(path)
+            if not discovered_entries:
+                continue
             entries.append(
                 LocalBrowserEntry(
                     path=path,
@@ -95,7 +106,8 @@ def flatten_local_paths(
                     is_dir=True,
                 )
             )
-        for filename in sorted(files, key=str.casefold):
+            visible_directories.append(discovered_entries)
+        for filename in files:
             path = current_path / filename
             if should_include_path(path, root=resolved_root, options=options):
                 entries.append(
@@ -105,7 +117,12 @@ def flatten_local_paths(
                         is_dir=False,
                     )
                 )
-    return tuple(entries)
+        for discovered_entries in visible_directories:
+            nested_entries.extend(discovered_entries)
+        entries.extend(nested_entries)
+        return entries
+
+    return tuple(visit(resolved_root))
 
 
 ### local_browser.py ends here

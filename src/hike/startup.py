@@ -1,18 +1,63 @@
-"""Helpers for handling CLI startup targets."""
+"""Helpers for CLI startup options and startup targets."""
 
 ##############################################################################
 # Python imports.
-from dataclasses import dataclass
+from __future__ import annotations
+
 from enum import StrEnum
 from pathlib import Path
 
 ##############################################################################
-# httpx imports.
+# Httpx imports.
 from httpx import URL
+
+##############################################################################
+# Pydantic imports.
+from pydantic import BaseModel, ConfigDict, Field
 
 ##############################################################################
 # Local imports.
 from .data import looks_urllike
+
+
+##############################################################################
+class OpenOptions(BaseModel):
+    """Typed options for launching the Hike TUI."""
+
+    model_config = ConfigDict(frozen=True)
+
+    target: str | None = Field(
+        default=None,
+        description="Startup file, directory, or URL to open.",
+    )
+    command: tuple[str, ...] | None = Field(
+        default=None,
+        description="Startup internal command to run when the TUI launches.",
+    )
+    navigation: bool | None = Field(
+        default=None,
+        description="Override navigation visibility on startup.",
+    )
+    theme: str | None = Field(
+        default=None,
+        description="Override the configured Textual theme for this launch.",
+    )
+    root: str | None = Field(
+        default=None,
+        description="Override the initial local browser root directory.",
+    )
+    ignore: bool | None = Field(
+        default=None,
+        description="Override ignore-file filtering in the local browser.",
+    )
+    hidden: bool | None = Field(
+        default=None,
+        description="Override hidden-file visibility in the local browser.",
+    )
+    exclude: tuple[str, ...] = Field(
+        default_factory=tuple,
+        description="Additional exclude globs for the local browser.",
+    )
 
 
 ##############################################################################
@@ -27,9 +72,10 @@ class StartupTargetKind(StrEnum):
 
 
 ##############################################################################
-@dataclass(frozen=True, slots=True)
-class StartupTarget:
+class StartupTarget(BaseModel):
     """The classified startup target."""
+
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 
     kind: StartupTargetKind
     value: Path | URL | str | None = None
@@ -37,24 +83,17 @@ class StartupTarget:
 
 ##############################################################################
 def classify_startup_target(target: str | None) -> StartupTarget:
-    """Classify a startup target from the command line.
-
-    Args:
-        target: The raw target supplied on the command line.
-
-    Returns:
-        The classified startup target.
-    """
+    """Classify a startup target from the command line."""
     if target is None:
-        return StartupTarget(StartupTargetKind.NONE)
+        return StartupTarget(kind=StartupTargetKind.NONE)
     if looks_urllike(target):
-        return StartupTarget(StartupTargetKind.URL, URL(target))
+        return StartupTarget(kind=StartupTargetKind.URL, value=URL(target))
     path = Path(target).expanduser()
     if path.is_file():
-        return StartupTarget(StartupTargetKind.FILE, path.resolve())
+        return StartupTarget(kind=StartupTargetKind.FILE, value=path.resolve())
     if path.is_dir():
-        return StartupTarget(StartupTargetKind.DIRECTORY, path.resolve())
-    return StartupTarget(StartupTargetKind.MISSING, target)
+        return StartupTarget(kind=StartupTargetKind.DIRECTORY, value=path.resolve())
+    return StartupTarget(kind=StartupTargetKind.MISSING, value=target)
 
 
 ### startup.py ends here

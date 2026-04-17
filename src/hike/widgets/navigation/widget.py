@@ -173,7 +173,7 @@ class Navigation(Vertical):
         """Drop focus down into a panel."""
         if (active := self.query_one(TabbedContent).active_pane) is not None:
             for widget in active.query("*"):
-                if widget.can_focus:
+                if widget.can_focus and widget.display and widget.visible:
                     widget.focus()
                     return
 

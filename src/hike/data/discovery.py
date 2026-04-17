@@ -2,10 +2,10 @@
 
 ##############################################################################
 # Python imports.
-from argparse import Namespace
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
+from typing import Any, cast
 
 ##############################################################################
 # pathspec imports.
@@ -28,21 +28,22 @@ class LocalDiscoveryOptions:
     exclude_patterns: tuple[str, ...] = ()
 
 
-##############################################################################
 def local_discovery_options(
-    arguments: Namespace, configuration: Configuration
+    arguments: object, configuration: Configuration
 ) -> LocalDiscoveryOptions:
     """Build the effective local browser discovery options."""
+    cli_arguments = cast(Any, arguments)
+    ignore = cast(bool | None, cli_arguments.ignore)
+    hidden = cast(bool | None, cli_arguments.hidden)
+    exclude = cast(tuple[str, ...] | list[str], cli_arguments.exclude)
     return LocalDiscoveryOptions(
         use_ignore_files=configuration.local_use_ignore_files
-        if arguments.ignore is None
-        else arguments.ignore,
-        show_hidden=configuration.local_show_hidden
-        if arguments.hidden is None
-        else arguments.hidden,
+        if ignore is None
+        else ignore,
+        show_hidden=configuration.local_show_hidden if hidden is None else hidden,
         exclude_patterns=(
             *configuration.local_exclude_patterns,
-            *tuple(arguments.exclude),
+            *tuple(exclude),
         ),
     )
 

@@ -5,22 +5,29 @@ section will describe what can be configured and how.
 
 !!! note
 
-    At the moment some configuration can be done via Hike's UI; other things
-    require that you edit the configuration file using your preferred text
-    editor. Eventually I aim to make everything that can be configured
-    configurable within Hike itself.
+At the moment some configuration can be done via Hike's UI; other things
+require that you edit the configuration file using your preferred text
+editor. Hike now ships a typed CLI for this too, so the most useful starting
+points are:
 
-The location of the configuration file will depend on how your operating
-system and its settings; but by default it is looked for in
-[`$XDG_CONFIG_HOME`](https://specifications.freedesktop.org/basedir-spec/latest/),
-in a `hike` subdirectory. Mostly this will translate to the file being
-called `~/.config/hike/configuration.json`.
+```sh
+hike config init
+hike config show --format yaml
+hike bindings list
+```
+
+The active configuration file is resolved in this order:
+
+1. A path passed with `--config` / `HIKE_CONFIG_PATH`
+2. `./hike.config.yaml` in the current working directory, if it exists
+3. `~/.config/hike/config.yaml`
+4. Legacy config files such as `~/.config/hike/configuration.json`
 
 If you want to use a different configuration file for a specific workflow, you
 can point Hike at it with:
 
 ```sh
-hike --config ~/.config/hike/work-docs.json
+hike open --config ~/.config/hike/work-docs.yaml
 ```
 
 ## Command line location
@@ -56,7 +63,7 @@ appear in the [command palette](index.md#the-command-palette).
 The following commands can have their keyboard bindings set:
 
 ```bash exec="on"
-hike --bindings | sed -e 's/^\([A-Z].*\) - \(.*\)$/- `\1` - *\2*/' -e 's/^    \(Default:\) \(.*\)$/    - *\1* `\2`/'
+hike bindings list
 ```
 
 ### Changing a binding
@@ -68,11 +75,16 @@ change the binding used to create a bookmark, changing it from
 <kbd>Shift</kbd>+<kbd>F6</kbd> to jump to the bookmarks, you would set
 `bindings` to this:
 
-```json
-"bindings": {
-    "BookmarkLocation": "f6",
-    "JumpToBookmarks": "shift+f6"
-}
+```yaml
+bindings:
+  BookmarkLocation: f6
+  JumpToBookmarks: shift+f6
+```
+
+You can also update a single binding from the CLI:
+
+```sh
+hike config set bindings.BookmarkLocation f6
 ```
 
 The designations used for keys is based on the internal system used by

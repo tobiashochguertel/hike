@@ -2,7 +2,6 @@
 
 ##############################################################################
 # Python imports.
-from argparse import Namespace
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
@@ -87,7 +86,7 @@ from ..messages import (
     SetLocalViewRoot,
 )
 from ..providers import BookmarkCommands, HistoryCommands, MainCommands
-from ..startup import StartupTargetKind, classify_startup_target
+from ..startup import OpenOptions, StartupTargetKind, classify_startup_target
 from ..support import view_in_browser
 from ..widgets import CommandLine, Navigation, Viewer
 
@@ -181,7 +180,7 @@ class Main(EnhancedScreen[None]):
 
     AUTO_FOCUS = "CommandLine Input"
 
-    def __init__(self, arguments: Namespace) -> None:
+    def __init__(self, arguments: OpenOptions) -> None:
         """Initialise the main screen.
 
         Args:
@@ -357,8 +356,9 @@ class Main(EnhancedScreen[None]):
 
     def _handle_startup_input(self) -> None:
         """Handle any startup target or startup command."""
-        if getattr(self._arguments, "command", None):
-            self.post_message(HandleInput(" ".join(self._arguments.command)))
+        startup_command = self._arguments.command
+        if startup_command:
+            self.post_message(HandleInput(" ".join(startup_command)))
             return
         startup_target = self._startup_target
         if startup_target.kind is StartupTargetKind.NONE:
@@ -376,7 +376,7 @@ class Main(EnhancedScreen[None]):
         if startup_target.kind is StartupTargetKind.DIRECTORY and isinstance(
             startup_target.value, Path
         ):
-            self._show_navigation(Navigation.jump_to_local)
+            self.call_after_refresh(self._show_navigation, Navigation.jump_to_local)
             return
         self.notify(
             f"Could not locate {startup_target.value!r}",

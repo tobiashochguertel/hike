@@ -14,6 +14,11 @@ dependencies = [
     "pathspec>=0.12.1",
     "typing-extensions>=4.12.2",
     "pyperclip>=1.9.0",
+    "typer>=0.24.1",
+    "pydantic>=2.13.2",
+    "pydantic-settings>=2.13.1",
+    "ruamel-yaml>=0.19.1",
+    "python-dotenv>=1.2.2",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"
@@ -114,6 +119,9 @@ ignore = [
     # I think try...expect...pass reads far better.
     "SIM105",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"src/hike/cli/*.py" = ["B008"]
 
 [tool.ruff.lint.pycodestyle]
 max-line-length = 120
