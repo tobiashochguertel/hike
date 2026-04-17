@@ -7,6 +7,10 @@
   hidden-file, ignore and exclude-glob handling.
 - Added persistent discovery defaults to the configuration file, plus support
   for selecting an alternate config file with `--config`.
+- Added explicit startup target handling so `hike <file>`, `hike <directory>`
+  and `hike <url>` behave directly at launch.
+- Added a `--command` option for preserving the old "run an internal command on
+  startup" workflow.
 
 ## v1.4.0
 

@@ -23,14 +23,11 @@ def get_args(argv: Sequence[str] | None = None) -> Namespace:
         The arguments.
     """
 
-    # Build the parser.
     parser = ArgumentParser(
         prog="hike",
         description=__doc__,
         epilog=f"v{__version__}",
     )
-
-    # Add --version
     parser.add_argument(
         "-v",
         "--version",
@@ -38,31 +35,23 @@ def get_args(argv: Sequence[str] | None = None) -> Namespace:
         action="version",
         version=f"%(prog)s v{__version__}",
     )
-
-    # Add --license
     parser.add_argument(
         "--license",
         "--licence",
         help="Show license information",
         action="store_true",
     )
-
-    # Add --bindings
     parser.add_argument(
         "-b",
         "--bindings",
         help="List commands that can have their bindings changed",
         action="store_true",
     )
-
-    # Add --navigation
     parser.add_argument(
         "--navigation",
         help="Show or hide the navigation panel on startup",
         action=BooleanOptionalAction,
     )
-
-    # Add --theme
     parser.add_argument(
         "-t",
         "--theme",
@@ -72,8 +61,6 @@ def get_args(argv: Sequence[str] | None = None) -> Namespace:
         "--config",
         help="Use an alternate configuration file.",
     )
-
-    # Add local browser discovery options.
     parser.add_argument(
         "--root",
         help="Set the initial local browser root directory.",
@@ -95,17 +82,25 @@ def get_args(argv: Sequence[str] | None = None) -> Namespace:
         default=[],
         metavar="GLOB",
     )
-
-    # The remainder is going to be the initial command.
     parser.add_argument(
-        "command",
-        help="The initial command; can be any valid input to Hike's command line.",
-        nargs="*",
+        "-c",
+        "--command",
+        help="Run an internal Hike command on startup.",
+        metavar="COMMAND",
+        nargs="+",
+    )
+    parser.add_argument(
+        "target",
+        help="A startup file, directory or URL to open.",
+        metavar="TARGET",
+        nargs="?",
     )
 
     args = parser.parse_args(argv)
     if args.root is not None and not Path(args.root).expanduser().is_dir():
         parser.error("--root must point to an existing directory")
+    if args.target is not None and args.command is not None:
+        parser.error("TARGET and --command are mutually exclusive")
     return args
 
 

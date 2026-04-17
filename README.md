@@ -66,9 +66,13 @@ x install hike
 Once you've installed Hike using one of the above methods, you can run the
 application using the `hike` command.
 
-For example:
+Common startup patterns include:
 
 ```sh
+hike README.md
+hike docs/
+hike https://example.com/README.md
+hike --command gh davep/hike
 hike --config ~/.config/hike/work-docs.json --root docs
 hike --root docs --exclude generated/ --hidden
 hike --no-ignore
