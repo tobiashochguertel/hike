@@ -141,6 +141,30 @@ hike --version
 hike --version
 ```
 
+#### `--root`
+
+Sets the initial root directory for the local browser.
+
+#### `--ignore`
+
+Enables ignore-file filtering in the local browser.
+
+#### `--no-ignore`
+
+Disables ignore-file filtering in the local browser.
+
+#### `--hidden`
+
+Shows dotfiles in the local browser.
+
+#### `--no-hidden`
+
+Hides dotfiles in the local browser.
+
+#### `--exclude`
+
+Adds an exclude glob for the local browser. The option can be repeated.
+
 #### The startup command
 
 Hike can also take a command on the command line, which will be processed

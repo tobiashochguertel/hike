@@ -3,8 +3,10 @@
 ##############################################################################
 # Python imports.
 from argparse import ArgumentParser, BooleanOptionalAction, Namespace
+from collections.abc import Sequence
 from inspect import cleandoc
 from operator import attrgetter
+from pathlib import Path
 
 ##############################################################################
 # Local imports.
@@ -13,7 +15,7 @@ from .hike import Hike
 
 
 ##############################################################################
-def get_args() -> Namespace:
+def get_args(argv: Sequence[str] | None = None) -> Namespace:
     """Get the command line arguments.
 
     Returns:
@@ -66,6 +68,29 @@ def get_args() -> Namespace:
         help="Set the theme for the application (set to ? to list available themes)",
     )
 
+    # Add local browser discovery options.
+    parser.add_argument(
+        "--root",
+        help="Set the initial local browser root directory.",
+    )
+    parser.add_argument(
+        "--ignore",
+        help="Enable or disable ignore-file filtering in the local browser",
+        action=BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "--hidden",
+        help="Show or hide dotfiles in the local browser",
+        action=BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "--exclude",
+        help="Add an exclude glob for the local browser (repeatable)",
+        action="append",
+        default=[],
+        metavar="GLOB",
+    )
+
     # The remainder is going to be the initial command.
     parser.add_argument(
         "command",
@@ -73,8 +98,10 @@ def get_args() -> Namespace:
         nargs="*",
     )
 
-    # Finally, parse the command line.
-    return parser.parse_args()
+    args = parser.parse_args(argv)
+    if args.root is not None and not Path(args.root).expanduser().is_dir():
+        parser.error("--root must point to an existing directory")
+    return args
 
 
 ##############################################################################

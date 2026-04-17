@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added `.gitignore` and `.ignore` support to the local file browser.
+- Added CLI options for controlling local browser discovery, including root,
+  hidden-file, ignore and exclude-glob handling.
 
 ## v1.4.0
 

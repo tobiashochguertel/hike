@@ -4,6 +4,7 @@
 # Python imports.
 from argparse import Namespace
 from functools import partial
+from pathlib import Path
 
 ##############################################################################
 # Pyperclip imports.
@@ -65,6 +66,7 @@ from ..data import (
     save_history,
     update_configuration,
 )
+from ..data.discovery import LocalDiscoveryOptions
 from ..messages import (
     ClearHistory,
     CopyToClipboard,
@@ -176,6 +178,12 @@ class Main(EnhancedScreen[None]):
         """
         self._arguments = arguments
         """The arguments passed on the command line."""
+        self._local_options = LocalDiscoveryOptions(
+            use_ignore_files=True if arguments.ignore is None else arguments.ignore,
+            show_hidden=False if arguments.hidden is None else arguments.hidden,
+            exclude_patterns=tuple(arguments.exclude),
+        )
+        """The effective local browser discovery options."""
         super().__init__()
 
     def compose(self) -> ComposeResult:
@@ -183,7 +191,7 @@ class Main(EnhancedScreen[None]):
         yield Header()
         with VerticalGroup():
             with Horizontal(id="workspace"):
-                yield Navigation(classes="panel")
+                yield Navigation(classes="panel", local_options=self._local_options)
                 yield Viewer(classes="panel")
             yield CommandLine(classes="panel")
         yield Footer()
@@ -198,6 +206,11 @@ class Main(EnhancedScreen[None]):
         )
         self.query_one(Navigation).dock_right = config.navigation_on_right
         self.query_one(Navigation).bookmarks = (bookmarks := load_bookmarks())
+        if self._arguments.root is not None:
+            self.query_one(Navigation).set_local_view_root(
+                Path(self._arguments.root).expanduser().resolve()
+            )
+        self.query_one(Navigation).configure_local_view(self._local_options)
         BookmarkCommands.bookmarks = bookmarks
         self.query_one(Viewer).history = load_history()
         self.query_one(CommandLine).history = load_command_history()

@@ -27,6 +27,7 @@ from textual_enhanced.binding import HelpfulBinding
 # Local imports.
 from ...commands import JumpToCommandLine
 from ...data import Bookmark, Bookmarks, load_configuration
+from ...data.discovery import LocalDiscoveryOptions
 from ...types import HikeHistory, HikeLocation
 from .bookmarks_view import BookmarksView
 from .history_view import HistoryView
@@ -109,6 +110,19 @@ class Navigation(Vertical):
     bookmarks: var[Bookmarks] = var(Bookmarks)
     """The bookmarks."""
 
+    def __init__(
+        self,
+        *,
+        local_options: LocalDiscoveryOptions | None = None,
+        name: str | None = None,
+        id: str | None = None,
+        classes: str | None = None,
+        disabled: bool = False,
+    ) -> None:
+        """Initialise the navigation panel."""
+        self._local_options = local_options or LocalDiscoveryOptions()
+        super().__init__(name=name, id=id, classes=classes, disabled=disabled)
+
     def action_return_to_tabs_or_bounce_out(self) -> None:
         """Return focus to the tabs, or to the input."""
         if self.screen.focused == (tabs := self.query_one(Tabs)):
@@ -171,7 +185,8 @@ class Navigation(Vertical):
                 yield MarkdownTableOfContents(Markdown())
             with TabPane("Local", id="local"):
                 yield LocalView(
-                    Path(load_configuration().local_start_location).expanduser()
+                    Path(load_configuration().local_start_location).expanduser(),
+                    options=self._local_options,
                 )
             with TabPane("Bookmarks", id="bookmarks"):
                 yield BookmarksView()
@@ -202,6 +217,11 @@ class Navigation(Vertical):
             root: The new root directory.
         """
         self.query_one(LocalView).path = root
+
+    def configure_local_view(self, options: LocalDiscoveryOptions) -> None:
+        """Update the local browser's discovery options."""
+        self._local_options = options
+        self.query_one(LocalView).configure(options)
 
     def refresh_local_view(self) -> None:
         """Refresh the local view."""

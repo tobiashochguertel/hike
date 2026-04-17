@@ -66,6 +66,13 @@ x install hike
 Once you've installed Hike using one of the above methods, you can run the
 application using the `hike` command.
 
+For example:
+
+```sh
+hike --root docs --exclude generated/ --hidden
+hike --no-ignore
+```
+
 The best way to get to know Hike is to read the help screen. Once in the
 application you can see this by pressing <kbd>F1</kbd>.
 
@@ -82,7 +89,8 @@ documentation](https://hike.davep.dev/).
 ## Features
 
 - A command line where file names, URLs and commands can be entered.
-- A local file browser that respects `.gitignore` and `.ignore` files.
+- A local file browser that respects `.gitignore` and `.ignore` files, with
+  CLI toggles for hidden files, ignore handling and extra excludes.
 - A simple bookmarking system.
 - A browsing history.
 - The ability to edit markdown documents in the local filesystem, either

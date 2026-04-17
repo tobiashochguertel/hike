@@ -12,14 +12,29 @@ from textual.widgets import DirectoryTree
 
 ##############################################################################
 # Local imports.
-from ...data import maybe_markdown
-from ...data.ignore_files import visible_paths
+from ...data.discovery import LocalDiscoveryOptions, should_include_path
 from ...messages import OpenLocation
 
 
 ##############################################################################
 class LocalView(DirectoryTree):
     """A browser for the local filesystem."""
+
+    def __init__(
+        self,
+        path: str | Path,
+        *,
+        options: LocalDiscoveryOptions | None = None,
+    ) -> None:
+        """Initialise the local browser."""
+        super().__init__(path)
+        self._options = options or LocalDiscoveryOptions()
+
+    def configure(self, options: LocalDiscoveryOptions) -> None:
+        """Update the discovery options for the local browser."""
+        self._options = options
+        if self.is_mounted:
+            self.reload()
 
     def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
         """Filter a directory for things that look like Markdown.
@@ -32,9 +47,12 @@ class LocalView(DirectoryTree):
         """
         return (
             path
-            for path in visible_paths(paths, root=Path(self.path))
-            if (path.is_dir() and not path.name.startswith("."))
-            or (path.is_file() and maybe_markdown(path))
+            for path in paths
+            if should_include_path(
+                path,
+                root=Path(self.path),
+                options=self._options,
+            )
         )
 
     @on(DirectoryTree.FileSelected)
