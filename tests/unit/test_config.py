@@ -5,6 +5,10 @@
 from pathlib import Path
 
 ##############################################################################
+# Pytest imports.
+import pytest
+
+##############################################################################
 # Local imports.
 from hike.data.config import (
     Configuration,
@@ -14,6 +18,7 @@ from hike.data.config import (
     set_configuration_file,
 )
 from hike.data.discovery import local_discovery_options
+from hike.data.layout import LayoutMode, layout_policy
 
 
 ##############################################################################
@@ -71,6 +76,37 @@ def test_discovery_options_use_configuration_defaults(tmp_path: Path) -> None:
         assert options.exclude_patterns == ("generated/", "node_modules/")
     finally:
         set_configuration_file(None)
+
+
+##############################################################################
+def test_layout_policy_uses_configuration_defaults() -> None:
+    """Layout policy should be derived from persisted configuration values."""
+    policy = layout_policy(
+        Configuration(
+            sidebar_default_width_percent=30,
+            sidebar_min_width=20,
+            sidebar_max_width=48,
+            sidebar_auto_fit=False,
+            responsive_auto_switch_narrow=False,
+            responsive_narrow_width=88,
+            responsive_narrow_mode="sidebar-only",
+        )
+    )
+
+    assert policy.sidebar.default_width_percent == 30
+    assert policy.sidebar.min_width == 20
+    assert policy.sidebar.max_width == 48
+    assert policy.sidebar.auto_fit is False
+    assert policy.responsive.auto_switch_narrow is False
+    assert policy.responsive.narrow_width == 88
+    assert policy.responsive.narrow_mode is LayoutMode.SIDEBAR_ONLY
+
+
+##############################################################################
+def test_layout_policy_rejects_invalid_narrow_mode() -> None:
+    """Invalid responsive layout modes should fail fast."""
+    with pytest.raises(ValueError, match="responsive_narrow_mode"):
+        layout_policy(Configuration(responsive_narrow_mode="broken"))
 
 
 ### test_config.py ends here

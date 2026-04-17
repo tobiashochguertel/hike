@@ -32,6 +32,18 @@ class Configuration:
     navigation_on_right: bool = False
     """Should the navigation panel live on the right?"""
 
+    sidebar_default_width_percent: int = 22
+    """The default sidebar width as a percentage of terminal width."""
+
+    sidebar_min_width: int = 24
+    """The minimum width of the sidebar in terminal cells."""
+
+    sidebar_max_width: int = 60
+    """The maximum width of the sidebar in terminal cells."""
+
+    sidebar_auto_fit: bool = True
+    """Should the sidebar auto-fit to the active navigation content?"""
+
     markdown_extensions: list[str] = field(default_factory=lambda: [".md", ".markdown"])
     """The file extensions to consider to be Markdown files."""
 
@@ -42,6 +54,15 @@ class Configuration:
 
     command_line_on_top: bool = False
     """Should the command line live at the top of the screen?"""
+
+    responsive_auto_switch_narrow: bool = True
+    """Should Hike switch to a single-pane layout on narrow terminals?"""
+
+    responsive_narrow_width: int = 100
+    """The terminal width threshold for responsive single-pane mode."""
+
+    responsive_narrow_mode: str = "content-only"
+    """The default single-pane view to show on narrow terminals."""
 
     main_branches: list[str] = field(default_factory=lambda: ["main", "master"])
     """The branches considered to be main branches on forges."""

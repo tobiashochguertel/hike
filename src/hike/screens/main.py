@@ -72,7 +72,7 @@ from ..data import (
     update_configuration,
 )
 from ..data.discovery import LocalDiscoveryOptions, local_discovery_options
-from ..data.layout import LayoutMode, LayoutPolicy, LayoutState, effective_layout_state
+from ..data.layout import LayoutMode, LayoutState, effective_layout_state, layout_policy
 from ..messages import (
     ClearHistory,
     CopyToClipboard,
@@ -189,8 +189,6 @@ class Main(EnhancedScreen[None]):
         """The arguments passed on the command line."""
         self._layout_state = LayoutState()
         """The effective layout state."""
-        self._layout_policy = LayoutPolicy()
-        """The active layout policy."""
         self._mode_override: LayoutMode | None = None
         """An optional single-pane mode override for responsive layouts."""
         self._local_options = LocalDiscoveryOptions()
@@ -211,7 +209,7 @@ class Main(EnhancedScreen[None]):
 
     def _is_narrow_layout(self, width: int | None = None) -> bool:
         """Return `True` when the current terminal should use single-pane mode."""
-        return self._layout_policy.responsive.is_narrow(
+        return layout_policy(load_configuration()).responsive.is_narrow(
             self.size.width if width is None else width
         )
 
@@ -228,14 +226,15 @@ class Main(EnhancedScreen[None]):
         sidebar_content_width: int | None = None,
     ) -> LayoutState:
         """Resolve the effective layout state for the current terminal size."""
+        configuration = load_configuration()
         return effective_layout_state(
-            load_configuration(),
+            configuration,
             terminal_width=self.size.width,
             navigation_override=navigation_override,
             mode_override=mode_override,
             sidebar_content_width=sidebar_content_width,
             current_sidebar_width=self._layout_state.sidebar_width,
-            policy=self._layout_policy,
+            policy=layout_policy(configuration),
         )
 
     def _refresh_layout_state(self, *, navigation_override: bool | None = None) -> None:

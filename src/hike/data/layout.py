@@ -97,6 +97,38 @@ class LayoutState:
 
 
 ##############################################################################
+def layout_mode_from_configuration(mode: str) -> LayoutMode:
+    """Parse the configured narrow-screen mode."""
+    try:
+        return LayoutMode(mode)
+    except ValueError as error:
+        raise ValueError(
+            "responsive_narrow_mode must be one of "
+            f"{', '.join(layout_mode.value for layout_mode in LayoutMode)}"
+        ) from error
+
+
+##############################################################################
+def layout_policy(configuration: Configuration) -> LayoutPolicy:
+    """Build the effective layout policy from persisted configuration."""
+    return LayoutPolicy(
+        sidebar=SidebarSizingPolicy(
+            default_width_percent=configuration.sidebar_default_width_percent,
+            min_width=configuration.sidebar_min_width,
+            max_width=configuration.sidebar_max_width,
+            auto_fit=configuration.sidebar_auto_fit,
+        ),
+        responsive=ResponsiveLayoutPolicy(
+            auto_switch_narrow=configuration.responsive_auto_switch_narrow,
+            narrow_width=configuration.responsive_narrow_width,
+            narrow_mode=layout_mode_from_configuration(
+                configuration.responsive_narrow_mode
+            ),
+        ),
+    )
+
+
+##############################################################################
 def effective_layout_state(
     configuration: Configuration,
     *,

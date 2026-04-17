@@ -88,6 +88,10 @@ Commands can also be discovered via the command palette
 
 ![The command palette](https://raw.githubusercontent.com/davep/hike/refs/heads/main/.images/hike-command-palette.png)
 
+On narrower terminals Hike automatically switches to a single-pane layout. Use
+<kbd>Ctrl</kbd>+<kbd>N</kbd> to show the active sidebar view and
+<kbd>Ctrl</kbd>+<kbd>G</kbd> to return to the markdown content.
+
 For more information and details on configuring Hike, see [the online
 documentation](https://hike.davep.dev/).
 
@@ -96,6 +100,8 @@ documentation](https://hike.davep.dev/).
 - A command line where file names, URLs and commands can be entered.
 - A local file browser that respects `.gitignore` and `.ignore` files, with
   CLI toggles for hidden files, ignore handling and extra excludes.
+- A smaller, auto-fitting navigation sidebar with responsive single-pane
+  behavior for narrow terminals.
 - A simple bookmarking system.
 - A browsing history.
 - The ability to edit markdown documents in the local filesystem, either
