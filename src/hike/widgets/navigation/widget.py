@@ -28,6 +28,7 @@ from textual_enhanced.binding import HelpfulBinding
 from ...commands import JumpToCommandLine
 from ...data import Bookmark, Bookmarks, load_configuration
 from ...data.discovery import LocalDiscoveryOptions
+from ...data.layout import LayoutState
 from ...types import HikeHistory, HikeLocation
 from .bookmarks_view import BookmarksView
 from .history_view import HistoryView
@@ -145,6 +146,11 @@ class Navigation(Vertical):
     def _watch_dock_right(self) -> None:
         """React to the dock toggle being changed."""
         self.set_class(self.dock_right, "--dock-right")
+
+    def apply_layout_state(self, layout_state: LayoutState) -> None:
+        """Apply the computed layout state to the navigation panel."""
+        self.dock_right = layout_state.navigation_dock_right
+        self.styles.width = layout_state.sidebar_width
 
     def _maybe_enable_tab(self, tab: str, data: object) -> bool:
         """Enable/disable a tab based on there being data.
