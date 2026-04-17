@@ -11,6 +11,7 @@ from pathlib import Path
 ##############################################################################
 # Local imports.
 from . import __doc__, __version__
+from .data import set_configuration_file
 from .hike import Hike
 
 
@@ -66,6 +67,10 @@ def get_args(argv: Sequence[str] | None = None) -> Namespace:
         "-t",
         "--theme",
         help="Set the theme for the application (set to ? to list available themes)",
+    )
+    parser.add_argument(
+        "--config",
+        help="Use an alternate configuration file.",
     )
 
     # Add local browser discovery options.
@@ -135,6 +140,8 @@ def show_themes() -> None:
 def main() -> None:
     """The main entry point."""
     args = get_args()
+    if args.config is not None:
+        set_configuration_file(args.config)
     if args.license:
         print(cleandoc(Hike.HELP_LICENSE))
     elif args.bindings:

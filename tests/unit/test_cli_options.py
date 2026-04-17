@@ -48,4 +48,12 @@ def test_get_args_accepts_repeatable_excludes() -> None:
     assert args.exclude == ["node_modules/", "**/generated/"]
 
 
+##############################################################################
+def test_get_args_accepts_config_override() -> None:
+    """An alternate configuration file should be selectable."""
+    args = get_args(["--config", "custom-hike.json"])
+
+    assert args.config == "custom-hike.json"
+
+
 ### test_cli_options.py ends here

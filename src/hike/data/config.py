@@ -13,6 +13,10 @@ from pathlib import Path
 # Local imports.
 from .locations import config_dir
 
+##############################################################################
+_configuration_override: Path | None = None
+"""An optional override for the configuration file path."""
+
 
 ##############################################################################
 @dataclass
@@ -48,6 +52,15 @@ class Configuration:
     local_start_location: str = "~"
     """The start location for the local file system browser."""
 
+    local_use_ignore_files: bool = True
+    """Should the local browser respect ignore files?"""
+
+    local_show_hidden: bool = False
+    """Should the local browser show hidden files and directories?"""
+
+    local_exclude_patterns: list[str] = field(default_factory=list)
+    """Extra exclude globs for the local browser."""
+
     bindings: dict[str, str] = field(default_factory=dict)
     """Command keyboard binding overrides."""
 
@@ -62,13 +75,40 @@ class Configuration:
 
 
 ##############################################################################
+def _normalize_configuration_path(path: str | Path) -> Path:
+    """Normalise a configuration file path."""
+    normalized = Path(path).expanduser()
+    if not normalized.is_absolute():
+        normalized = Path.cwd() / normalized
+    return normalized
+
+
+##############################################################################
+def set_configuration_file(path: str | Path | None) -> Path:
+    """Set the configuration file path override.
+
+    Args:
+        path: The new configuration file path, or `None` to clear the override.
+
+    Returns:
+        The effective configuration file path.
+    """
+    global _configuration_override
+    load_configuration.cache_clear()
+    _configuration_override = (
+        None if path is None else _normalize_configuration_path(path)
+    )
+    return configuration_file()
+
+
+##############################################################################
 def configuration_file() -> Path:
     """The path to the file that holds the application configuration.
 
     Returns:
         The path to the configuration file.
     """
-    return config_dir() / "configuration.json"
+    return _configuration_override or (config_dir() / "configuration.json")
 
 
 ##############################################################################
@@ -82,6 +122,7 @@ def save_configuration(configuration: Configuration) -> Configuration:
         The configuration.
     """
     load_configuration.cache_clear()
+    configuration_file().parent.mkdir(parents=True, exist_ok=True)
     configuration_file().write_text(
         dumps(asdict(configuration), indent=4), encoding="utf-8"
     )

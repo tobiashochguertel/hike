@@ -141,6 +141,10 @@ hike --version
 hike --version
 ```
 
+#### `--config`
+
+Use an alternate configuration file.
+
 #### `--root`
 
 Sets the initial root directory for the local browser.

@@ -66,7 +66,7 @@ from ..data import (
     save_history,
     update_configuration,
 )
-from ..data.discovery import LocalDiscoveryOptions
+from ..data.discovery import LocalDiscoveryOptions, local_discovery_options
 from ..messages import (
     ClearHistory,
     CopyToClipboard,
@@ -178,11 +178,7 @@ class Main(EnhancedScreen[None]):
         """
         self._arguments = arguments
         """The arguments passed on the command line."""
-        self._local_options = LocalDiscoveryOptions(
-            use_ignore_files=True if arguments.ignore is None else arguments.ignore,
-            show_hidden=False if arguments.hidden is None else arguments.hidden,
-            exclude_patterns=tuple(arguments.exclude),
-        )
+        self._local_options = LocalDiscoveryOptions()
         """The effective local browser discovery options."""
         super().__init__()
 
@@ -199,6 +195,7 @@ class Main(EnhancedScreen[None]):
     def on_mount(self) -> None:
         """Configure the screen once the DOM is mounted."""
         config = load_configuration()
+        self._local_options = local_discovery_options(self._arguments, config)
         self.navigation_visible = (
             config.navigation_visible
             if self._arguments.navigation is None

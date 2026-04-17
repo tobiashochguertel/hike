@@ -16,6 +16,13 @@ system and its settings; but by default it is looked for in
 in a `hike` subdirectory. Mostly this will translate to the file being
 called `~/.config/hike/configuration.json`.
 
+If you want to use a different configuration file for a specific workflow, you
+can point Hike at it with:
+
+```sh
+hike --config ~/.config/hike/work-docs.json
+```
+
 ## Command line location
 
 By default Hike's command line appears at the bottom of the screen, above
@@ -121,6 +128,21 @@ For example, if you wanted it to always start with the current directory, you co
 
 ```json
 "local_start_location": ".",
+```
+
+## Local file browser discovery
+
+The local browser's discovery defaults can also be configured. The following
+settings control whether ignore files are used, whether dotfiles are shown,
+and which extra exclude globs should always be applied:
+
+```json
+"local_use_ignore_files": true,
+"local_show_hidden": false,
+"local_exclude_patterns": [
+    "generated/",
+    "node_modules/"
+],
 ```
 
 ## Main forge branches

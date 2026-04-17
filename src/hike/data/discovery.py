@@ -2,6 +2,7 @@
 
 ##############################################################################
 # Python imports.
+from argparse import Namespace
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -12,6 +13,7 @@ from pathspec import GitIgnoreSpec
 
 ##############################################################################
 # Local imports.
+from .config import Configuration
 from .ignore_files import is_ignored
 from .location_types import maybe_markdown
 
@@ -24,6 +26,25 @@ class LocalDiscoveryOptions:
     use_ignore_files: bool = True
     show_hidden: bool = False
     exclude_patterns: tuple[str, ...] = ()
+
+
+##############################################################################
+def local_discovery_options(
+    arguments: Namespace, configuration: Configuration
+) -> LocalDiscoveryOptions:
+    """Build the effective local browser discovery options."""
+    return LocalDiscoveryOptions(
+        use_ignore_files=configuration.local_use_ignore_files
+        if arguments.ignore is None
+        else arguments.ignore,
+        show_hidden=configuration.local_show_hidden
+        if arguments.hidden is None
+        else arguments.hidden,
+        exclude_patterns=(
+            *configuration.local_exclude_patterns,
+            *tuple(arguments.exclude),
+        ),
+    )
 
 
 ##############################################################################

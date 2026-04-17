@@ -69,6 +69,7 @@ application using the `hike` command.
 For example:
 
 ```sh
+hike --config ~/.config/hike/work-docs.json --root docs
 hike --root docs --exclude generated/ --hidden
 hike --no-ignore
 ```

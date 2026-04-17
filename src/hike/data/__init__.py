@@ -8,6 +8,7 @@ from .config import (
     Configuration,
     load_configuration,
     save_configuration,
+    set_configuration_file,
     update_configuration,
 )
 from .history import load_history, save_history
@@ -36,6 +37,7 @@ __all__ = [
     "save_command_history",
     "save_configuration",
     "save_history",
+    "set_configuration_file",
     "update_configuration",
 ]
 
