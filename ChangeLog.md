@@ -43,6 +43,13 @@
   command.
 - Fixed the `Taskfile.yml` install verification step to use the new
   `hike bindings list` subcommand instead of the removed legacy flag.
+- Fixed `hike config init --force` so legacy `configuration.json` files are
+  migrated to the modern YAML config path instead of being overwritten with
+  commented YAML content.
+- Fixed CLI startup so root help/version and non-TUI commands no longer import
+  the full Textual application stack at module import time.
+- Added compatibility loading for broken legacy `.json` config files that
+  contain YAML content from earlier typed-config builds.
 
 ## v1.4.0
 

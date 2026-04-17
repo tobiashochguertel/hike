@@ -118,13 +118,13 @@ Sets Hike's theme; this overrides and changes any previous theme choice made
 To see a list of available themes use `?` as the theme name:
 
 ```sh
-hike --theme=?
+hike open --theme=?
 ```
 ```bash exec="on" result="text"
-hike --theme=?
+hike open --theme=?
 ```
 
-#### `open -v`, `open --version`
+#### `--version`
 
 Prints the version number of Hike.
 

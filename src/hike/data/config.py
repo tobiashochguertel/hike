@@ -8,7 +8,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import cache
 from io import StringIO
-from json import dumps, loads
+from json import JSONDecodeError, dumps, loads
 from pathlib import Path
 from types import UnionType
 from typing import Any, Union, cast, get_args, get_origin
@@ -181,6 +181,17 @@ def legacy_configuration_file() -> Path:
 
 
 ##############################################################################
+def _explicit_configuration_file() -> Path | None:
+    """Return an explicitly selected configuration file path, if any."""
+    if _configuration_override is not None:
+        return _configuration_override
+    settings = load_runtime_settings()
+    if settings.config_path is not None:
+        return _normalize_configuration_path(settings.config_path)
+    return None
+
+
+##############################################################################
 def _legacy_dotfile() -> Path:
     """Return the legacy dotfile configuration path."""
     return Path.home() / _LEGACY_DOTFILE_NAME
@@ -200,11 +211,8 @@ def set_configuration_file(path: str | Path | None) -> Path:
 ##############################################################################
 def configuration_file() -> Path:
     """Return the effective configuration file path."""
-    if _configuration_override is not None:
-        return _configuration_override
-    settings = load_runtime_settings()
-    if settings.config_path is not None:
-        return _normalize_configuration_path(settings.config_path)
+    if explicit := _explicit_configuration_file():
+        return explicit
     for candidate in (
         project_configuration_file(),
         default_configuration_file(),
@@ -217,9 +225,37 @@ def configuration_file() -> Path:
 
 
 ##############################################################################
+def configuration_init_paths() -> tuple[Path, Path | None]:
+    """Return the preferred init target and any existing file that should be replaced."""
+    if explicit := _explicit_configuration_file():
+        return explicit, explicit if explicit.exists() else None
+
+    project = project_configuration_file()
+    if project.exists():
+        return project, project
+
+    default = default_configuration_file()
+    if default.exists():
+        return default, default
+
+    for legacy in (_legacy_dotfile(), legacy_configuration_file()):
+        if legacy.exists():
+            return default, legacy
+
+    return default, None
+
+
+##############################################################################
 def _load_json_configuration(path: Path) -> dict[str, Any]:
     """Load legacy JSON configuration data."""
-    loaded = loads(path.read_text(encoding="utf-8"))
+    raw = path.read_text(encoding="utf-8")
+    try:
+        loaded = loads(raw)
+    except JSONDecodeError:
+        # Older typed-config builds could mistakenly write YAML into the legacy
+        # JSON path during `config init --force`; accept that shape so users can
+        # recover without manually editing files first.
+        loaded = _yaml().load(raw)
     if not isinstance(loaded, dict):
         raise ValueError(f"Configuration root must be an object: {path}")
     return cast(dict[str, Any], loaded)

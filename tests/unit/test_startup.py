@@ -20,24 +20,27 @@ class _FakeApp:
 
     args: list[str] | None = None
     prog_name: str | None = None
+    called_without_args: bool = False
 
-    def __call__(self, *, args: list[str], prog_name: str) -> None:
+    def __call__(self, *, prog_name: str, args: list[str] | None = None) -> None:
         """Capture the forwarded Typer arguments."""
         self.args = args
         self.prog_name = prog_name
+        self.called_without_args = args is None
 
 
 ##############################################################################
 def test_cli_main_maps_empty_invocation_to_root_help(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The installed entrypoint should show root help when no subcommand is given."""
+    """The installed entrypoint should follow Typer's direct-app pattern."""
     fake_app = _FakeApp()
     monkeypatch.setattr("hike.__main__.app", fake_app)
 
-    cli_main([])
+    cli_main()
 
-    assert fake_app.args == ["--help"]
+    assert fake_app.called_without_args is True
+    assert fake_app.args is None
     assert fake_app.prog_name == "hike"
 
 

@@ -7,6 +7,7 @@ from .command_history import load_command_history, save_command_history
 from .config import (
     Configuration,
     configuration_file,
+    configuration_init_paths,
     configuration_schema,
     dump_configuration,
     get_configuration_value,
@@ -43,6 +44,7 @@ __all__ = [
     "Bookmarks",
     "can_be_negotiated_to_markdown",
     "Configuration",
+    "configuration_init_paths",
     "configuration_file",
     "configuration_schema",
     "dump_configuration",

@@ -4,7 +4,6 @@
 # Python imports.
 from __future__ import annotations
 
-import sys
 from collections.abc import Sequence
 
 ##############################################################################
@@ -15,11 +14,11 @@ from .cli.app import app
 ##############################################################################
 def main(argv: Sequence[str] | None = None) -> None:
     """Run the Hike CLI."""
-    args = list(sys.argv[1:] if argv is None else argv)
-    if not args:
-        args = ["--help"]
+    if argv is None:
+        app(prog_name="hike")
+        return
 
-    app(args=args, prog_name="hike")
+    app(args=list(argv), prog_name="hike")
 
 
 ##############################################################################

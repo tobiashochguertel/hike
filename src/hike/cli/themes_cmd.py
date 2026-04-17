@@ -8,11 +8,10 @@ from __future__ import annotations
 # Typer imports.
 import typer
 
-from ..hike import Hike
-
 ##############################################################################
 # Local imports.
 from ..startup import OpenOptions
+from .runtime import load_hike_class
 
 ##############################################################################
 app = typer.Typer(
@@ -26,7 +25,7 @@ app = typer.Typer(
 @app.command("list")
 def list_themes() -> None:
     """List available themes."""
-    for theme in sorted(Hike(OpenOptions()).available_themes):
+    for theme in sorted(load_hike_class()(OpenOptions()).available_themes):
         if theme != "textual-ansi":
             typer.echo(theme)
 
