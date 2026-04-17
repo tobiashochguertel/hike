@@ -44,7 +44,7 @@ class Hike(EnhancedApp[None]):
     def on_load(self, event: events.Load) -> None:
         """Apply config-backed runtime settings before application mode starts."""
         del event
-        configuration = load_configuration()
+        configuration = load_configuration(self._arguments.runtime_context)
         theme_name = self._arguments.theme or configuration.theme
         if theme_name is not None:
             try:
@@ -56,7 +56,7 @@ class Hike(EnhancedApp[None]):
 
     def watch_theme(self) -> None:
         """Save the application's theme when it's changed."""
-        with update_configuration() as config:
+        with update_configuration(self._arguments.runtime_context) as config:
             config.theme = self.theme
 
     def get_default_screen(self) -> Main:
@@ -69,7 +69,7 @@ class Hike(EnhancedApp[None]):
 
     def action_help_quit(self) -> None:
         """Override Textual's default handling of ctrl+c."""
-        if load_configuration().allow_traditional_quit:
+        if load_configuration(self._arguments.runtime_context).allow_traditional_quit:
             self.exit()
         else:
             super().action_help_quit()

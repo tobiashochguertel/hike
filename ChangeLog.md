@@ -57,6 +57,9 @@
 - Replaced the temporary signal-env/runtime shim with a dedicated runtime
   bootstrap seam, a static theme catalog for metadata commands, and Textual
   `Load` lifecycle setup for theme/keymap initialization.
+- Replaced ambient CLI config/env path overrides with an explicit runtime
+  context layer so command invocations no longer leak path selection into later
+  commands while the TUI still sees the intended config/env files.
 
 ## v1.4.0
 

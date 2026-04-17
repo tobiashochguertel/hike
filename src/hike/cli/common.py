@@ -17,7 +17,7 @@ from rich.console import Console
 
 ##############################################################################
 # Local imports.
-from ..data import set_configuration_file, set_environment_file
+from ..data import RuntimeContext, resolve_runtime_context
 
 ##############################################################################
 _HIKE_CONFIG_PATH_ENV = "HIKE_CONFIG_PATH"
@@ -50,13 +50,12 @@ def env_path_option() -> Any:
 
 
 ##############################################################################
-def apply_runtime_path_overrides(
+def resolve_cli_runtime_context(
     config_path: Path | None,
     env_path: Path | None,
-) -> None:
-    """Apply CLI-level path overrides for config and env files."""
-    set_environment_file(env_path)
-    set_configuration_file(config_path)
+) -> RuntimeContext:
+    """Resolve a runtime context from shared CLI path options."""
+    return resolve_runtime_context(config_path=config_path, env_path=env_path)
 
 
 ### common.py ends here

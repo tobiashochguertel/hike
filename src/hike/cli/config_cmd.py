@@ -25,7 +25,7 @@ from ..data import (
     unset_configuration_value,
     validate_configuration_file,
 )
-from .common import apply_runtime_path_overrides, config_path_option, env_path_option
+from .common import config_path_option, env_path_option, resolve_cli_runtime_context
 from .services import initialize_configuration
 
 ##############################################################################
@@ -55,9 +55,9 @@ def init_config(
     env_path: Path | None = env_path_option(),
 ) -> None:
     """Create a commented default configuration file."""
-    apply_runtime_path_overrides(config_path, env_path)
+    runtime_context = resolve_cli_runtime_context(config_path, env_path)
     try:
-        result = initialize_configuration(force)
+        result = initialize_configuration(force, runtime_context)
     except FileExistsError as error:
         _fail(f"Configuration file already exists: {error.filename}", code=1)
     if result.backup is not None:
@@ -79,14 +79,14 @@ def show_config(
     env_path: Path | None = env_path_option(),
 ) -> None:
     """Display the current configuration."""
-    apply_runtime_path_overrides(config_path, env_path)
+    runtime_context = resolve_cli_runtime_context(config_path, env_path)
     try:
-        validate_configuration_file()
+        validate_configuration_file(context=runtime_context)
     except FileNotFoundError as error:
         _fail(f"Configuration file not found: {error.filename}", code=1)
     except ValidationError as error:
         _fail(str(error), code=3)
-    typer.echo(dump_configuration(format_name), nl=False)
+    typer.echo(dump_configuration(format_name, context=runtime_context), nl=False)
 
 
 ##############################################################################
@@ -97,9 +97,9 @@ def get_config(
     env_path: Path | None = env_path_option(),
 ) -> None:
     """Read a single configuration property."""
-    apply_runtime_path_overrides(config_path, env_path)
+    runtime_context = resolve_cli_runtime_context(config_path, env_path)
     try:
-        value = get_configuration_value(property_path)
+        value = get_configuration_value(property_path, context=runtime_context)
     except KeyError:
         _fail(f"Configuration property not found: {property_path}", code=1)
     typer.echo(value if isinstance(value, str) else dumps(value))
@@ -116,9 +116,9 @@ def set_config(
     env_path: Path | None = env_path_option(),
 ) -> None:
     """Set a configuration property."""
-    apply_runtime_path_overrides(config_path, env_path)
+    runtime_context = resolve_cli_runtime_context(config_path, env_path)
     try:
-        set_configuration_value(property_path, value)
+        set_configuration_value(property_path, value, context=runtime_context)
     except (KeyError, ValueError) as error:
         _fail(str(error), code=3)
     except ValidationError as error:
@@ -136,9 +136,9 @@ def unset_config(
     env_path: Path | None = env_path_option(),
 ) -> None:
     """Unset a configuration property."""
-    apply_runtime_path_overrides(config_path, env_path)
+    runtime_context = resolve_cli_runtime_context(config_path, env_path)
     try:
-        unset_configuration_value(property_path)
+        unset_configuration_value(property_path, context=runtime_context)
     except KeyError:
         _fail(f"Configuration property not found: {property_path}", code=1)
     except ValidationError as error:
@@ -153,14 +153,14 @@ def validate_config(
     env_path: Path | None = env_path_option(),
 ) -> None:
     """Validate the active configuration file."""
-    apply_runtime_path_overrides(config_path, env_path)
+    runtime_context = resolve_cli_runtime_context(config_path, env_path)
     try:
-        configuration = validate_configuration_file()
+        configuration = validate_configuration_file(context=runtime_context)
     except FileNotFoundError as error:
         _fail(f"Configuration file not found: {error.filename}", code=1)
     except ValidationError as error:
         _fail(str(error), code=3)
-    typer.echo(f"Configuration is valid: {configuration_file()}")
+    typer.echo(f"Configuration is valid: {configuration_file(runtime_context)}")
     if configuration.theme is not None:
         typer.echo(f"Theme: {configuration.theme}")
 
@@ -172,8 +172,8 @@ def config_path(
     env_path: Path | None = env_path_option(),
 ) -> None:
     """Print the effective configuration file path."""
-    apply_runtime_path_overrides(config_path, env_path)
-    typer.echo(configuration_file())
+    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    typer.echo(configuration_file(runtime_context))
 
 
 ### config_cmd.py ends here

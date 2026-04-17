@@ -13,10 +13,10 @@ import typer
 ##############################################################################
 # Local imports.
 from .common import (
-    apply_runtime_path_overrides,
     config_path_option,
     console,
     env_path_option,
+    resolve_cli_runtime_context,
 )
 from .services import binding_summaries
 
@@ -35,8 +35,8 @@ def list_bindings(
     env_path: Path | None = env_path_option(),
 ) -> None:
     """List commands that support keybinding overrides."""
-    apply_runtime_path_overrides(config_path, env_path)
-    for summary in binding_summaries():
+    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    for summary in binding_summaries(runtime_context):
         console.print(
             f"[bold]{summary.command_name}[/] [dim]- {summary.tooltip}[/]\n"
             f"    Default: [cyan]{summary.default_key}[/]  "

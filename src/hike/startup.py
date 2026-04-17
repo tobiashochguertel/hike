@@ -17,14 +17,14 @@ from pydantic import BaseModel, ConfigDict, Field
 
 ##############################################################################
 # Local imports.
-from .data import looks_urllike
+from .data import RuntimeContext, looks_urllike
 
 
 ##############################################################################
 class OpenOptions(BaseModel):
     """Typed options for launching the Hike TUI."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 
     target: str | None = Field(
         default=None,
@@ -57,6 +57,10 @@ class OpenOptions(BaseModel):
     exclude: tuple[str, ...] = Field(
         default_factory=tuple,
         description="Additional exclude globs for the local browser.",
+    )
+    runtime_context: RuntimeContext | None = Field(
+        default=None,
+        description="Resolved runtime paths for config and env discovery.",
     )
 
 

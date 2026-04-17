@@ -15,7 +15,7 @@ import typer
 from ..app_info import APP_DESCRIPTION, APP_NAME
 from .bindings_cmd import app as bindings_app
 from .bindings_cmd import list_bindings
-from .common import apply_runtime_path_overrides, config_path_option, env_path_option
+from .common import config_path_option, env_path_option, resolve_cli_runtime_context
 from .config_cmd import app as config_app
 from .contracts import OpenCommandRequest
 from .env_cmd import app as env_app
@@ -137,7 +137,6 @@ def open_command(
     env_path: Path | None = env_path_option(),
 ) -> None:
     """Launch the Hike TUI."""
-    apply_runtime_path_overrides(config_path, env_path)
     if license_text:
         show_license()
         raise typer.Exit()
@@ -149,6 +148,7 @@ def open_command(
             typer.echo(item)
         raise typer.Exit()
     try:
+        runtime_context = resolve_cli_runtime_context(config_path, env_path)
         options = build_open_options(
             OpenCommandRequest(
                 target=target,
@@ -159,7 +159,8 @@ def open_command(
                 ignore=ignore,
                 hidden=hidden,
                 exclude=tuple(exclude),
-            )
+            ),
+            runtime_context=runtime_context,
         )
     except ValueError as error:
         raise typer.BadParameter(str(error)) from error

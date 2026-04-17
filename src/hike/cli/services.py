@@ -16,11 +16,12 @@ from ..app_info import APP_VERSION, HELP_LICENSE
 from ..command_catalog import MAIN_COMMAND_MESSAGES
 from ..data import (
     Configuration,
+    RuntimeContext,
     configuration_init_paths,
     load_configuration,
     render_default_configuration,
+    resolve_runtime_context,
     save_configuration,
-    set_configuration_file,
 )
 from ..startup import OpenOptions
 from ..theme_catalog import theme_names as static_theme_names
@@ -66,9 +67,11 @@ def theme_names() -> list[str]:
 
 
 ##############################################################################
-def binding_summaries() -> list[BindingSummary]:
+def binding_summaries(
+    context: RuntimeContext | None = None,
+) -> list[BindingSummary]:
     """Return the configurable keybinding summaries."""
-    overrides = load_configuration().bindings
+    overrides = load_configuration(context).bindings
     summaries: list[BindingSummary] = []
     for command in sorted(MAIN_COMMAND_MESSAGES, key=attrgetter("__name__")):
         if command().has_binding:
@@ -86,6 +89,7 @@ def binding_summaries() -> list[BindingSummary]:
 ##############################################################################
 def build_open_options(
     request: OpenCommandRequest,
+    runtime_context: RuntimeContext | None = None,
 ) -> OpenOptions:
     """Build validated TUI startup options from CLI inputs."""
     if request.root is not None and not request.root.expanduser().is_dir():
@@ -105,6 +109,7 @@ def build_open_options(
         ignore=request.ignore,
         hidden=request.hidden,
         exclude=request.exclude,
+        runtime_context=runtime_context,
     )
 
 
@@ -117,9 +122,13 @@ def run_hike(options: OpenOptions) -> None:
 
 
 ##############################################################################
-def initialize_configuration(force: bool) -> ConfigInitResult:
+def initialize_configuration(
+    force: bool,
+    context: RuntimeContext | None = None,
+) -> ConfigInitResult:
     """Create or replace the active configuration file."""
-    target, existing = configuration_init_paths()
+    active = resolve_runtime_context() if context is None else context
+    target, existing = configuration_init_paths(active)
     if existing is not None and not force:
         raise FileExistsError(existing)
 
@@ -134,11 +143,14 @@ def initialize_configuration(force: bool) -> ConfigInitResult:
 
     target.parent.mkdir(parents=True, exist_ok=True)
     if target.suffix.lower() == ".json":
-        previous = set_configuration_file(target)
-        try:
-            save_configuration(Configuration())
-        finally:
-            set_configuration_file(previous if previous != target else None)
+        save_configuration(
+            Configuration(),
+            resolve_runtime_context(
+                config_path=target,
+                env_path=active.env_path,
+                cwd=active.cwd,
+            ),
+        )
     else:
         target.write_text(render_default_configuration(), encoding="utf-8")
     return ConfigInitResult(target=target, backup=backup)
