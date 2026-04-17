@@ -3,6 +3,7 @@
 ##############################################################################
 # Python imports.
 from argparse import Namespace
+from collections.abc import Callable
 from functools import partial
 from pathlib import Path
 
@@ -20,7 +21,6 @@ from pyperclip import copy as copy_to_clipboard
 from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import Horizontal, VerticalGroup
-from textual.reactive import var
 from textual.widgets import Footer, Header, Markdown
 
 ##############################################################################
@@ -71,7 +71,7 @@ from ..data import (
     update_configuration,
 )
 from ..data.discovery import LocalDiscoveryOptions, local_discovery_options
-from ..data.layout import LayoutState, effective_layout_state
+from ..data.layout import LayoutMode, LayoutState, effective_layout_state
 from ..messages import (
     ClearHistory,
     CopyToClipboard,
@@ -173,9 +173,6 @@ class Main(EnhancedScreen[None]):
 
     AUTO_FOCUS = "CommandLine Input"
 
-    navigation_visible: var[bool] = var(True)
-    """Set if the navigation panel is visible or not."""
-
     def __init__(self, arguments: Namespace) -> None:
         """Initialise the main screen.
 
@@ -189,6 +186,61 @@ class Main(EnhancedScreen[None]):
         self._local_options = LocalDiscoveryOptions()
         """The effective local browser discovery options."""
         super().__init__()
+
+    def _navigation(self) -> Navigation:
+        """Return the navigation widget."""
+        return self.query_one(Navigation)
+
+    def _viewer(self) -> Viewer:
+        """Return the viewer widget."""
+        return self.query_one(Viewer)
+
+    def _command_line(self) -> CommandLine:
+        """Return the command line widget."""
+        return self.query_one(CommandLine)
+
+    def _resolve_layout_state(
+        self,
+        *,
+        navigation_override: bool | None = None,
+        mode_override: LayoutMode | None = None,
+    ) -> LayoutState:
+        """Resolve the effective layout state for the current terminal size."""
+        return effective_layout_state(
+            load_configuration(),
+            terminal_width=self.size.width,
+            navigation_override=navigation_override,
+            mode_override=mode_override,
+        )
+
+    def _apply_layout_state(
+        self, layout_state: LayoutState, *, persist_navigation: bool = False
+    ) -> None:
+        """Apply the computed layout state to the mounted widgets."""
+        self._layout_state = layout_state
+        self.set_class(layout_state.navigation_visible, "navigation")
+        self._navigation().apply_layout_state(layout_state)
+        self._command_line().dock_top = layout_state.command_line_on_top
+        if persist_navigation:
+            with update_configuration() as config:
+                config.navigation_visible = layout_state.navigation_visible
+
+    def _set_navigation_visible(self, visible: bool) -> Navigation:
+        """Update navigation visibility through the layout policy."""
+        self._apply_layout_state(
+            self._resolve_layout_state(navigation_override=visible),
+            persist_navigation=True,
+        )
+        return self._navigation()
+
+    def _show_navigation(
+        self, jump_to: Callable[[Navigation], None] | None = None
+    ) -> Navigation:
+        """Ensure the navigation panel is visible and optionally jump within it."""
+        navigation = self._set_navigation_visible(True)
+        if jump_to is not None:
+            jump_to(navigation)
+        return navigation
 
     def compose(self) -> ComposeResult:
         """Compose the content of the screen."""
@@ -204,24 +256,32 @@ class Main(EnhancedScreen[None]):
         """Configure the screen once the DOM is mounted."""
         config = load_configuration()
         self._local_options = local_discovery_options(self._arguments, config)
-        self._layout_state = effective_layout_state(
-            config,
-            terminal_width=self.size.width,
-            navigation_override=self._arguments.navigation,
+        self._apply_layout_state(
+            effective_layout_state(
+                config,
+                terminal_width=self.size.width,
+                navigation_override=self._arguments.navigation,
+            )
         )
-        self.navigation_visible = self._layout_state.navigation_visible
-        self.query_one(Navigation).dock_right = self._layout_state.navigation_dock_right
-        self.query_one(Navigation).bookmarks = (bookmarks := load_bookmarks())
+        self._navigation().bookmarks = (bookmarks := load_bookmarks())
         if self._arguments.root is not None:
-            self.query_one(Navigation).set_local_view_root(
+            self._navigation().set_local_view_root(
                 Path(self._arguments.root).expanduser().resolve()
             )
-        self.query_one(Navigation).configure_local_view(self._local_options)
+        self._navigation().configure_local_view(self._local_options)
         BookmarkCommands.bookmarks = bookmarks
-        self.query_one(Viewer).history = load_history()
-        self.query_one(CommandLine).history = load_command_history()
-        self.query_one(CommandLine).dock_top = self._layout_state.command_line_on_top
+        self._viewer().history = load_history()
+        self._command_line().history = load_command_history()
         self._handle_startup_input()
+
+    def on_resize(self) -> None:
+        """Keep the layout state in sync with terminal width changes."""
+        if self.is_mounted:
+            self._apply_layout_state(
+                self._resolve_layout_state(
+                    navigation_override=self._layout_state.navigation_visible
+                )
+            )
 
     def _handle_startup_input(self) -> None:
         """Handle any startup target or startup command."""
@@ -246,7 +306,7 @@ class Main(EnhancedScreen[None]):
         if startup_target.kind is StartupTargetKind.DIRECTORY and isinstance(
             startup_target.value, Path
         ):
-            navigation = self._with_navigation_visible()
+            navigation = self._show_navigation()
             navigation.set_local_view_root(startup_target.value)
             navigation.jump_to_local()
             return
@@ -256,12 +316,6 @@ class Main(EnhancedScreen[None]):
             severity="error",
             timeout=8,
         )
-
-    def _watch_navigation_visible(self) -> None:
-        """React to the navigation visible property being set."""
-        self.set_class(self.navigation_visible, "navigation")
-        with update_configuration() as config:
-            config.navigation_visible = self.navigation_visible
 
     @on(Help)
     async def _show_help(self) -> None:
@@ -466,21 +520,27 @@ class Main(EnhancedScreen[None]):
 
     def action_toggle_navigation_command(self) -> None:
         """Toggle the display of the navigation panel."""
-        self.navigation_visible = not self.navigation_visible
+        self._set_navigation_visible(not self._layout_state.navigation_visible)
 
     def action_change_navigation_side_command(self) -> None:
         """Change the side that the navigation panel lives on."""
-        navigation = self.query_one(Navigation)
-        navigation.dock_right = not navigation.dock_right
         with update_configuration() as config:
-            config.navigation_on_right = navigation.dock_right
+            config.navigation_on_right = not config.navigation_on_right
+        self._apply_layout_state(
+            self._resolve_layout_state(
+                navigation_override=self._layout_state.navigation_visible
+            )
+        )
 
     def action_change_command_line_location_command(self) -> None:
         """Change the location of the command line."""
-        command_line = self.query_one(CommandLine)
-        command_line.dock_top = not command_line.dock_top
         with update_configuration() as config:
-            config.command_line_on_top = command_line.dock_top
+            config.command_line_on_top = not config.command_line_on_top
+        self._apply_layout_state(
+            self._resolve_layout_state(
+                navigation_override=self._layout_state.navigation_visible
+            )
+        )
 
     def action_jump_to_command_line_command(self) -> None:
         """Jump to the command line."""
@@ -518,15 +578,6 @@ class Main(EnhancedScreen[None]):
             self.query_one(Navigation).add_bookmark(title, location)
             self.notify("Bookmark added")
 
-    def _with_navigation_visible(self) -> Navigation:
-        """Ensure navigation is visible.
-
-        Returns:
-            The navigation widget.
-        """
-        self.navigation_visible = True
-        return self.query_one(Navigation)
-
     @on(Quit)
     def action_quit_command(self) -> None:
         """Quit the application."""
@@ -535,22 +586,22 @@ class Main(EnhancedScreen[None]):
     @on(JumpToTableOfContents)
     def action_jump_to_table_of_contents_command(self) -> None:
         """Jump to the table of contents."""
-        self._with_navigation_visible().jump_to_content()
+        self._show_navigation(Navigation.jump_to_content)
 
     @on(JumpToLocalBrowser)
     def action_jump_to_local_browser_command(self) -> None:
         """Jump to the local browser."""
-        self._with_navigation_visible().jump_to_local()
+        self._show_navigation(Navigation.jump_to_local)
 
     @on(JumpToBookmarks)
     def action_jump_to_bookmarks_command(self) -> None:
         """Jump to the bookmarks."""
-        self._with_navigation_visible().jump_to_bookmarks()
+        self._show_navigation(Navigation.jump_to_bookmarks)
 
     @on(JumpToHistory)
     def action_jump_to_history_command(self) -> None:
         """Jump to the history."""
-        self._with_navigation_visible().jump_to_history()
+        self._show_navigation(Navigation.jump_to_history)
 
     def action_copy_location_to_clipboard_command(self) -> None:
         """Copy the current location to the clipboard."""
