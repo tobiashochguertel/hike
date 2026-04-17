@@ -49,6 +49,9 @@ and after you get <kbd>Enter</kbd> the dialog will open:
 
 There are some commands that interact with the navigation panel. These are:
 
+The local browser filters out ignored paths using `.gitignore` and `.ignore`
+files found in the browser root and its ancestors.
+
 #### `bookmarks`
 
 !!! aliases

@@ -11,6 +11,7 @@ dependencies = [
     "textual-fspicker>=0.4.1",
     "xdg-base-dirs>=6.0.2",
     "httpx>=0.28.1",
+    "pathspec>=0.12.1",
     "typing-extensions>=4.12.2",
     "pyperclip>=1.9.0",
 ]

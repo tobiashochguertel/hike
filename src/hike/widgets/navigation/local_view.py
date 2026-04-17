@@ -13,6 +13,7 @@ from textual.widgets import DirectoryTree
 ##############################################################################
 # Local imports.
 from ...data import maybe_markdown
+from ...data.ignore_files import visible_paths
 from ...messages import OpenLocation
 
 
@@ -31,7 +32,7 @@ class LocalView(DirectoryTree):
         """
         return (
             path
-            for path in paths
+            for path in visible_paths(paths, root=Path(self.path))
             if (path.is_dir() and not path.name.startswith("."))
             or (path.is_file() and maybe_markdown(path))
         )

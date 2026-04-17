@@ -82,7 +82,7 @@ documentation](https://hike.davep.dev/).
 ## Features
 
 - A command line where file names, URLs and commands can be entered.
-- A local file browser.
+- A local file browser that respects `.gitignore` and `.ignore` files.
 - A simple bookmarking system.
 - A browsing history.
 - The ability to edit markdown documents in the local filesystem, either

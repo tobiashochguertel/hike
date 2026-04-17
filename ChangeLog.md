@@ -1,5 +1,9 @@
 # Hike ChangeLog
 
+## Unreleased
+
+- Added `.gitignore` and `.ignore` support to the local file browser.
+
 ## v1.4.0
 
 **Released: 2026-03-25**
