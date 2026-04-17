@@ -23,6 +23,7 @@ from .navigation import (
     JumpToBookmarks,
     JumpToHistory,
     JumpToLocalBrowser,
+    JumpToSidebarView,
     JumpToTableOfContents,
 )
 
@@ -42,6 +43,7 @@ __all__ = [
     "JumpToDocument",
     "JumpToHistory",
     "JumpToLocalBrowser",
+    "JumpToSidebarView",
     "JumpToTableOfContents",
     "Reload",
     "SaveCopy",

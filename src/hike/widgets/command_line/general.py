@@ -21,6 +21,7 @@ from ...commands import (
     JumpToDocument,
     JumpToHistory,
     JumpToLocalBrowser,
+    JumpToSidebarView,
     JumpToTableOfContents,
 )
 from ...messages import HandleInput
@@ -72,11 +73,20 @@ class ContentsCommand(GeneralCommand):
 
 ##############################################################################
 class DocumentCommand(GeneralCommand):
-    """Jump to the markdown document"""
+    """Jump to the markdown document / content view"""
 
     COMMAND = "`document`"
     ALIASES = "`d`, `doc`"
     MESSAGE = JumpToDocument
+
+
+##############################################################################
+class SidebarCommand(GeneralCommand):
+    """Jump to the active sidebar view"""
+
+    COMMAND = "`sidebar`"
+    ALIASES = "`nav`, `navigation`"
+    MESSAGE = JumpToSidebarView
 
 
 ##############################################################################

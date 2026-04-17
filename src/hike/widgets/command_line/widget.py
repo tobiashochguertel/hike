@@ -41,6 +41,7 @@ from .general import (
     LocalCommand,
     QuitCommand,
     ReadMeCommand,
+    SidebarCommand,
 )
 from .obsidian import ObsidianCommand
 from .open_directory import OpenDirectoryCommand
@@ -68,6 +69,7 @@ COMMANDS: Final[tuple[type[InputCommand], ...]] = (
     HelpCommand,
     HistoryCommand,
     LocalCommand,
+    SidebarCommand,
     ChangeLogCommand,
     OpenFromBitbucket,
     OpenFromCodeberg,

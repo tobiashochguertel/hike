@@ -49,4 +49,11 @@ class JumpToHistory(Command):
     BINDING_KEY = "ctrl+y"
 
 
+##############################################################################
+class JumpToSidebarView(Command):
+    """Jump to the active sidebar view"""
+
+    BINDING_KEY = "ctrl+n"
+
+
 ### navigation.py ends here
