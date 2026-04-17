@@ -71,11 +71,16 @@ def normalize_argv(argv: Sequence[str]) -> list[str]:
     args = list(argv)
     if not args:
         return ["open"]
+    help_present = False
     index = 0
     while index < len(args):
         token = args[index]
         if token in _SUBCOMMANDS:
             return args
+        if token in {"--help", "-h"}:
+            help_present = True
+            index += 1
+            continue
         if token in {"--command", "-c"}:
             command = " ".join(args[index + 1 :]).strip()
             if not command:
@@ -88,6 +93,8 @@ def normalize_argv(argv: Sequence[str]) -> list[str]:
             index += 1
             continue
         return ["open", *args]
+    if help_present:
+        return args
     return ["open", *args]
 
 

@@ -23,6 +23,8 @@ from hike.data.local_browser import (
     LocalBrowserMode,
     local_browser_mode_from_configuration,
 )
+from hike.hike import Hike
+from hike.startup import OpenOptions
 
 
 ##############################################################################
@@ -124,6 +126,30 @@ def test_local_browser_mode_configuration_accepts_flat_list() -> None:
         )
         is LocalBrowserMode.FLAT_LIST
     )
+
+
+##############################################################################
+def test_hike_applies_theme_and_binding_overrides_from_configuration(
+    tmp_path: Path,
+) -> None:
+    """Runtime startup should consume persisted theme and binding overrides."""
+    override = tmp_path / "config.yaml"
+
+    try:
+        set_configuration_file(override)
+        save_configuration(
+            Configuration(
+                theme="textual-light",
+                bindings={"JumpToBookmarks": "shift+f6"},
+            )
+        )
+
+        app = Hike(OpenOptions())
+
+        assert app.theme == "textual-light"
+        assert app._keymap["JumpToBookmarks"] == "shift+f6"
+    finally:
+        set_configuration_file(None)
 
 
 ### test_config.py ends here
