@@ -45,6 +45,17 @@ def test_normalize_argv_collapses_legacy_command_tail() -> None:
 
 
 ##############################################################################
+def test_normalize_argv_preserves_root_help() -> None:
+    """Root help should stay on the root command so subcommands remain visible."""
+    assert normalize_argv(["--help"]) == ["--help"]
+    assert normalize_argv(["--config", "custom.yaml", "--help"]) == [
+        "--config",
+        "custom.yaml",
+        "--help",
+    ]
+
+
+##############################################################################
 def test_classify_startup_target_handles_missing_target() -> None:
     """A missing startup target should be classified clearly."""
     startup = classify_startup_target(None)
