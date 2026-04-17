@@ -4,7 +4,6 @@
 # Python imports.
 from __future__ import annotations
 
-from collections.abc import Sequence
 from inspect import cleandoc
 from pathlib import Path
 from shlex import split as split_shell_words
@@ -32,6 +31,7 @@ app = typer.Typer(
     name="hike",
     help="A Markdown browser for the terminal.",
     add_completion=True,
+    no_args_is_help=True,
 )
 
 app.add_typer(config_app, name="config")
@@ -39,63 +39,6 @@ app.add_typer(schema_app, name="schema")
 app.add_typer(env_app, name="env")
 app.add_typer(bindings_app, name="bindings")
 app.add_typer(themes_app, name="themes")
-
-_SUBCOMMANDS = {"open", "config", "schema", "env", "bindings", "themes", "license"}
-_OPTIONS_WITH_VALUES = {
-    "--config",
-    "--env-file",
-    "--theme",
-    "--root",
-    "--exclude",
-    "--command",
-    "-t",
-    "-c",
-}
-_FLAGS = {
-    "--version",
-    "--license",
-    "--licence",
-    "--bindings",
-    "--navigation",
-    "--no-navigation",
-    "--ignore",
-    "--no-ignore",
-    "--hidden",
-    "--no-hidden",
-}
-
-
-##############################################################################
-def normalize_argv(argv: Sequence[str]) -> list[str]:
-    """Normalize argv so `hike PATH` behaves like `hike open PATH`."""
-    args = list(argv)
-    if not args:
-        return ["open"]
-    help_present = False
-    index = 0
-    while index < len(args):
-        token = args[index]
-        if token in _SUBCOMMANDS:
-            return args
-        if token in {"--help", "-h"}:
-            help_present = True
-            index += 1
-            continue
-        if token in {"--command", "-c"}:
-            command = " ".join(args[index + 1 :]).strip()
-            if not command:
-                return ["open", *args]
-            return ["open", *args[: index + 1], command]
-        if token in _OPTIONS_WITH_VALUES:
-            index += 2
-            continue
-        if token in _FLAGS or token.startswith("-"):
-            index += 1
-            continue
-        return ["open", *args]
-    if help_present:
-        return args
-    return ["open", *args]
 
 
 ##############################################################################

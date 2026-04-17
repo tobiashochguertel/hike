@@ -69,16 +69,14 @@ application using the `hike` command.
 Common startup patterns include:
 
 ```sh
-hike README.md
-hike docs/
-hike https://example.com/README.md
 hike open --command "gh davep/hike"
+hike open README.md
+hike open docs/
+hike open https://example.com/README.md
 hike open --config ~/.config/hike/work-docs.yaml --root docs
 hike open --root docs --exclude generated/ --hidden
-hike --no-ignore
+hike open --no-ignore
 ```
-
-The bare `hike <target>` form remains as a shortcut for `hike open <target>`.
 The structured CLI now also includes:
 
 ```sh

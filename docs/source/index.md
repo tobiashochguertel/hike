@@ -81,9 +81,6 @@ hike schema list
 hike env init
 ```
 
-The shorthand `hike README.md` still works and is treated as
-`hike open README.md`.
-
 #### `-h`, `--help`
 
 Prints the help for the `hike` command.
@@ -103,17 +100,17 @@ Prints a summary of Hike's license.
 hike license
 ```
 
-#### `--navigation`
+#### `open --navigation`
 
 Starts Hike with the navigation panel visible; this overrides and modifies
 the saved state of the navigation panel.
 
-#### `--no-navigation`
+#### `open --no-navigation`
 
 Starts Hike with the navigation panel hidden; this overrides and modifies
 the saved state of the navigation panel.
 
-#### `-t`, `--theme`
+#### `open -t`, `open --theme`
 
 Sets Hike's theme; this overrides and changes any previous theme choice made
 [via the user interface](configuration.md#theme).
@@ -127,7 +124,7 @@ hike --theme=?
 hike --theme=?
 ```
 
-#### `-v`, `--version`
+#### `open -v`, `open --version`
 
 Prints the version number of Hike.
 
@@ -138,35 +135,35 @@ hike --version
 hike --version
 ```
 
-#### `--config`
+#### `open --config`
 
 Use an alternate configuration file.
 
-#### `--root`
+#### `open --root`
 
 Sets the initial root directory for the local browser.
 
-#### `--ignore`
+#### `open --ignore`
 
 Enables ignore-file filtering in the local browser.
 
-#### `--no-ignore`
+#### `open --no-ignore`
 
 Disables ignore-file filtering in the local browser.
 
-#### `--hidden`
+#### `open --hidden`
 
 Shows dotfiles in the local browser.
 
-#### `--no-hidden`
+#### `open --no-hidden`
 
 Hides dotfiles in the local browser.
 
-#### `--exclude`
+#### `open --exclude`
 
 Adds an exclude glob for the local browser. The option can be repeated.
 
-#### `-c`, `--command`
+#### `open -c`, `open --command`
 
 Run a command through Hike's [internal command line](commands.md) on startup.
 Use this when you want startup behavior that is richer than opening a local
@@ -178,26 +175,26 @@ hike open --command "gh davep/org-davep-2bit"
 
 #### Startup targets
 
-Hike also accepts a plain startup target on the command line. If the target
-is a file, it is opened immediately. If it is a directory, the local browser
-is rooted there. If it is a URL, it is loaded directly.
+Use the `open` subcommand for startup targets. If the target is a file, it is
+opened immediately. If it is a directory, the local browser is rooted there.
+If it is a URL, it is loaded directly.
 
 To open a file:
 
 ```sh
-hike view-this.md
+hike open view-this.md
 ```
 
 To start in a specific directory:
 
 ```sh
-hike docs/source/
+hike open docs/source/
 ```
 
 To open a URL directly:
 
 ```sh
-hike https://example.com/README.md
+hike open https://example.com/README.md
 ```
 
 ### Responsive navigation
