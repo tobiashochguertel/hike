@@ -6,6 +6,10 @@ from pathlib import Path
 from typing import cast
 
 ##############################################################################
+# Rich imports.
+from rich.cells import cell_len
+
+##############################################################################
 # Textual imports.
 from textual import on, work
 from textual.content import Content
@@ -57,6 +61,9 @@ class Location(Option):
 class HistoryView(EnhancedOptionList):
     """The display of history."""
 
+    _width_hint: int | None = None
+    """The preferred content width for the current history list."""
+
     DEFAULT_CSS = """
     HistoryView {
         height: 1fr;
@@ -106,6 +113,22 @@ class HistoryView(EnhancedOptionList):
         Args:
             history: The history to update with.
         """
+        self._width_hint = max(
+            (
+                max(
+                    cell_len(f"  {location.name}"),
+                    cell_len(str(location.parent)),
+                )
+                if isinstance(location, Path)
+                else max(
+                    cell_len(f"  {Path(location.path).name}"),
+                    cell_len(str(Path(location.path).parent)),
+                    cell_len(location.host),
+                )
+                for location in history
+            ),
+            default=None,
+        )
         self.clear_options().add_options(
             Location(location_id, location)
             for location_id, location in reversed(list(enumerate(history)))
@@ -116,6 +139,10 @@ class HistoryView(EnhancedOptionList):
         if self.option_count:
             with self.prevent(EnhancedOptionList.OptionHighlighted):
                 self.highlighted = 0
+
+    def content_width_hint(self) -> int | None:
+        """Return the preferred width for the current history list."""
+        return self._width_hint
 
     @on(EnhancedOptionList.OptionHighlighted)
     def visit_from_history(self, message: EnhancedOptionList.OptionHighlighted) -> None:

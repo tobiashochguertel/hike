@@ -71,7 +71,7 @@ from ..data import (
     update_configuration,
 )
 from ..data.discovery import LocalDiscoveryOptions, local_discovery_options
-from ..data.layout import LayoutMode, LayoutState, effective_layout_state
+from ..data.layout import LayoutMode, LayoutPolicy, LayoutState, effective_layout_state
 from ..messages import (
     ClearHistory,
     CopyToClipboard,
@@ -183,6 +183,8 @@ class Main(EnhancedScreen[None]):
         """The arguments passed on the command line."""
         self._layout_state = LayoutState()
         """The effective layout state."""
+        self._layout_policy = LayoutPolicy()
+        """The active layout policy."""
         self._local_options = LocalDiscoveryOptions()
         """The effective local browser discovery options."""
         super().__init__()
@@ -204,6 +206,7 @@ class Main(EnhancedScreen[None]):
         *,
         navigation_override: bool | None = None,
         mode_override: LayoutMode | None = None,
+        sidebar_content_width: int | None = None,
     ) -> LayoutState:
         """Resolve the effective layout state for the current terminal size."""
         return effective_layout_state(
@@ -211,6 +214,9 @@ class Main(EnhancedScreen[None]):
             terminal_width=self.size.width,
             navigation_override=navigation_override,
             mode_override=mode_override,
+            sidebar_content_width=sidebar_content_width,
+            current_sidebar_width=self._layout_state.sidebar_width,
+            policy=self._layout_policy,
         )
 
     def _apply_layout_state(
@@ -228,7 +234,10 @@ class Main(EnhancedScreen[None]):
     def _set_navigation_visible(self, visible: bool) -> Navigation:
         """Update navigation visibility through the layout policy."""
         self._apply_layout_state(
-            self._resolve_layout_state(navigation_override=visible),
+            self._resolve_layout_state(
+                navigation_override=visible,
+                sidebar_content_width=self._navigation().content_width_hint(),
+            ),
             persist_navigation=True,
         )
         return self._navigation()
@@ -257,10 +266,9 @@ class Main(EnhancedScreen[None]):
         config = load_configuration()
         self._local_options = local_discovery_options(self._arguments, config)
         self._apply_layout_state(
-            effective_layout_state(
-                config,
-                terminal_width=self.size.width,
+            self._resolve_layout_state(
                 navigation_override=self._arguments.navigation,
+                sidebar_content_width=self._navigation().content_width_hint(),
             )
         )
         self._navigation().bookmarks = (bookmarks := load_bookmarks())
@@ -279,7 +287,8 @@ class Main(EnhancedScreen[None]):
         if self.is_mounted:
             self._apply_layout_state(
                 self._resolve_layout_state(
-                    navigation_override=self._layout_state.navigation_visible
+                    navigation_override=self._layout_state.navigation_visible,
+                    sidebar_content_width=self._navigation().content_width_hint(),
                 )
             )
 
@@ -461,6 +470,16 @@ class Main(EnhancedScreen[None]):
         """
         self.query_one(Navigation).table_of_contents = message.table_of_contents
 
+    @on(Navigation.LayoutHintChanged)
+    def _refresh_navigation_width(self, _: Navigation.LayoutHintChanged) -> None:
+        """Recompute the sidebar width from the active navigation content."""
+        self._apply_layout_state(
+            self._resolve_layout_state(
+                navigation_override=self._layout_state.navigation_visible,
+                sidebar_content_width=self._navigation().content_width_hint(),
+            )
+        )
+
     @on(Markdown.TableOfContentsSelected)
     def _jump_to_content(self, message: Markdown.TableOfContentsSelected) -> None:
         """Jump to a specific location in the current document.
@@ -528,7 +547,8 @@ class Main(EnhancedScreen[None]):
             config.navigation_on_right = not config.navigation_on_right
         self._apply_layout_state(
             self._resolve_layout_state(
-                navigation_override=self._layout_state.navigation_visible
+                navigation_override=self._layout_state.navigation_visible,
+                sidebar_content_width=self._navigation().content_width_hint(),
             )
         )
 
@@ -538,7 +558,8 @@ class Main(EnhancedScreen[None]):
             config.command_line_on_top = not config.command_line_on_top
         self._apply_layout_state(
             self._resolve_layout_state(
-                navigation_override=self._layout_state.navigation_visible
+                navigation_override=self._layout_state.navigation_visible,
+                sidebar_content_width=self._navigation().content_width_hint(),
             )
         )
 

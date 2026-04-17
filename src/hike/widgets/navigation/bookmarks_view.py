@@ -10,6 +10,10 @@ from typing import cast
 from httpx import URL
 
 ##############################################################################
+# Rich imports.
+from rich.cells import cell_len
+
+##############################################################################
 # Textual imports.
 from textual import on, work
 from textual.content import Content
@@ -54,6 +58,9 @@ class BookmarkView(Option):
 class BookmarksView(EnhancedOptionList):
     """The display of bookmarks."""
 
+    _width_hint: int | None = None
+    """The preferred content width for the current bookmark list."""
+
     DEFAULT_CSS = """
     BookmarksView {
         height: 1fr;
@@ -95,10 +102,24 @@ class BookmarksView(EnhancedOptionList):
         Args:
             bookmarks: The bookmarks to show.
         """
+        self._width_hint = max(
+            (
+                max(
+                    cell_len(f"  {bookmark.title}"),
+                    cell_len(str(bookmark.location)),
+                )
+                for bookmark in bookmarks
+            ),
+            default=None,
+        )
         with self.preserved_highlight:
             self.clear_options().add_options(
                 BookmarkView(bookmark) for bookmark in sorted(bookmarks)
             )
+
+    def content_width_hint(self) -> int | None:
+        """Return the preferred width for the current bookmark list."""
+        return self._width_hint
 
     @on(EnhancedOptionList.OptionSelected)
     def _visit_bookmark(self, message: EnhancedOptionList.OptionSelected) -> None:

@@ -24,15 +24,39 @@ class LayoutMode(StrEnum):
 class SidebarSizingPolicy:
     """Policy for the navigation/sidebar width."""
 
-    default_width_percent: int = 27
-    min_width: int = 38
-    max_width: int = 10_000
-    auto_fit: bool = False
+    default_width_percent: int = 22
+    min_width: int = 24
+    max_width: int = 60
+    auto_fit: bool = True
+    content_padding: int = 4
+    jitter_threshold: int = 2
 
     def default_width(self, terminal_width: int) -> int:
         """Calculate the default sidebar width for a terminal width."""
         calculated = round(terminal_width * (self.default_width_percent / 100))
-        return max(self.min_width, min(calculated, self.max_width))
+        return self.clamp_width(calculated)
+
+    def clamp_width(self, width: int) -> int:
+        """Clamp a width to the configured min/max caps."""
+        return max(self.min_width, min(width, self.max_width))
+
+    def preferred_width(
+        self,
+        terminal_width: int,
+        *,
+        content_width: int | None = None,
+        current_width: int | None = None,
+    ) -> int:
+        """Calculate the effective sidebar width for the current conditions."""
+        width = self.default_width(terminal_width)
+        if self.auto_fit and content_width is not None:
+            width = self.clamp_width(content_width + self.content_padding)
+        if (
+            current_width is not None
+            and abs(width - current_width) < self.jitter_threshold
+        ):
+            return current_width
+        return width
 
 
 ##############################################################################
@@ -75,6 +99,8 @@ def effective_layout_state(
     terminal_width: int,
     navigation_override: bool | None = None,
     mode_override: LayoutMode | None = None,
+    sidebar_content_width: int | None = None,
+    current_sidebar_width: int | None = None,
     policy: LayoutPolicy | None = None,
 ) -> LayoutState:
     """Build the effective layout state for the current runtime conditions."""
@@ -105,7 +131,11 @@ def effective_layout_state(
         command_line_on_top=configuration.command_line_on_top,
         sidebar_visible=mode in (LayoutMode.SPLIT, LayoutMode.SIDEBAR_ONLY),
         content_visible=mode in (LayoutMode.SPLIT, LayoutMode.CONTENT_ONLY),
-        sidebar_width=policy.sidebar.default_width(terminal_width),
+        sidebar_width=policy.sidebar.preferred_width(
+            terminal_width,
+            content_width=sidebar_content_width,
+            current_width=current_sidebar_width,
+        ),
     )
 
 
