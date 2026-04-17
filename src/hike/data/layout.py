@@ -64,9 +64,13 @@ class SidebarSizingPolicy:
 class ResponsiveLayoutPolicy:
     """Policy for responsive layout switching."""
 
-    auto_switch_narrow: bool = False
+    auto_switch_narrow: bool = True
     narrow_width: int = 100
     narrow_mode: LayoutMode = LayoutMode.CONTENT_ONLY
+
+    def is_narrow(self, terminal_width: int) -> bool:
+        """Return `True` when responsive single-pane mode should apply."""
+        return self.auto_switch_narrow and terminal_width < self.narrow_width
 
 
 ##############################################################################
@@ -114,11 +118,7 @@ def effective_layout_state(
         mode = mode_override
     else:
         mode = LayoutMode.SPLIT if navigation_visible else LayoutMode.CONTENT_ONLY
-        if (
-            navigation_visible
-            and policy.responsive.auto_switch_narrow
-            and terminal_width < policy.responsive.narrow_width
-        ):
+        if navigation_visible and policy.responsive.is_narrow(terminal_width):
             mode = policy.responsive.narrow_mode
     if mode is LayoutMode.CONTENT_ONLY:
         navigation_visible = False
