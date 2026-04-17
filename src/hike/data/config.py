@@ -24,6 +24,11 @@ from ruamel.yaml import YAML
 ##############################################################################
 # Local imports.
 from .locations import config_dir
+from .runtime_context import (
+    RuntimeContext,
+    current_runtime_context,
+    resolve_runtime_context,
+)
 from .settings import load_runtime_settings
 
 ##############################################################################
@@ -32,11 +37,7 @@ _PROJECT_CONFIG_FILENAME = "hike.config.yaml"
 _LEGACY_CONFIG_FILENAME = "configuration.json"
 _LEGACY_DOTFILE_NAME = ".hike.yaml"
 
-_configuration_override: Path | None = None
-"""An optional override for the configuration file path."""
 
-
-##############################################################################
 class Configuration(BaseModel):
     """The typed configuration data for the application."""
 
@@ -139,8 +140,8 @@ class Configuration(BaseModel):
         description="Show front matter blocks in the document viewer when present.",
     )
     allow_traditional_quit: bool = Field(
-        default=False,
-        description="Allow Ctrl+C to quit immediately instead of showing Textual help.",
+        default=True,
+        description="Allow Ctrl+C to quit immediately and restore the shell promptly.",
     )
 
 
@@ -154,18 +155,30 @@ def _yaml() -> YAML:
 
 
 ##############################################################################
-def _normalize_configuration_path(path: str | Path) -> Path:
+def _normalize_configuration_path(
+    path: str | Path,
+    *,
+    cwd: Path | None = None,
+) -> Path:
     """Normalise a configuration file path."""
     normalized = Path(path).expanduser()
     if not normalized.is_absolute():
-        normalized = Path.cwd() / normalized
+        normalized = (Path.cwd() if cwd is None else cwd) / normalized
     return normalized
 
 
 ##############################################################################
-def project_configuration_file() -> Path:
+def _active_context(context: RuntimeContext | None = None) -> RuntimeContext:
+    """Return the explicit or ambient runtime context."""
+    active = current_runtime_context() if context is None else context
+    return resolve_runtime_context() if active is None else active
+
+
+##############################################################################
+def project_configuration_file(context: RuntimeContext | None = None) -> Path:
     """Return the project-local configuration file path."""
-    return Path.cwd() / _PROJECT_CONFIG_FILENAME
+    active = _active_context(context)
+    return active.cwd / _PROJECT_CONFIG_FILENAME
 
 
 ##############################################################################
@@ -181,13 +194,19 @@ def legacy_configuration_file() -> Path:
 
 
 ##############################################################################
-def _explicit_configuration_file() -> Path | None:
+def _explicit_configuration_file(
+    context: RuntimeContext | None = None,
+) -> Path | None:
     """Return an explicitly selected configuration file path, if any."""
-    if _configuration_override is not None:
-        return _configuration_override
-    settings = load_runtime_settings()
+    active = _active_context(context)
+    if active.config_path is not None:
+        return active.config_path
+    settings = load_runtime_settings(active)
     if settings.config_path is not None:
-        return _normalize_configuration_path(settings.config_path)
+        return _normalize_configuration_path(
+            settings.config_path,
+            cwd=active.cwd,
+        )
     return None
 
 
@@ -198,23 +217,13 @@ def _legacy_dotfile() -> Path:
 
 
 ##############################################################################
-def set_configuration_file(path: str | Path | None) -> Path:
-    """Set the configuration file path override."""
-    global _configuration_override
-    load_configuration.cache_clear()
-    _configuration_override = (
-        None if path is None else _normalize_configuration_path(path)
-    )
-    return configuration_file()
-
-
-##############################################################################
-def configuration_file() -> Path:
+def configuration_file(context: RuntimeContext | None = None) -> Path:
     """Return the effective configuration file path."""
-    if explicit := _explicit_configuration_file():
+    active = _active_context(context)
+    if explicit := _explicit_configuration_file(active):
         return explicit
     for candidate in (
-        project_configuration_file(),
+        project_configuration_file(active),
         default_configuration_file(),
         _legacy_dotfile(),
         legacy_configuration_file(),
@@ -225,12 +234,15 @@ def configuration_file() -> Path:
 
 
 ##############################################################################
-def configuration_init_paths() -> tuple[Path, Path | None]:
+def configuration_init_paths(
+    context: RuntimeContext | None = None,
+) -> tuple[Path, Path | None]:
     """Return the preferred init target and any existing file that should be replaced."""
-    if explicit := _explicit_configuration_file():
+    active = _active_context(context)
+    if explicit := _explicit_configuration_file(active):
         return explicit, explicit if explicit.exists() else None
 
-    project = project_configuration_file()
+    project = project_configuration_file(active)
     if project.exists():
         return project, project
 
@@ -285,38 +297,57 @@ def _write_yaml(path: Path, data: dict[str, Any]) -> None:
 
 
 ##############################################################################
-def save_configuration(configuration: Configuration) -> Configuration:
+def save_configuration(
+    configuration: Configuration,
+    context: RuntimeContext | None = None,
+) -> Configuration:
     """Save the given configuration."""
-    load_configuration.cache_clear()
-    target = configuration_file()
+    clear_configuration_cache()
+    target = configuration_file(context)
     data = configuration.model_dump(mode="json", exclude_none=False)
     if target.suffix.lower() == ".json":
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(dumps(data, indent=4), encoding="utf-8")
     else:
         _write_yaml(target, data)
-    return load_configuration()
+    return load_configuration(context)
 
 
 ##############################################################################
 @cache
-def load_configuration() -> Configuration:
+def _load_configuration_cached(
+    context: RuntimeContext | None,
+) -> Configuration:
     """Load the current configuration."""
-    source = configuration_file()
+    source = configuration_file(context)
     if not source.exists():
         return Configuration()
     return Configuration.model_validate(_load_configuration_data(source))
 
 
 ##############################################################################
+def clear_configuration_cache() -> None:
+    """Clear cached configuration values."""
+    _load_configuration_cached.cache_clear()
+
+
+##############################################################################
+def load_configuration(context: RuntimeContext | None = None) -> Configuration:
+    """Load the current configuration."""
+    return _load_configuration_cached(_active_context(context))
+
+
+##############################################################################
 @contextmanager
-def update_configuration() -> Iterator[Configuration]:
+def update_configuration(
+    context: RuntimeContext | None = None,
+) -> Iterator[Configuration]:
     """Context manager for updating the configuration."""
-    configuration = load_configuration()
+    configuration = load_configuration(context)
     try:
         yield configuration
     finally:
-        save_configuration(configuration)
+        save_configuration(configuration, context)
 
 
 ##############################################################################
@@ -326,9 +357,12 @@ def configuration_schema() -> dict[str, Any]:
 
 
 ##############################################################################
-def dump_configuration(format_name: str = "yaml") -> str:
+def dump_configuration(
+    format_name: str = "yaml",
+    context: RuntimeContext | None = None,
+) -> str:
     """Dump the active configuration in the requested format."""
-    data = load_configuration().model_dump(mode="json", exclude_none=False)
+    data = load_configuration(context).model_dump(mode="json", exclude_none=False)
     match format_name:
         case "json":
             return dumps(data, indent=2) + "\n"
@@ -341,10 +375,16 @@ def dump_configuration(format_name: str = "yaml") -> str:
 
 
 ##############################################################################
-def validate_configuration_file(path: str | Path | None = None) -> Configuration:
+def validate_configuration_file(
+    path: str | Path | None = None,
+    context: RuntimeContext | None = None,
+) -> Configuration:
     """Validate the configuration file at the given path or the active path."""
+    active = _active_context(context)
     source = (
-        configuration_file() if path is None else _normalize_configuration_path(path)
+        configuration_file(active)
+        if path is None
+        else _normalize_configuration_path(path, cwd=active.cwd)
     )
     if not source.exists():
         raise FileNotFoundError(source)
@@ -465,9 +505,9 @@ def _parse_property_path(path: str) -> list[str | int]:
 
 
 ##############################################################################
-def _load_raw_configuration() -> dict[str, Any]:
+def _load_raw_configuration(context: RuntimeContext | None = None) -> dict[str, Any]:
     """Return the current configuration as a mutable raw mapping."""
-    source = configuration_file()
+    source = configuration_file(context)
     if source.exists():
         return _load_configuration_data(source)
     return {}
@@ -547,27 +587,37 @@ def _coerce_value(raw: str) -> Any:
 
 
 ##############################################################################
-def get_configuration_value(path: str) -> Any:
+def get_configuration_value(
+    path: str,
+    context: RuntimeContext | None = None,
+) -> Any:
     """Return a single configuration property."""
     return _get_value(
-        load_configuration().model_dump(mode="json"), _parse_property_path(path)
+        load_configuration(context).model_dump(mode="json"), _parse_property_path(path)
     )
 
 
 ##############################################################################
-def set_configuration_value(path: str, raw_value: str) -> Configuration:
+def set_configuration_value(
+    path: str,
+    raw_value: str,
+    context: RuntimeContext | None = None,
+) -> Configuration:
     """Set a single configuration property and validate the result."""
-    data = _load_raw_configuration()
+    data = _load_raw_configuration(context)
     _set_value(data, _parse_property_path(path), _coerce_value(raw_value))
-    return save_configuration(Configuration.model_validate(data))
+    return save_configuration(Configuration.model_validate(data), context)
 
 
 ##############################################################################
-def unset_configuration_value(path: str) -> Configuration:
+def unset_configuration_value(
+    path: str,
+    context: RuntimeContext | None = None,
+) -> Configuration:
     """Unset a configuration property and validate the result."""
-    data = _load_raw_configuration()
+    data = _load_raw_configuration(context)
     _unset_value(data, _parse_property_path(path))
-    return save_configuration(Configuration.model_validate(data))
+    return save_configuration(Configuration.model_validate(data), context)
 
 
 ### config.py ends here

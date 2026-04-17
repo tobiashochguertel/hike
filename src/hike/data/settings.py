@@ -23,12 +23,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 ##############################################################################
 # Local imports.
 from .locations import config_dir
+from .runtime_context import (
+    RuntimeContext,
+    current_runtime_context,
+    resolve_runtime_context,
+)
 
 ##############################################################################
 _ENV_FILENAME = ".env"
-
-_environment_override: Path | None = None
-"""An optional override for the environment file path."""
 
 
 ##############################################################################
@@ -72,18 +74,26 @@ class RuntimeSettings(BaseSettings):
 
 
 ##############################################################################
-def _normalize_path(path: str | Path) -> Path:
+def _normalize_path(path: str | Path, *, cwd: Path | None = None) -> Path:
     """Normalise a runtime path setting."""
     normalized = Path(path).expanduser()
     if not normalized.is_absolute():
-        normalized = Path.cwd() / normalized
+        normalized = (Path.cwd() if cwd is None else cwd) / normalized
     return normalized
 
 
 ##############################################################################
-def project_environment_file() -> Path:
+def _active_context(context: RuntimeContext | None = None) -> RuntimeContext:
+    """Return the explicit or ambient runtime context."""
+    active = current_runtime_context() if context is None else context
+    return resolve_runtime_context() if active is None else active
+
+
+##############################################################################
+def project_environment_file(context: RuntimeContext | None = None) -> Path:
     """Return the project-local .env file path."""
-    return Path.cwd() / _ENV_FILENAME
+    active = _active_context(context)
+    return active.cwd / _ENV_FILENAME
 
 
 ##############################################################################
@@ -92,16 +102,6 @@ def default_environment_file() -> Path:
     return config_dir() / _ENV_FILENAME
 
 
-##############################################################################
-def set_environment_file(path: str | Path | None) -> Path:
-    """Set the environment-file override."""
-    global _environment_override
-    load_runtime_settings.cache_clear()
-    _environment_override = None if path is None else _normalize_path(path)
-    return environment_file()
-
-
-##############################################################################
 def _base_runtime_settings() -> RuntimeSettings:
     """Load runtime settings from process environment only."""
     return RuntimeSettings()
@@ -114,14 +114,18 @@ def runtime_settings_from_file(path: Path) -> RuntimeSettings:
 
 
 ##############################################################################
-def environment_file() -> Path:
+def environment_file(context: RuntimeContext | None = None) -> Path:
     """Return the effective environment-file path."""
-    if _environment_override is not None:
-        return _environment_override
+    active = _active_context(context)
+    if active.env_path is not None:
+        return active.env_path
     base = _base_runtime_settings()
     if base.env_path is not None:
-        return _normalize_path(base.env_path)
-    for candidate in (project_environment_file(), default_environment_file()):
+        return _normalize_path(
+            base.env_path,
+            cwd=active.cwd,
+        )
+    for candidate in (project_environment_file(active), default_environment_file()):
         if candidate.exists():
             return candidate
     return default_environment_file()
@@ -129,12 +133,26 @@ def environment_file() -> Path:
 
 ##############################################################################
 @cache
-def load_runtime_settings() -> RuntimeSettings:
+def _load_runtime_settings_cached(
+    context: RuntimeContext | None,
+) -> RuntimeSettings:
     """Load runtime settings from the process environment and optional env file."""
-    source = environment_file()
+    source = environment_file(context)
     if source.exists():
         return runtime_settings_from_file(source)
     return _base_runtime_settings()
+
+
+##############################################################################
+def clear_runtime_settings_cache() -> None:
+    """Clear cached runtime settings."""
+    _load_runtime_settings_cached.cache_clear()
+
+
+##############################################################################
+def load_runtime_settings(context: RuntimeContext | None = None) -> RuntimeSettings:
+    """Load runtime settings from the process environment and optional env file."""
+    return _load_runtime_settings_cached(_active_context(context))
 
 
 ##############################################################################
@@ -144,9 +162,17 @@ def runtime_settings_schema() -> dict[str, Any]:
 
 
 ##############################################################################
-def load_environment_values(path: str | Path | None = None) -> dict[str, str]:
+def load_environment_values(
+    path: str | Path | None = None,
+    context: RuntimeContext | None = None,
+) -> dict[str, str]:
     """Load key/value pairs from an environment file."""
-    source = environment_file() if path is None else _normalize_path(path)
+    active = _active_context(context)
+    source = (
+        environment_file(active)
+        if path is None
+        else _normalize_path(path, cwd=active.cwd)
+    )
     if not source.exists():
         return {}
     return {

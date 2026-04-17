@@ -94,6 +94,10 @@ hike env validate
 
 If you still have a legacy `~/.config/hike/configuration.json`, running
 `hike config init --force` now migrates you onto the modern YAML config path.
+By default, <kbd>Ctrl</kbd>+<kbd>C</kbd> now quits the TUI immediately so a bad
+draw state can't leave your shell stuck in raw mode.
+If you want Textual's reminder/copy-first behavior instead, set
+`allow_traditional_quit: false` in your Hike config file.
 
 The best way to get to know Hike is to read the help screen. Once in the
 application you can see this by pressing <kbd>F1</kbd>.

@@ -10,6 +10,14 @@ from types import SimpleNamespace
 import pytest
 
 ##############################################################################
+# Textual imports.
+from textual import events
+
+##############################################################################
+# Textual enhanced imports.
+from textual_enhanced.app import EnhancedApp
+
+##############################################################################
 # Typer imports.
 from typer.testing import CliRunner
 
@@ -18,11 +26,11 @@ from typer.testing import CliRunner
 from hike.cli.app import app as cli_app
 from hike.data.config import (
     Configuration,
+    clear_configuration_cache,
     configuration_file,
     load_configuration,
     render_default_configuration,
     save_configuration,
-    set_configuration_file,
 )
 from hike.data.discovery import local_discovery_options
 from hike.data.layout import LayoutMode, layout_policy
@@ -30,6 +38,8 @@ from hike.data.local_browser import (
     LocalBrowserMode,
     local_browser_mode_from_configuration,
 )
+from hike.data.runtime_context import RuntimeContext, resolve_runtime_context
+from hike.data.settings import environment_file
 from hike.hike import Hike
 from hike.startup import OpenOptions
 
@@ -52,66 +62,80 @@ def _patch_config_locations(
     )
     monkeypatch.setattr(
         "hike.data.config.load_runtime_settings",
-        lambda: SimpleNamespace(config_path=None),
+        lambda _context=None: SimpleNamespace(config_path=None),
     )
     return config_root
+
+
+##############################################################################
+def _context_for(path: Path, *, cwd: Path | None = None) -> RuntimeContext:
+    """Create a runtime context for direct config tests."""
+    return resolve_runtime_context(
+        config_path=path,
+        cwd=path.parent if cwd is None else cwd,
+    )
 
 
 ##############################################################################
 def test_set_configuration_file_uses_override(tmp_path: Path) -> None:
     """The configuration path should be overridable from the CLI."""
     override = tmp_path / "custom" / "hike.json"
+    context = _context_for(override)
 
-    try:
-        set_configuration_file(override)
+    assert configuration_file(context) == override
 
-        assert configuration_file() == override
-    finally:
-        set_configuration_file(None)
+
+##############################################################################
+def test_configuration_file_uses_config_path_from_runtime_env_file(
+    tmp_path: Path,
+) -> None:
+    """The resolved config path should honor HIKE_CONFIG_PATH from the env file."""
+    env_file = tmp_path / ".env"
+    env_file.write_text("HIKE_CONFIG_PATH=custom-config.yaml\n", encoding="utf-8")
+
+    context = resolve_runtime_context(env_path=env_file, cwd=tmp_path)
+
+    assert environment_file(context) == env_file
+    assert configuration_file(context) == tmp_path / "custom-config.yaml"
 
 
 ##############################################################################
 def test_save_configuration_creates_override_parent_directory(tmp_path: Path) -> None:
     """Saving to an override path should create its parent directory."""
     override = tmp_path / "custom" / "hike.json"
+    context = _context_for(override)
 
-    try:
-        set_configuration_file(override)
-        save_configuration(Configuration())
+    save_configuration(Configuration(), context)
 
-        assert override.is_file()
-    finally:
-        set_configuration_file(None)
+    assert override.is_file()
 
 
 ##############################################################################
 def test_discovery_options_use_configuration_defaults(tmp_path: Path) -> None:
     """Configuration defaults should feed into the local browser options."""
     override = tmp_path / "config.json"
+    context = _context_for(override)
 
-    try:
-        set_configuration_file(override)
-        save_configuration(
-            Configuration(
-                local_use_ignore_files=False,
-                local_show_hidden=True,
-                local_exclude_patterns=["generated/", "node_modules/"],
-            )
-        )
-        config = load_configuration()
+    save_configuration(
+        Configuration(
+            local_use_ignore_files=False,
+            local_show_hidden=True,
+            local_exclude_patterns=["generated/", "node_modules/"],
+        ),
+        context,
+    )
+    config = load_configuration(context)
 
-        args = type(
-            "Args",
-            (),
-            {"ignore": None, "hidden": None, "exclude": []},
-        )()
-        options = local_discovery_options(args, config)
+    args = type(
+        "Args",
+        (),
+        {"ignore": None, "hidden": None, "exclude": []},
+    )()
+    options = local_discovery_options(args, config)
 
-        assert options.use_ignore_files is False
-        assert options.show_hidden is True
-        assert options.exclude_patterns == ("generated/", "node_modules/")
-    finally:
-        set_configuration_file(None)
+    assert options.use_ignore_files is False
+    assert options.show_hidden is True
+    assert options.exclude_patterns == ("generated/", "node_modules/")
 
 
 ##############################################################################
@@ -162,24 +186,82 @@ def test_local_browser_mode_configuration_accepts_flat_list() -> None:
 def test_hike_applies_theme_and_binding_overrides_from_configuration(
     tmp_path: Path,
 ) -> None:
-    """Runtime startup should consume persisted theme and binding overrides."""
+    """Runtime setup should consume persisted theme and binding overrides."""
     override = tmp_path / "config.yaml"
+    context = _context_for(override)
 
-    try:
-        set_configuration_file(override)
-        save_configuration(
-            Configuration(
-                theme="textual-light",
-                bindings={"JumpToBookmarks": "shift+f6"},
-            )
-        )
+    save_configuration(
+        Configuration(
+            theme="textual-light",
+            bindings={"JumpToBookmarks": "shift+f6"},
+        ),
+        context,
+    )
 
-        app = Hike(OpenOptions())
+    app = Hike(OpenOptions(runtime_context=context))
+    app.on_load(events.Load())
 
-        assert app.theme == "textual-light"
-        assert app._keymap["JumpToBookmarks"] == "shift+f6"
-    finally:
-        set_configuration_file(None)
+    assert app.theme == "textual-light"
+    assert app._keymap["JumpToBookmarks"] == "shift+f6"
+
+
+##############################################################################
+def test_hike_help_quit_exits_immediately_by_default(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The default Ctrl+C behavior should quit promptly."""
+    override = tmp_path / "config.yaml"
+    calls: dict[str, bool] = {}
+    context = _context_for(override)
+
+    save_configuration(Configuration(), context)
+    app = Hike(OpenOptions(runtime_context=context))
+    monkeypatch.setattr(app, "exit", lambda: calls.setdefault("exit", True))
+    monkeypatch.setattr(
+        EnhancedApp,
+        "action_help_quit",
+        lambda self: calls.setdefault("super", True),
+    )
+
+    app.action_help_quit()
+
+    assert calls == {"exit": True}
+
+
+##############################################################################
+def test_hike_exposes_a_ctrl_c_binding() -> None:
+    """The TUI should bind Ctrl+C so users can always recover their shell."""
+    app = Hike(OpenOptions())
+
+    assert any(
+        binding.key == "ctrl+c" and binding.action == "help_quit"
+        for binding in app._bindings.key_to_bindings.get("ctrl+c", ())
+    )
+
+
+##############################################################################
+def test_hike_help_quit_can_still_use_legacy_behavior_when_disabled(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Users can still opt back into the legacy Textual help behavior."""
+    override = tmp_path / "config.yaml"
+    calls: dict[str, bool] = {}
+    context = _context_for(override)
+
+    save_configuration(Configuration(allow_traditional_quit=False), context)
+    app = Hike(OpenOptions(runtime_context=context))
+    monkeypatch.setattr(app, "exit", lambda: calls.setdefault("exit", True))
+    monkeypatch.setattr(
+        EnhancedApp,
+        "action_help_quit",
+        lambda self: calls.setdefault("super", True),
+    )
+
+    app.action_help_quit()
+
+    assert calls == {"super": True}
 
 
 ##############################################################################
@@ -196,11 +278,10 @@ def test_load_configuration_accepts_yaml_in_legacy_json_file(
     )
 
     try:
-        load_configuration.cache_clear()
+        clear_configuration_cache()
         config = load_configuration()
     finally:
-        load_configuration.cache_clear()
-        set_configuration_file(None)
+        clear_configuration_cache()
 
     assert config.navigation_visible is False
     assert config.main_branches == ["trunk"]
@@ -215,16 +296,11 @@ def test_config_init_migrates_legacy_json_to_default_yaml(
     config_root = _patch_config_locations(monkeypatch, tmp_path)
     legacy = config_root / "configuration.json"
     legacy.write_text('{"navigation_visible": false}\n', encoding="utf-8")
-    monkeypatch.setattr(
-        "hike.cli.app.load_hike_class",
-        lambda: pytest.fail("Config init should not load the TUI"),
-    )
 
     try:
         result = _RUNNER.invoke(cli_app, ["config", "init", "--force"])
     finally:
-        load_configuration.cache_clear()
-        set_configuration_file(None)
+        clear_configuration_cache()
 
     target = config_root / "config.yaml"
     backups = list(config_root.glob("configuration.json.bak-*"))
@@ -235,6 +311,24 @@ def test_config_init_migrates_legacy_json_to_default_yaml(
     assert len(backups) == 1
     assert backups[0].read_text(encoding="utf-8") == '{"navigation_visible": false}\n'
     assert "# Hike configuration" in target.read_text(encoding="utf-8")
+
+
+##############################################################################
+def test_cli_config_path_does_not_leak_explicit_context_between_invocations(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """CLI commands should not leak config overrides into later invocations."""
+    config_root = _patch_config_locations(monkeypatch, tmp_path)
+    explicit = tmp_path / "custom" / "work.yaml"
+
+    first = _RUNNER.invoke(cli_app, ["config", "path", "--config", str(explicit)])
+    second = _RUNNER.invoke(cli_app, ["config", "path"])
+
+    assert first.exit_code == 0
+    assert second.exit_code == 0
+    assert first.output.strip() == str(explicit)
+    assert second.output.strip() == str(config_root / "config.yaml")
 
 
 ##############################################################################

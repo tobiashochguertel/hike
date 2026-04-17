@@ -17,13 +17,13 @@ from pydantic import ValidationError
 
 ##############################################################################
 # Local imports.
-from ..data import configuration_schema, runtime_settings_schema
+from ..data import RuntimeContext, configuration_schema, runtime_settings_schema
 from ..data.config import validate_configuration_file
 from ..data.settings import (
     load_runtime_settings,
     runtime_settings_from_file,
 )
-from .common import apply_runtime_path_overrides, config_path_option, env_path_option
+from .common import config_path_option, env_path_option, resolve_cli_runtime_context
 
 ##############################################################################
 app = typer.Typer(
@@ -55,9 +55,13 @@ def _schema_for(schema_type: str) -> dict[str, object]:
 
 
 ##############################################################################
-def _schema_export_path(schema_type: str) -> Path:
+def _schema_export_path(
+    schema_type: str,
+    *,
+    context: RuntimeContext | None = None,
+) -> Path:
     """Return the default export path for a schema type."""
-    store = load_runtime_settings().schema_store_path.expanduser()
+    store = load_runtime_settings(context).schema_store_path.expanduser()
     return store / f"hike.{schema_type}.schema.json"
 
 
@@ -77,7 +81,7 @@ def show_schema(
     env_path: Path | None = env_path_option(),
 ) -> None:
     """Print a JSON schema to stdout."""
-    apply_runtime_path_overrides(config_path, env_path)
+    resolve_cli_runtime_context(config_path, env_path)
     try:
         schema = _schema_for(schema_type)
     except ValueError as error:
@@ -94,11 +98,11 @@ def validate_schema_target(
     env_path: Path | None = env_path_option(),
 ) -> None:
     """Validate a file against one of Hike's types."""
-    apply_runtime_path_overrides(config_path, env_path)
+    runtime_context = resolve_cli_runtime_context(config_path, env_path)
     try:
         match schema_type:
             case "config":
-                validate_configuration_file(file)
+                validate_configuration_file(file, context=runtime_context)
             case "env":
                 runtime_settings_from_file(file)
             case _:
@@ -123,11 +127,13 @@ def export_schemas(
     env_path: Path | None = env_path_option(),
 ) -> None:
     """Export all supported schemas as JSON files."""
-    apply_runtime_path_overrides(config_path, env_path)
+    runtime_context = resolve_cli_runtime_context(config_path, env_path)
     export_root = (
         out.expanduser().resolve()
         if out is not None
-        else load_runtime_settings().schema_store_path.expanduser().resolve()
+        else load_runtime_settings(runtime_context)
+        .schema_store_path.expanduser()
+        .resolve()
     )
     export_root.mkdir(parents=True, exist_ok=True)
     for schema_type in _SCHEMA_TYPES:
@@ -144,10 +150,10 @@ def schema_path(
     env_path: Path | None = env_path_option(),
 ) -> None:
     """Print the default export path for a schema type."""
-    apply_runtime_path_overrides(config_path, env_path)
+    runtime_context = resolve_cli_runtime_context(config_path, env_path)
     if schema_type not in _SCHEMA_TYPES:
         _fail(f"Unknown schema type: {schema_type}", code=2)
-    typer.echo(_schema_export_path(schema_type))
+    typer.echo(_schema_export_path(schema_type, context=runtime_context))
 
 
 ### schema_cmd.py ends here

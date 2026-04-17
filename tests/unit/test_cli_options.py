@@ -16,6 +16,7 @@ from typer.testing import CliRunner
 ##############################################################################
 # Local imports.
 from hike.cli.app import app
+from hike.data import resolve_runtime_context
 from hike.startup import OpenOptions
 
 ##############################################################################
@@ -43,15 +44,19 @@ def _install_open_spy(monkeypatch: pytest.MonkeyPatch) -> dict[str, object]:
     """Patch the open command so tests can inspect the captured options."""
     captured: dict[str, object] = {}
     _FakeHike.captured = captured
-    monkeypatch.setattr("hike.cli.app.load_hike_class", lambda: _FakeHike)
     monkeypatch.setattr(
-        "hike.cli.app.apply_runtime_path_overrides",
-        lambda config_path, env_path: captured.update(
-            {
-                "config_path": config_path,
-                "env_path": env_path,
-            }
-        ),
+        "hike.cli.app.run_hike",
+        lambda options: (
+            captured.update({"options": options, "ran": True}),
+            None,
+        )[1],
+    )
+    monkeypatch.setattr(
+        "hike.cli.app.resolve_cli_runtime_context",
+        lambda config_path, env_path: (
+            captured.update({"config_path": config_path, "env_path": env_path}),
+            resolve_runtime_context(config_path=config_path, env_path=env_path),
+        )[1],
     )
     return captured
 
@@ -139,6 +144,12 @@ def test_open_command_applies_runtime_path_overrides(
     assert result.exit_code == 0
     assert captured["config_path"] == Path("custom-hike.yaml")
     assert captured["env_path"] == Path("custom-hike.env")
+    assert cast(
+        OpenOptions, captured["options"]
+    ).runtime_context == resolve_runtime_context(
+        config_path="custom-hike.yaml",
+        env_path="custom-hike.env",
+    )
 
 
 ##############################################################################
@@ -194,14 +205,31 @@ def test_root_cli_version_does_not_launch_tui(
 ) -> None:
     """The root callback should expose `--version` without loading the TUI."""
     monkeypatch.setattr(
-        "hike.cli.app.load_hike_class",
-        lambda: pytest.fail("Root --version should not load the TUI"),
+        "hike.cli.app.run_hike",
+        lambda _options: pytest.fail("Root --version should not load the TUI"),
     )
 
     result = _RUNNER.invoke(app, ["--version"])
 
     assert result.exit_code == 0
     assert "hike v" in result.output
+
+
+##############################################################################
+def test_open_command_theme_question_uses_theme_service(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`--theme ?` should list themes without launching the TUI."""
+    monkeypatch.setattr("hike.cli.app.theme_names", lambda: ["dark", "light"])
+    monkeypatch.setattr(
+        "hike.cli.app.run_hike",
+        lambda _options: pytest.fail("Theme listing should not launch the TUI"),
+    )
+
+    result = _RUNNER.invoke(app, ["open", "--theme", "?"])
+
+    assert result.exit_code == 0
+    assert result.output.splitlines() == ["dark", "light"]
 
 
 ##############################################################################
