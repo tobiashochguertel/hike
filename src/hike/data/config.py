@@ -41,6 +41,9 @@ class Configuration:
     sidebar_max_width: int = 60
     """The maximum width of the sidebar in terminal cells."""
 
+    sidebar_max_width_percent: int = 45
+    """The maximum width of the sidebar as a percentage of terminal width."""
+
     sidebar_auto_fit: bool = True
     """Should the sidebar auto-fit to the active navigation content?"""
 
@@ -81,6 +84,9 @@ class Configuration:
 
     local_exclude_patterns: list[str] = field(default_factory=list)
     """Extra exclude globs for the local browser."""
+
+    local_browser_view_mode: str = "flat-list"
+    """The rendering mode for the local file browser."""
 
     bindings: dict[str, str] = field(default_factory=dict)
     """Command keyboard binding overrides."""

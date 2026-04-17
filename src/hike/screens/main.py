@@ -57,6 +57,7 @@ from ..commands import (
     SaveCopy,
     SearchBookmarks,
     SearchHistory,
+    ToggleLocalBrowserMode,
     ToggleNavigation,
 )
 from ..data import (
@@ -172,6 +173,7 @@ class Main(EnhancedScreen[None]):
         SaveCopy,
         SearchBookmarks,
         SearchHistory,
+        ToggleLocalBrowserMode,
     )
 
     BINDINGS = Command.bindings(*COMMAND_MESSAGES)
@@ -187,6 +189,12 @@ class Main(EnhancedScreen[None]):
         """
         self._arguments = arguments
         """The arguments passed on the command line."""
+        self._startup_target = classify_startup_target(
+            getattr(arguments, "target", None)
+        )
+        """The classified startup target."""
+        self._initial_local_root = self._resolve_initial_local_root()
+        """The initial root directory for the local browser."""
         self._layout_state = LayoutState()
         """The effective layout state."""
         self._mode_override: LayoutMode | None = None
@@ -217,6 +225,16 @@ class Main(EnhancedScreen[None]):
         """Persist whether navigation should be available in wide layouts."""
         with update_configuration() as config:
             config.navigation_visible = enabled
+
+    def _resolve_initial_local_root(self) -> Path:
+        """Resolve the initial root directory for the local browser."""
+        if self._arguments.root is not None:
+            return Path(self._arguments.root).expanduser().resolve()
+        if self._startup_target.kind is StartupTargetKind.DIRECTORY and isinstance(
+            self._startup_target.value, Path
+        ):
+            return self._startup_target.value
+        return Path(load_configuration().local_start_location).expanduser().resolve()
 
     def _resolve_layout_state(
         self,
@@ -307,7 +325,11 @@ class Main(EnhancedScreen[None]):
         yield Header()
         with VerticalGroup():
             with Horizontal(id="workspace"):
-                yield Navigation(classes="panel", local_options=self._local_options)
+                yield Navigation(
+                    classes="panel",
+                    local_root=self._initial_local_root,
+                    local_options=self._local_options,
+                )
                 yield Viewer(classes="panel")
             yield CommandLine(classes="panel")
         yield Footer()
@@ -320,10 +342,6 @@ class Main(EnhancedScreen[None]):
             self._store_navigation_enabled(self._arguments.navigation)
         self._refresh_layout_state()
         self._navigation().bookmarks = (bookmarks := load_bookmarks())
-        if self._arguments.root is not None:
-            self._navigation().set_local_view_root(
-                Path(self._arguments.root).expanduser().resolve()
-            )
         self._navigation().configure_local_view(self._local_options)
         BookmarkCommands.bookmarks = bookmarks
         self._viewer().history = load_history()
@@ -342,9 +360,7 @@ class Main(EnhancedScreen[None]):
         if getattr(self._arguments, "command", None):
             self.post_message(HandleInput(" ".join(self._arguments.command)))
             return
-        startup_target = classify_startup_target(
-            getattr(self._arguments, "target", None)
-        )
+        startup_target = self._startup_target
         if startup_target.kind is StartupTargetKind.NONE:
             return
         if startup_target.kind is StartupTargetKind.FILE and isinstance(
@@ -360,9 +376,7 @@ class Main(EnhancedScreen[None]):
         if startup_target.kind is StartupTargetKind.DIRECTORY and isinstance(
             startup_target.value, Path
         ):
-            navigation = self._show_navigation()
-            navigation.set_local_view_root(startup_target.value)
-            navigation.jump_to_local()
+            self._show_navigation(Navigation.jump_to_local)
             return
         self.notify(
             f"Could not locate {startup_target.value!r}",
@@ -594,6 +608,11 @@ class Main(EnhancedScreen[None]):
                 navigation.call_after_refresh(navigation.run_action, "move_into_panel")
             return
         self._set_navigation_visible(not load_configuration().navigation_visible)
+
+    def action_toggle_local_browser_mode_command(self) -> None:
+        """Toggle the local browser between tree and flat-list modes."""
+        navigation = self._show_navigation(Navigation.jump_to_local)
+        navigation.toggle_local_browser_mode()
 
     def action_change_navigation_side_command(self) -> None:
         """Change the side that the navigation panel lives on."""

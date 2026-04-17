@@ -89,6 +89,7 @@ def test_sidebar_sizing_policy_clamps_width() -> None:
         default_width_percent=30,
         min_width=20,
         max_width=40,
+        max_width_percent=100,
         auto_fit=False,
     )
 
@@ -104,6 +105,7 @@ def test_sidebar_sizing_policy_prefers_content_width_when_auto_fit_enabled() -> 
         default_width_percent=30,
         min_width=20,
         max_width=40,
+        max_width_percent=100,
         auto_fit=True,
         content_padding=4,
     )
@@ -119,12 +121,27 @@ def test_sidebar_sizing_policy_avoids_small_resize_jitter() -> None:
     policy = SidebarSizingPolicy(
         min_width=20,
         max_width=60,
+        max_width_percent=100,
         auto_fit=True,
         content_padding=4,
         jitter_threshold=2,
     )
 
     assert policy.preferred_width(160, content_width=30, current_width=35) == 35
+
+
+##############################################################################
+def test_sidebar_sizing_policy_respects_percent_cap() -> None:
+    """The sidebar should not grow past the configured percent of terminal width."""
+    policy = SidebarSizingPolicy(
+        min_width=20,
+        max_width=120,
+        max_width_percent=40,
+        auto_fit=True,
+        content_padding=4,
+    )
+
+    assert policy.preferred_width(100, content_width=90) == 40
 
 
 ### test_layout.py ends here

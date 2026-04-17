@@ -265,7 +265,8 @@ and automatically switches to a single-pane layout on narrower terminals.
 ```json
 "sidebar_default_width_percent": 22,
 "sidebar_min_width": 24,
-"sidebar_max_width": 60,
+"sidebar_max_width": 80,
+"sidebar_max_width_percent": 45,
 "sidebar_auto_fit": true,
 "responsive_auto_switch_narrow": true,
 "responsive_narrow_width": 100,
@@ -274,6 +275,8 @@ and automatically switches to a single-pane layout on narrower terminals.
 
 - `sidebar_default_width_percent` controls the normal split-view width.
 - `sidebar_min_width` and `sidebar_max_width` clamp the sidebar when auto-fit is active.
+- `sidebar_max_width_percent` prevents the sidebar from consuming too much of the
+  terminal even when deep trees or long flat-list entries need more room.
 - `sidebar_auto_fit` enables content-aware sizing for the active navigation pane.
 - `responsive_auto_switch_narrow` enables the narrow-terminal single-pane mode.
 - `responsive_narrow_width` is the width threshold where the single-pane layout kicks in.
@@ -285,6 +288,23 @@ When Hike is in single-pane mode, use `JumpToSidebarView`
 by default) to switch to the active sidebar view, and `JumpToDocument`
 ([`JumpToDocument`](#bindable-commands), bound to <kbd>Ctrl</kbd>+<kbd>G</kbd>
 by default) to return to the markdown content.
+
+## Local browser mode
+
+The local browser can render either as a directory tree or as a flat list of
+relative paths rooted at the current local browser directory.
+
+```json
+"local_browser_view_mode": "flat-list"
+```
+
+Valid values are `"tree"` and `"flat-list"`.
+
+Use `ToggleLocalBrowserMode`
+([`ToggleLocalBrowserMode`](#bindable-commands), bound to
+<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> by default) to switch between the
+two modes. When the flat list is active, selecting a directory changes the root
+of the local browser to that directory.
 
 ## Obsidian vaults location
 

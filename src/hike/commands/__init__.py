@@ -25,6 +25,7 @@ from .navigation import (
     JumpToLocalBrowser,
     JumpToSidebarView,
     JumpToTableOfContents,
+    ToggleLocalBrowserMode,
 )
 
 ##############################################################################
@@ -45,6 +46,7 @@ __all__ = [
     "JumpToLocalBrowser",
     "JumpToSidebarView",
     "JumpToTableOfContents",
+    "ToggleLocalBrowserMode",
     "Reload",
     "SaveCopy",
     "SearchBookmarks",

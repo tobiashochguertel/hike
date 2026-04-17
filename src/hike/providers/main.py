@@ -32,6 +32,7 @@ from ..commands import (
     SaveCopy,
     SearchBookmarks,
     SearchHistory,
+    ToggleLocalBrowserMode,
     ToggleNavigation,
 )
 
@@ -68,6 +69,7 @@ class MainCommands(CommandsProvider):
         yield from self.maybe(SaveCopy)
         yield SearchBookmarks()
         yield SearchHistory()
+        yield ToggleLocalBrowserMode()
         yield ToggleNavigation()
 
 

@@ -1,0 +1,70 @@
+version: "3"
+
+vars:
+  ALL_IN_BRANCH: feature/all-requested-features
+  INSTALL_REPO: https://github.com/tobiashochguertel/hike.git
+
+tasks:
+  check:
+    desc: Run the full validation suite
+    cmds:
+      - make checkall
+
+  merge-all-requested-features:
+    desc: Merge SOURCE_BRANCH into feature/all-requested-features, validate, and push
+    requires:
+      vars:
+        - SOURCE_BRANCH
+    cmds:
+      - |
+        bash -euo pipefail <<'EOF'
+        current_branch="$(git branch --show-current)"
+        source_branch="{{.SOURCE_BRANCH}}"
+        target_branch="{{.ALL_IN_BRANCH}}"
+
+        if [ -n "$(git status --short)" ]; then
+          echo "Working tree must be clean before merging." >&2
+          exit 1
+        fi
+
+        if [ "$source_branch" = "$target_branch" ]; then
+          echo "SOURCE_BRANCH must differ from $target_branch." >&2
+          exit 1
+        fi
+
+        trap 'git switch "$current_branch" >/dev/null' EXIT
+
+        git fetch origin "$target_branch" "$source_branch"
+        git switch "$target_branch"
+        git merge --no-ff "$source_branch" \
+          -m "merge: add $source_branch" \
+          -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+        make checkall
+        git push origin "$target_branch"
+        EOF
+
+  install-all-requested-features:
+    desc: Install hike from feature/all-requested-features with uv tool
+    cmds:
+      - |
+        bash -euo pipefail <<'EOF'
+        install_ref="git+{{.INSTALL_REPO}}@{{.ALL_IN_BRANCH}}"
+
+        if uv tool list | grep -q '^hike '; then
+          uv tool uninstall hike
+        fi
+
+        uv tool install "$install_ref"
+        hike --bindings | grep -E 'ToggleLocalBrowserMode|JumpToSidebarView|JumpToDocument'
+        EOF
+
+  refresh-all-requested-features:
+    desc: Merge SOURCE_BRANCH into feature/all-requested-features, validate, push, and install
+    requires:
+      vars:
+        - SOURCE_BRANCH
+    cmds:
+      - task: merge-all-requested-features
+        vars:
+          SOURCE_BRANCH: "{{.SOURCE_BRANCH}}"
+      - task: install-all-requested-features

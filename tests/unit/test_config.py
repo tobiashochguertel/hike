@@ -19,6 +19,10 @@ from hike.data.config import (
 )
 from hike.data.discovery import local_discovery_options
 from hike.data.layout import LayoutMode, layout_policy
+from hike.data.local_browser import (
+    LocalBrowserMode,
+    local_browser_mode_from_configuration,
+)
 
 
 ##############################################################################
@@ -86,6 +90,7 @@ def test_layout_policy_uses_configuration_defaults() -> None:
             sidebar_default_width_percent=30,
             sidebar_min_width=20,
             sidebar_max_width=48,
+            sidebar_max_width_percent=35,
             sidebar_auto_fit=False,
             responsive_auto_switch_narrow=False,
             responsive_narrow_width=88,
@@ -96,6 +101,7 @@ def test_layout_policy_uses_configuration_defaults() -> None:
     assert policy.sidebar.default_width_percent == 30
     assert policy.sidebar.min_width == 20
     assert policy.sidebar.max_width == 48
+    assert policy.sidebar.max_width_percent == 35
     assert policy.sidebar.auto_fit is False
     assert policy.responsive.auto_switch_narrow is False
     assert policy.responsive.narrow_width == 88
@@ -107,6 +113,17 @@ def test_layout_policy_rejects_invalid_narrow_mode() -> None:
     """Invalid responsive layout modes should fail fast."""
     with pytest.raises(ValueError, match="responsive_narrow_mode"):
         layout_policy(Configuration(responsive_narrow_mode="broken"))
+
+
+##############################################################################
+def test_local_browser_mode_configuration_accepts_flat_list() -> None:
+    """The configured local browser mode should be parseable."""
+    assert (
+        local_browser_mode_from_configuration(
+            Configuration(local_browser_view_mode="flat-list").local_browser_view_mode
+        )
+        is LocalBrowserMode.FLAT_LIST
+    )
 
 
 ### test_config.py ends here
