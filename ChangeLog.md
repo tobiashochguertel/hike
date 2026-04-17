@@ -63,6 +63,11 @@
 - Moved screen and widget configuration access behind the running Hike
   application so UI code no longer reaches directly into config persistence
   helpers.
+- Removed the last ambient config reads from non-UI runtime helpers by passing
+  explicit Markdown/content-type and forge-branch inputs into location and
+  remote-opening flows.
+- Added end-to-end coverage for the Typer CLI and the Textual TUI using
+  `CliRunner` and Textual's `run_test()` / `Pilot` APIs.
 
 ## v1.4.0
 

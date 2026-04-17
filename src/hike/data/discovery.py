@@ -2,7 +2,7 @@
 
 ##############################################################################
 # Python imports.
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
 from typing import Any, cast
@@ -15,7 +15,10 @@ from pathspec import GitIgnoreSpec
 # Local imports.
 from .config import Configuration
 from .ignore_files import is_ignored
-from .location_types import maybe_markdown
+from .location_types import (
+    markdown_extensions_from_configuration,
+    maybe_markdown,
+)
 
 
 ##############################################################################
@@ -26,6 +29,9 @@ class LocalDiscoveryOptions:
     use_ignore_files: bool = True
     show_hidden: bool = False
     exclude_patterns: tuple[str, ...] = ()
+    markdown_extensions: tuple[str, ...] = field(
+        default_factory=lambda: markdown_extensions_from_configuration(Configuration())
+    )
 
 
 def local_discovery_options(
@@ -44,6 +50,9 @@ def local_discovery_options(
         exclude_patterns=(
             *configuration.local_exclude_patterns,
             *tuple(exclude),
+        ),
+        markdown_extensions=tuple(
+            extension.lower() for extension in configuration.markdown_extensions
         ),
     )
 
@@ -78,7 +87,7 @@ def should_include_path(
         return False
     if is_excluded(path, root=root, patterns=options.exclude_patterns):
         return False
-    return path.is_dir() or maybe_markdown(path)
+    return path.is_dir() or maybe_markdown(path, options.markdown_extensions)
 
 
 ### discovery.py ends here

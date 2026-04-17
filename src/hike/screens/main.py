@@ -66,6 +66,10 @@ from ..data import (
 )
 from ..data.discovery import LocalDiscoveryOptions, local_discovery_options
 from ..data.layout import LayoutMode, LayoutState, effective_layout_state, layout_policy
+from ..data.location_types import (
+    markdown_content_types_from_configuration,
+    markdown_extensions_from_configuration,
+)
 from ..messages import (
     ClearHistory,
     CopyToClipboard,
@@ -408,13 +412,18 @@ class Main(EnhancedScreen[None]):
         Args:
             message: The message requesting the file be opened.
         """
-        if maybe_markdown(message.to_open) or await can_be_negotiated_to_markdown(
-            message.to_open
+        configuration = self._configuration()
+        if maybe_markdown(
+            message.to_open,
+            markdown_extensions_from_configuration(configuration),
+        ) or await can_be_negotiated_to_markdown(
+            message.to_open,
+            markdown_content_types_from_configuration(configuration),
         ):
             self.query_one(Viewer).goto_anchor_after_load(
                 message.anchor
             ).location = message.to_open
-            self._show_document(focus=self._configuration().focus_viewer_on_load)
+            self._show_document(focus=configuration.focus_viewer_on_load)
         else:
             view_in_browser(message.to_open)
 
@@ -432,7 +441,12 @@ class Main(EnhancedScreen[None]):
                 filters=Filters(
                     (
                         "Markdown",
-                        maybe_markdown,
+                        lambda path: maybe_markdown(
+                            path,
+                            markdown_extensions_from_configuration(
+                                self._configuration()
+                            ),
+                        ),
                     ),
                     ("All files", lambda _: True),
                 ),
@@ -459,7 +473,7 @@ class Main(EnhancedScreen[None]):
         Args:
             message: The message requesting the operation.
         """
-        if (url := await message.url()) is None:
+        if (url := await message.url(self._configuration().main_branches)) is None:
             self.notify(
                 "The file you were after could not be located.\n\n"
                 "Check the spelling of the owner, repository and file; "

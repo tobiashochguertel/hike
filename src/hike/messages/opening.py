@@ -2,6 +2,7 @@
 
 ##############################################################################
 # Python imports.
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -16,7 +17,6 @@ from textual.message import Message
 ##############################################################################
 # Local imports.
 from .. import USER_AGENT
-from ..data import load_configuration
 from ..types import HikeLocation
 
 
@@ -73,8 +73,11 @@ class OpenFromForge(Message):
     filename: str | None = None
     """The optional name of the file to open."""
 
-    async def url(self) -> URL | None:
+    async def url(self, candidate_branches: Sequence[str]) -> URL | None:
         """The URL for the file on the forge.
+
+        Args:
+            candidate_branches: Branch names to try when no explicit branch was supplied.
 
         Returns:
             The URL if one could be worked out, or `None` if not.
@@ -82,7 +85,7 @@ class OpenFromForge(Message):
         filename = self.filename or "README.md"
         async with AsyncClient() as client:
             for candidate_branch in (
-                [self.branch] if self.branch else load_configuration().main_branches
+                [self.branch] if self.branch else candidate_branches
             ):
                 url = self.raw_url_format.format(
                     owner=self.owner,
