@@ -71,6 +71,7 @@ from ..data import (
     update_configuration,
 )
 from ..data.discovery import LocalDiscoveryOptions, local_discovery_options
+from ..data.layout import LayoutState, effective_layout_state
 from ..messages import (
     ClearHistory,
     CopyToClipboard,
@@ -183,6 +184,8 @@ class Main(EnhancedScreen[None]):
         """
         self._arguments = arguments
         """The arguments passed on the command line."""
+        self._layout_state = LayoutState()
+        """The effective layout state."""
         self._local_options = LocalDiscoveryOptions()
         """The effective local browser discovery options."""
         super().__init__()
@@ -201,12 +204,13 @@ class Main(EnhancedScreen[None]):
         """Configure the screen once the DOM is mounted."""
         config = load_configuration()
         self._local_options = local_discovery_options(self._arguments, config)
-        self.navigation_visible = (
-            config.navigation_visible
-            if self._arguments.navigation is None
-            else self._arguments.navigation
+        self._layout_state = effective_layout_state(
+            config,
+            terminal_width=self.size.width,
+            navigation_override=self._arguments.navigation,
         )
-        self.query_one(Navigation).dock_right = config.navigation_on_right
+        self.navigation_visible = self._layout_state.navigation_visible
+        self.query_one(Navigation).dock_right = self._layout_state.navigation_dock_right
         self.query_one(Navigation).bookmarks = (bookmarks := load_bookmarks())
         if self._arguments.root is not None:
             self.query_one(Navigation).set_local_view_root(
@@ -216,7 +220,7 @@ class Main(EnhancedScreen[None]):
         BookmarkCommands.bookmarks = bookmarks
         self.query_one(Viewer).history = load_history()
         self.query_one(CommandLine).history = load_command_history()
-        self.query_one(CommandLine).dock_top = config.command_line_on_top
+        self.query_one(CommandLine).dock_top = self._layout_state.command_line_on_top
         self._handle_startup_input()
 
     def _handle_startup_input(self) -> None:
