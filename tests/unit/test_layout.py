@@ -74,6 +74,15 @@ def test_effective_layout_state_supports_responsive_policy() -> None:
 
 
 ##############################################################################
+def test_effective_layout_state_defaults_to_content_only_on_narrow_screens() -> None:
+    """Default responsive policy should switch narrow terminals to one pane."""
+    state = effective_layout_state(Configuration(), terminal_width=80)
+
+    assert state.mode is LayoutMode.CONTENT_ONLY
+    assert state.navigation_visible is False
+
+
+##############################################################################
 def test_sidebar_sizing_policy_clamps_width() -> None:
     """Sidebar width should respect the configured min/max caps."""
     policy = SidebarSizingPolicy(
