@@ -35,10 +35,14 @@ from ...commands import JumpToCommandLine
 from ...data import Bookmark, Bookmarks, load_configuration
 from ...data.discovery import LocalDiscoveryOptions
 from ...data.layout import LayoutState
+from ...data.local_browser import (
+    LocalBrowserMode,
+    local_browser_mode_from_configuration,
+)
 from ...types import HikeHistory, HikeLocation
 from .bookmarks_view import BookmarksView
 from .history_view import HistoryView
-from .local_view import LocalView
+from .local_browser import LocalBrowser
 
 
 ##############################################################################
@@ -71,7 +75,6 @@ class Navigation(Vertical):
     Navigation {
         width: 22%;
         min-width: 24;
-        max-width: 60;
         dock: left;
         background: transparent;
 
@@ -94,7 +97,7 @@ class Navigation(Vertical):
 
         /* https://github.com/Textualize/textual/issues/5488 */
         HistoryView, &:focus-within HistoryView,
-        LocalView, &:focus-within LocalView,
+        LocalBrowser, &:focus-within LocalBrowser,
         BookmarksView, &:focus-within BookmarksView {
             background: transparent;
         }
@@ -143,6 +146,7 @@ class Navigation(Vertical):
     def __init__(
         self,
         *,
+        local_root: Path | None = None,
         local_options: LocalDiscoveryOptions | None = None,
         name: str | None = None,
         id: str | None = None,
@@ -150,6 +154,11 @@ class Navigation(Vertical):
         disabled: bool = False,
     ) -> None:
         """Initialise the navigation panel."""
+        self._local_root = (
+            Path(load_configuration().local_start_location).expanduser().resolve()
+            if local_root is None
+            else local_root.expanduser().resolve()
+        )
         self._local_options = local_options or LocalDiscoveryOptions()
         super().__init__(name=name, id=id, classes=classes, disabled=disabled)
 
@@ -202,7 +211,7 @@ class Navigation(Vertical):
                     self.query_one("MarkdownTableOfContents Tree", Tree).root
                 )
             case "local":
-                return _visible_tree_width(self.query_one(LocalView).root)
+                return self.query_one(LocalBrowser).content_width_hint()
             case "bookmarks":
                 return self.query_one(BookmarksView).content_width_hint()
             case "history":
@@ -249,9 +258,12 @@ class Navigation(Vertical):
             with TabPane("Content", id="content"):
                 yield MarkdownTableOfContents(Markdown())
             with TabPane("Local", id="local"):
-                yield LocalView(
-                    Path(load_configuration().local_start_location).expanduser(),
+                yield LocalBrowser(
+                    self._local_root,
                     options=self._local_options,
+                    mode=local_browser_mode_from_configuration(
+                        load_configuration().local_browser_view_mode
+                    ),
                 )
             with TabPane("Bookmarks", id="bookmarks"):
                 yield BookmarksView()
@@ -282,19 +294,25 @@ class Navigation(Vertical):
         Args:
             root: The new root directory.
         """
-        self.query_one(LocalView).path = root
+        self.query_one(LocalBrowser).set_root(root)
         self._request_layout_hint_refresh()
 
     def configure_local_view(self, options: LocalDiscoveryOptions) -> None:
         """Update the local browser's discovery options."""
         self._local_options = options
-        self.query_one(LocalView).configure(options)
+        self.query_one(LocalBrowser).configure(options)
         self._request_layout_hint_refresh()
 
     def refresh_local_view(self) -> None:
         """Refresh the local view."""
-        self.query_one(LocalView).reload()
+        self.query_one(LocalBrowser).reload()
         self._request_layout_hint_refresh()
+
+    def toggle_local_browser_mode(self) -> LocalBrowserMode:
+        """Toggle the local browser mode."""
+        mode = self.query_one(LocalBrowser).toggle_mode()
+        self._request_layout_hint_refresh()
+        return mode
 
     @dataclass
     class BookmarksUpdated(Message):
@@ -360,6 +378,11 @@ class Navigation(Vertical):
     @on(TabbedContent.TabActivated)
     def _active_tab_changed(self, _: TabbedContent.TabActivated) -> None:
         """React to the active navigation pane changing."""
+        self._request_layout_hint_refresh()
+
+    @on(LocalBrowser.LayoutHintChanged)
+    def _local_browser_changed(self, _: LocalBrowser.LayoutHintChanged) -> None:
+        """React to the local browser content or mode changing."""
         self._request_layout_hint_refresh()
 
     @on(Tree.NodeExpanded)

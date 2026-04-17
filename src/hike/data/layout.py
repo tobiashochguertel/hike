@@ -26,7 +26,8 @@ class SidebarSizingPolicy:
 
     default_width_percent: int = 22
     min_width: int = 24
-    max_width: int = 60
+    max_width: int = 80
+    max_width_percent: int = 45
     auto_fit: bool = True
     content_padding: int = 4
     jitter_threshold: int = 2
@@ -34,11 +35,21 @@ class SidebarSizingPolicy:
     def default_width(self, terminal_width: int) -> int:
         """Calculate the default sidebar width for a terminal width."""
         calculated = round(terminal_width * (self.default_width_percent / 100))
-        return self.clamp_width(calculated)
+        return self.clamp_width(calculated, terminal_width)
 
-    def clamp_width(self, width: int) -> int:
+    def effective_max_width(self, terminal_width: int) -> int:
+        """Return the effective absolute max width for the current terminal."""
+        return min(
+            self.max_width,
+            round(terminal_width * (self.max_width_percent / 100)),
+        )
+
+    def clamp_width(self, width: int, terminal_width: int) -> int:
         """Clamp a width to the configured min/max caps."""
-        return max(self.min_width, min(width, self.max_width))
+        return max(
+            self.min_width,
+            min(width, self.effective_max_width(terminal_width)),
+        )
 
     def preferred_width(
         self,
@@ -50,7 +61,9 @@ class SidebarSizingPolicy:
         """Calculate the effective sidebar width for the current conditions."""
         width = self.default_width(terminal_width)
         if self.auto_fit and content_width is not None:
-            width = self.clamp_width(content_width + self.content_padding)
+            width = self.clamp_width(
+                content_width + self.content_padding, terminal_width
+            )
         if (
             current_width is not None
             and abs(width - current_width) < self.jitter_threshold
@@ -116,6 +129,7 @@ def layout_policy(configuration: Configuration) -> LayoutPolicy:
             default_width_percent=configuration.sidebar_default_width_percent,
             min_width=configuration.sidebar_min_width,
             max_width=configuration.sidebar_max_width,
+            max_width_percent=configuration.sidebar_max_width_percent,
             auto_fit=configuration.sidebar_auto_fit,
         ),
         responsive=ResponsiveLayoutPolicy(

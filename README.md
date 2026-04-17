@@ -92,6 +92,10 @@ On narrower terminals Hike automatically switches to a single-pane layout. Use
 <kbd>Ctrl</kbd>+<kbd>N</kbd> to show the active sidebar view and
 <kbd>Ctrl</kbd>+<kbd>G</kbd> to return to the markdown content.
 
+The local browser can also switch between a tree and a flat list of relative
+paths. Use <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> to toggle the local
+browser mode.
+
 For more information and details on configuring Hike, see [the online
 documentation](https://hike.davep.dev/).
 
@@ -102,6 +106,8 @@ documentation](https://hike.davep.dev/).
   CLI toggles for hidden files, ignore handling and extra excludes.
 - A smaller, auto-fitting navigation sidebar with responsive single-pane
   behavior for narrow terminals.
+- A switchable local browser that can render either as a tree or as a flat list
+  of relative paths.
 - A simple bookmarking system.
 - A browsing history.
 - The ability to edit markdown documents in the local filesystem, either

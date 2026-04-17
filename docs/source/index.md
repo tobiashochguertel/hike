@@ -211,6 +211,13 @@ Use <kbd>Ctrl</kbd>+<kbd>N</kbd> to show the active sidebar view and
 <kbd>F2</kbd> navigation toggle still works, and the sidebar will return to the
 normal split layout once the terminal is wide enough again.
 
+### Local browser modes
+
+The local browser can now switch between a tree and a flat list of relative
+paths. Use <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> (or `m` while the local
+browser has focus) to toggle modes. The flat list uses paths relative to the
+current local-browser root, and selecting a directory changes that root.
+
 ## Getting help
 
 A great way to get to know Hike is to read the help screen. Once in the

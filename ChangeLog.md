@@ -19,6 +19,12 @@
   the document/content jump commands.
 - Added persistent configuration for sidebar sizing and responsive layout
   defaults.
+- Added a switchable local browser flat-list mode with relative paths and
+  persistent mode configuration.
+- Stabilised the initial local browser root display so opening a directory does
+  not briefly flash the absolute path before settling.
+- Improved local tree sidebar sizing so deep nested paths can grow the sidebar
+  up to the configured percentage-based cap.
 
 ## v1.4.0
 

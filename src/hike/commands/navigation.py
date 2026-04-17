@@ -36,6 +36,13 @@ class JumpToLocalBrowser(Command):
 
 
 ##############################################################################
+class ToggleLocalBrowserMode(Command):
+    """Toggle the local browser between tree and flat-list modes"""
+
+    BINDING_KEY = "ctrl+shift+l"
+
+
+##############################################################################
 class JumpToBookmarks(Command):
     """Jump to the bookmarks in the navigation panel"""
 
