@@ -80,6 +80,7 @@ hike open --no-ignore
 The structured CLI now also includes:
 
 ```sh
+hike --version
 hike bindings list
 hike themes list
 hike config init
@@ -90,6 +91,9 @@ hike schema export
 hike env init
 hike env validate
 ```
+
+If you still have a legacy `~/.config/hike/configuration.json`, running
+`hike config init --force` now migrates you onto the modern YAML config path.
 
 The best way to get to know Hike is to read the help screen. Once in the
 application you can see this by pressing <kbd>F1</kbd>.

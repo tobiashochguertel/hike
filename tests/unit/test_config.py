@@ -3,13 +3,19 @@
 ##############################################################################
 # Python imports.
 from pathlib import Path
+from types import SimpleNamespace
 
 ##############################################################################
 # Pytest imports.
 import pytest
 
 ##############################################################################
+# Typer imports.
+from typer.testing import CliRunner
+
+##############################################################################
 # Local imports.
+from hike.cli.app import app as cli_app
 from hike.data.config import (
     Configuration,
     configuration_file,
@@ -26,6 +32,29 @@ from hike.data.local_browser import (
 )
 from hike.hike import Hike
 from hike.startup import OpenOptions
+
+##############################################################################
+_RUNNER = CliRunner()
+
+
+##############################################################################
+def _patch_config_locations(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> Path:
+    """Point configuration resolution at a temporary test location."""
+    config_root = tmp_path / ".config" / "hike"
+    config_root.mkdir(parents=True, exist_ok=True)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("hike.data.config.config_dir", lambda: config_root)
+    monkeypatch.setattr(
+        "hike.data.config._legacy_dotfile", lambda: tmp_path / ".hike.yaml"
+    )
+    monkeypatch.setattr(
+        "hike.data.config.load_runtime_settings",
+        lambda: SimpleNamespace(config_path=None),
+    )
+    return config_root
 
 
 ##############################################################################
@@ -151,6 +180,61 @@ def test_hike_applies_theme_and_binding_overrides_from_configuration(
         assert app._keymap["JumpToBookmarks"] == "shift+f6"
     finally:
         set_configuration_file(None)
+
+
+##############################################################################
+def test_load_configuration_accepts_yaml_in_legacy_json_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Broken YAML-in-JSON legacy configs should still be readable."""
+    config_root = _patch_config_locations(monkeypatch, tmp_path)
+    legacy = config_root / "configuration.json"
+    legacy.write_text(
+        "navigation_visible: false\nmain_branches:\n  - trunk\n",
+        encoding="utf-8",
+    )
+
+    try:
+        load_configuration.cache_clear()
+        config = load_configuration()
+    finally:
+        load_configuration.cache_clear()
+        set_configuration_file(None)
+
+    assert config.navigation_visible is False
+    assert config.main_branches == ["trunk"]
+
+
+##############################################################################
+def test_config_init_migrates_legacy_json_to_default_yaml(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`config init --force` should migrate legacy JSON configs to YAML."""
+    config_root = _patch_config_locations(monkeypatch, tmp_path)
+    legacy = config_root / "configuration.json"
+    legacy.write_text('{"navigation_visible": false}\n', encoding="utf-8")
+    monkeypatch.setattr(
+        "hike.cli.app.load_hike_class",
+        lambda: pytest.fail("Config init should not load the TUI"),
+    )
+
+    try:
+        result = _RUNNER.invoke(cli_app, ["config", "init", "--force"])
+    finally:
+        load_configuration.cache_clear()
+        set_configuration_file(None)
+
+    target = config_root / "config.yaml"
+    backups = list(config_root.glob("configuration.json.bak-*"))
+
+    assert result.exit_code == 0
+    assert target.is_file()
+    assert not legacy.exists()
+    assert len(backups) == 1
+    assert backups[0].read_text(encoding="utf-8") == '{"navigation_visible": false}\n'
+    assert "# Hike configuration" in target.read_text(encoding="utf-8")
 
 
 ##############################################################################

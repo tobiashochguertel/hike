@@ -15,13 +15,13 @@ import typer
 ##############################################################################
 # Local imports.
 from .. import __version__
-from ..hike import Hike
 from ..startup import OpenOptions
 from .bindings_cmd import app as bindings_app
 from .bindings_cmd import list_bindings
 from .common import apply_runtime_path_overrides, config_path_option, env_path_option
 from .config_cmd import app as config_app
 from .env_cmd import app as env_app
+from .runtime import load_hike_class
 from .schema_cmd import app as schema_app
 from .themes_cmd import app as themes_app
 from .themes_cmd import list_themes
@@ -31,7 +31,7 @@ app = typer.Typer(
     name="hike",
     help="A Markdown browser for the terminal.",
     add_completion=True,
-    no_args_is_help=True,
+    invoke_without_command=True,
 )
 
 app.add_typer(config_app, name="config")
@@ -42,10 +42,30 @@ app.add_typer(themes_app, name="themes")
 
 
 ##############################################################################
+@app.callback()
+def main_callback(
+    ctx: typer.Context,
+    version: bool = typer.Option(
+        False,
+        "--version",
+        help="Show version information and exit.",
+        is_eager=True,
+    ),
+) -> None:
+    """Manage Hike from a structured Typer CLI."""
+    if version:
+        typer.echo(f"hike v{__version__}")
+        raise typer.Exit()
+    if ctx.invoked_subcommand is None and not ctx.args:
+        typer.echo(ctx.get_help(), nl=False)
+        raise typer.Exit()
+
+
+##############################################################################
 @app.command("license")
 def show_license() -> None:
     """Show Hike's license text."""
-    typer.echo(cleandoc(Hike.HELP_LICENSE))
+    typer.echo(cleandoc(load_hike_class().HELP_LICENSE))
 
 
 ##############################################################################
@@ -110,19 +130,11 @@ def open_command(
         "--licence",
         help="Show license information instead of launching the TUI.",
     ),
-    version: bool = typer.Option(
-        False,
-        "--version",
-        help="Show version information and exit.",
-    ),
     config_path: Path | None = config_path_option(),
     env_path: Path | None = env_path_option(),
 ) -> None:
     """Launch the Hike TUI."""
     apply_runtime_path_overrides(config_path, env_path)
-    if version:
-        typer.echo(f"hike v{__version__}")
-        raise typer.Exit()
     if license_text:
         show_license()
         raise typer.Exit()
@@ -146,7 +158,7 @@ def open_command(
         hidden=hidden,
         exclude=tuple(exclude),
     )
-    Hike(options).run()
+    load_hike_class()(options).run()
 
 
 ### app.py ends here

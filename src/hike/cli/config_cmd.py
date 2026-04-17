@@ -20,6 +20,7 @@ from pydantic import ValidationError
 # Local imports.
 from ..data import (
     configuration_file,
+    configuration_init_paths,
     dump_configuration,
     get_configuration_value,
     render_default_configuration,
@@ -57,20 +58,29 @@ def init_config(
 ) -> None:
     """Create a commented default configuration file."""
     apply_runtime_path_overrides(config_path, env_path)
-    target = configuration_file()
-    if target.exists():
+    target, existing = configuration_init_paths()
+    if existing is not None:
         if not force:
             _fail(
-                f"Configuration file already exists: {target}",
+                f"Configuration file already exists: {existing}",
                 code=1,
             )
-        backup = target.with_name(
-            f"{target.name}.bak-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        backup = existing.with_name(
+            f"{existing.name}.bak-{datetime.now().strftime('%Y%m%d%H%M%S')}"
         )
-        target.replace(backup)
+        existing.replace(backup)
         typer.echo(f"Backed up existing configuration to {backup}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(render_default_configuration(), encoding="utf-8")
+    if target.suffix.lower() == ".json":
+        from ..data import Configuration, save_configuration, set_configuration_file
+
+        previous = set_configuration_file(target)
+        try:
+            save_configuration(Configuration())
+        finally:
+            set_configuration_file(previous if previous != target else None)
+    else:
+        target.write_text(render_default_configuration(), encoding="utf-8")
     typer.echo(f"Created configuration file: {target}")
 
 

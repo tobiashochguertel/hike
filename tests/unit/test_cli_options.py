@@ -43,7 +43,7 @@ def _install_open_spy(monkeypatch: pytest.MonkeyPatch) -> dict[str, object]:
     """Patch the open command so tests can inspect the captured options."""
     captured: dict[str, object] = {}
     _FakeHike.captured = captured
-    monkeypatch.setattr("hike.cli.app.Hike", _FakeHike)
+    monkeypatch.setattr("hike.cli.app.load_hike_class", lambda: _FakeHike)
     monkeypatch.setattr(
         "hike.cli.app.apply_runtime_path_overrides",
         lambda config_path, env_path: captured.update(
@@ -186,6 +186,22 @@ def test_root_cli_help_lists_commands_without_launching_tui(
     assert "open" in result.output
     assert "config" in result.output
     assert "ran" not in captured
+
+
+##############################################################################
+def test_root_cli_version_does_not_launch_tui(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The root callback should expose `--version` without loading the TUI."""
+    monkeypatch.setattr(
+        "hike.cli.app.load_hike_class",
+        lambda: pytest.fail("Root --version should not load the TUI"),
+    )
+
+    result = _RUNNER.invoke(app, ["--version"])
+
+    assert result.exit_code == 0
+    assert "hike v" in result.output
 
 
 ##############################################################################
