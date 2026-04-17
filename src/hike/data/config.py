@@ -139,8 +139,8 @@ class Configuration(BaseModel):
         description="Show front matter blocks in the document viewer when present.",
     )
     allow_traditional_quit: bool = Field(
-        default=False,
-        description="Allow Ctrl+C to quit immediately instead of showing Textual help.",
+        default=True,
+        description="Allow Ctrl+C to quit immediately and restore the shell promptly.",
     )
 
 

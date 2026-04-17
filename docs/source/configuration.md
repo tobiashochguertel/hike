@@ -114,16 +114,24 @@ Because Hike is built with Textual, and some of Textual's widgets use
 situations <kbd>ctrl</kbd>+<kbd>c</kbd> will pop up a notification reminding
 you what the actual binding is to quit the application.
 
-For those who really need to lean into their muscle memory you can enable
-<kbd>ctrl</kbd>+<kbd>c</kbd> as a quit key combination:
+Hike now enables the traditional quit behaviour by default, so
+<kbd>ctrl</kbd>+<kbd>c</kbd> exits immediately unless a widget is handling copy
+selection itself. The default configuration value is:
 
-```json
-"allow_traditional_quit": true
+```yaml
+allow_traditional_quit: true
 ```
 
-If this is set *and* if you aren't in a widget with marked text that can be
-copied, Hike will quit. If set to `false` (the default) the default
-behaviour for Hike (and most Textual applications) will happen.
+If you would prefer Textual's default reminder/help behaviour instead, set it to
+`false`:
+
+```yaml
+allow_traditional_quit: false
+```
+
+With that setting disabled, Hike falls back to Textual's normal
+<kbd>ctrl</kbd>+<kbd>c</kbd> handling, including copy-friendly behaviour in
+widgets that support text selection.
 
 ## Local file system start location
 

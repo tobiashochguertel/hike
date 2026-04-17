@@ -4,7 +4,6 @@
 # Python imports.
 from __future__ import annotations
 
-from datetime import datetime
 from json import dumps
 from pathlib import Path
 
@@ -20,15 +19,14 @@ from pydantic import ValidationError
 # Local imports.
 from ..data import (
     configuration_file,
-    configuration_init_paths,
     dump_configuration,
     get_configuration_value,
-    render_default_configuration,
     set_configuration_value,
     unset_configuration_value,
     validate_configuration_file,
 )
 from .common import apply_runtime_path_overrides, config_path_option, env_path_option
+from .services import initialize_configuration
 
 ##############################################################################
 app = typer.Typer(
@@ -58,30 +56,13 @@ def init_config(
 ) -> None:
     """Create a commented default configuration file."""
     apply_runtime_path_overrides(config_path, env_path)
-    target, existing = configuration_init_paths()
-    if existing is not None:
-        if not force:
-            _fail(
-                f"Configuration file already exists: {existing}",
-                code=1,
-            )
-        backup = existing.with_name(
-            f"{existing.name}.bak-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-        )
-        existing.replace(backup)
-        typer.echo(f"Backed up existing configuration to {backup}")
-    target.parent.mkdir(parents=True, exist_ok=True)
-    if target.suffix.lower() == ".json":
-        from ..data import Configuration, save_configuration, set_configuration_file
-
-        previous = set_configuration_file(target)
-        try:
-            save_configuration(Configuration())
-        finally:
-            set_configuration_file(previous if previous != target else None)
-    else:
-        target.write_text(render_default_configuration(), encoding="utf-8")
-    typer.echo(f"Created configuration file: {target}")
+    try:
+        result = initialize_configuration(force)
+    except FileExistsError as error:
+        _fail(f"Configuration file already exists: {error.filename}", code=1)
+    if result.backup is not None:
+        typer.echo(f"Backed up existing configuration to {result.backup}")
+    typer.echo(f"Created configuration file: {result.target}")
 
 
 ##############################################################################

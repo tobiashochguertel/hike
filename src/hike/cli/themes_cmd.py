@@ -10,8 +10,7 @@ import typer
 
 ##############################################################################
 # Local imports.
-from ..startup import OpenOptions
-from .runtime import load_hike_class
+from .services import theme_names
 
 ##############################################################################
 app = typer.Typer(
@@ -25,9 +24,8 @@ app = typer.Typer(
 @app.command("list")
 def list_themes() -> None:
     """List available themes."""
-    for theme in sorted(load_hike_class()(OpenOptions()).available_themes):
-        if theme != "textual-ansi":
-            typer.echo(theme)
+    for theme in theme_names():
+        typer.echo(theme)
 
 
 ### themes_cmd.py ends here

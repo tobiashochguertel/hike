@@ -3,7 +3,8 @@
 ##############################################################################
 ##############################################################################
 # Textual imports.
-from textual.app import InvalidThemeError, ScreenStackError
+from textual import events
+from textual.app import InvalidThemeError
 
 ##############################################################################
 # Textual enhanced imports.
@@ -11,7 +12,7 @@ from textual_enhanced.app import EnhancedApp
 
 ##############################################################################
 # Local imports.
-from . import __version__
+from .app_info import HELP_ABOUT, HELP_LICENSE, HELP_TITLE
 from .data import (
     load_configuration,
     update_configuration,
@@ -24,29 +25,9 @@ from .startup import OpenOptions
 class Hike(EnhancedApp[None]):
     """The main application class."""
 
-    HELP_TITLE = f"Hike v{__version__}"
-    HELP_ABOUT = """
-    `Hike` is a terminal-based Markdown viewer; it was created
-    by and is maintained by [Dave Pearson](https://www.davep.org/); it is
-    Free Software and can be [found on
-    GitHub](https://github.com/davep/hike).
-    """
-    HELP_LICENSE = """
-    Hike - A Markdown viewer for the terminal.  \n    Copyright (C) 2025 Dave Pearson
-
-    This program is free software: you can redistribute it and/or modify it
-    under the terms of the GNU General Public License as published by the Free
-    Software Foundation, either version 3 of the License, or (at your option)
-    any later version.
-
-    This program is distributed in the hope that it will be useful, but WITHOUT
-    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-    FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-    more details.
-
-    You should have received a copy of the GNU General Public License along with
-    this program. If not, see <https://www.gnu.org/licenses/>.
-    """
+    HELP_TITLE = HELP_TITLE
+    HELP_ABOUT = HELP_ABOUT
+    HELP_LICENSE = HELP_LICENSE
 
     COMMANDS = set()
 
@@ -59,16 +40,19 @@ class Hike(EnhancedApp[None]):
         self._arguments = arguments
         """The command line arguments passed to the application."""
         super().__init__()
+
+    def on_load(self, event: events.Load) -> None:
+        """Apply config-backed runtime settings before application mode starts."""
+        del event
         configuration = load_configuration()
-        if configuration.theme is not None:
+        theme_name = self._arguments.theme or configuration.theme
+        if theme_name is not None:
             try:
-                self.theme = arguments.theme or configuration.theme
+                self.theme = theme_name
             except InvalidThemeError:
                 pass
-        try:
-            self.update_keymap(configuration.bindings)
-        except ScreenStackError:  # https://github.com/Textualize/textual/issues/5742
-            pass
+        if configuration.bindings:
+            self.set_keymap(configuration.bindings)
 
     def watch_theme(self) -> None:
         """Save the application's theme when it's changed."""

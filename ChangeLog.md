@@ -50,6 +50,13 @@
   the full Textual application stack at module import time.
 - Added compatibility loading for broken legacy `.json` config files that
   contain YAML content from earlier typed-config builds.
+- Changed the default `Ctrl+C` behavior so the TUI quits immediately instead of
+  trapping users inside a broken raw terminal session.
+- Extracted CLI runtime/config initialization work into dedicated services so
+  Typer command handlers stay thin and avoid importing screen logic directly.
+- Replaced the temporary signal-env/runtime shim with a dedicated runtime
+  bootstrap seam, a static theme catalog for metadata commands, and Textual
+  `Load` lifecycle setup for theme/keymap initialization.
 
 ## v1.4.0
 

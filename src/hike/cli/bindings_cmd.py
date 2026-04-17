@@ -4,7 +4,6 @@
 # Python imports.
 from __future__ import annotations
 
-from operator import attrgetter
 from pathlib import Path
 
 ##############################################################################
@@ -13,14 +12,13 @@ import typer
 
 ##############################################################################
 # Local imports.
-from ..data import load_configuration
-from ..screens import Main
 from .common import (
     apply_runtime_path_overrides,
     config_path_option,
     console,
     env_path_option,
 )
+from .services import binding_summaries
 
 ##############################################################################
 app = typer.Typer(
@@ -38,15 +36,12 @@ def list_bindings(
 ) -> None:
     """List commands that support keybinding overrides."""
     apply_runtime_path_overrides(config_path, env_path)
-    overrides = load_configuration().bindings
-    for command in sorted(Main.COMMAND_MESSAGES, key=attrgetter("__name__")):
-        if command().has_binding:
-            current = overrides.get(command.__name__, command.binding().key)
-            console.print(
-                f"[bold]{command.__name__}[/] [dim]- {command.tooltip()}[/]\n"
-                f"    Default: [cyan]{command.binding().key}[/]  "
-                f"Current: [green]{current}[/]"
-            )
+    for summary in binding_summaries():
+        console.print(
+            f"[bold]{summary.command_name}[/] [dim]- {summary.tooltip}[/]\n"
+            f"    Default: [cyan]{summary.default_key}[/]  "
+            f"Current: [green]{summary.current_key}[/]"
+        )
 
 
 ### bindings_cmd.py ends here

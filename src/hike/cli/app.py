@@ -4,9 +4,7 @@
 # Python imports.
 from __future__ import annotations
 
-from inspect import cleandoc
 from pathlib import Path
-from shlex import split as split_shell_words
 
 ##############################################################################
 # Typer imports.
@@ -14,22 +12,27 @@ import typer
 
 ##############################################################################
 # Local imports.
-from .. import __version__
-from ..startup import OpenOptions
+from ..app_info import APP_DESCRIPTION, APP_NAME
 from .bindings_cmd import app as bindings_app
 from .bindings_cmd import list_bindings
 from .common import apply_runtime_path_overrides, config_path_option, env_path_option
 from .config_cmd import app as config_app
+from .contracts import OpenCommandRequest
 from .env_cmd import app as env_app
-from .runtime import load_hike_class
 from .schema_cmd import app as schema_app
+from .services import (
+    build_open_options,
+    license_text,
+    run_hike,
+    theme_names,
+    version_text,
+)
 from .themes_cmd import app as themes_app
-from .themes_cmd import list_themes
 
 ##############################################################################
 app = typer.Typer(
-    name="hike",
-    help="A Markdown browser for the terminal.",
+    name=APP_NAME.lower(),
+    help=APP_DESCRIPTION,
     add_completion=True,
     invoke_without_command=True,
 )
@@ -54,7 +57,7 @@ def main_callback(
 ) -> None:
     """Manage Hike from a structured Typer CLI."""
     if version:
-        typer.echo(f"hike v{__version__}")
+        typer.echo(version_text())
         raise typer.Exit()
     if ctx.invoked_subcommand is None and not ctx.args:
         typer.echo(ctx.get_help(), nl=False)
@@ -65,7 +68,7 @@ def main_callback(
 @app.command("license")
 def show_license() -> None:
     """Show Hike's license text."""
-    typer.echo(cleandoc(load_hike_class().HELP_LICENSE))
+    typer.echo(license_text())
 
 
 ##############################################################################
@@ -142,23 +145,25 @@ def open_command(
         list_bindings(config_path=config_path, env_path=env_path)
         raise typer.Exit()
     if theme == "?":
-        list_themes()
+        for item in theme_names():
+            typer.echo(item)
         raise typer.Exit()
-    if root is not None and not root.expanduser().is_dir():
-        raise typer.BadParameter("--root must point to an existing directory")
-    if target is not None and command is not None:
-        raise typer.BadParameter("TARGET and --command are mutually exclusive")
-    options = OpenOptions(
-        target=target,
-        command=None if command is None else tuple(split_shell_words(command)),
-        navigation=navigation,
-        theme=theme,
-        root=None if root is None else str(root),
-        ignore=ignore,
-        hidden=hidden,
-        exclude=tuple(exclude),
-    )
-    load_hike_class()(options).run()
+    try:
+        options = build_open_options(
+            OpenCommandRequest(
+                target=target,
+                command=command,
+                navigation=navigation,
+                theme=theme,
+                root=root,
+                ignore=ignore,
+                hidden=hidden,
+                exclude=tuple(exclude),
+            )
+        )
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+    run_hike(options)
 
 
 ### app.py ends here

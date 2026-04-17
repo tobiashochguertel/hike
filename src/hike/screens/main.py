@@ -24,7 +24,7 @@ from textual.widgets import Footer, Header, Markdown
 
 ##############################################################################
 # Textual enhanced imports.
-from textual_enhanced.commands import ChangeTheme, Command, Help, Quit
+from textual_enhanced.commands import Command, Help, Quit
 from textual_enhanced.dialogs import ModalInput
 from textual_enhanced.screen import EnhancedScreen
 from textual_enhanced.tools import add_key
@@ -36,28 +36,21 @@ from textual_fspicker import FileOpen, FileSave, Filters
 ##############################################################################
 # Local imports.
 from .. import __version__
+from ..command_catalog import MAIN_COMMAND_MESSAGES
 from ..commands import (
     Backward,
     BookmarkLocation,
-    ChangeCommandLineLocation,
-    ChangeNavigationSide,
     CopyLocationToClipboard,
     CopyMarkdownToClipboard,
     Edit,
     Forward,
     JumpToBookmarks,
-    JumpToCommandLine,
-    JumpToDocument,
     JumpToHistory,
     JumpToLocalBrowser,
     JumpToSidebarView,
     JumpToTableOfContents,
     Reload,
     SaveCopy,
-    SearchBookmarks,
-    SearchHistory,
-    ToggleLocalBrowserMode,
-    ToggleNavigation,
 )
 from ..data import (
     can_be_negotiated_to_markdown,
@@ -145,35 +138,7 @@ class Main(EnhancedScreen[None]):
     The following key bindings and commands are available:
     """
 
-    COMMAND_MESSAGES = (
-        # Keep these together as they're bound to function keys and destined
-        # for the footer.
-        Help,
-        ToggleNavigation,
-        Edit,
-        ChangeTheme,
-        Quit,
-        # Everything else.
-        Backward,
-        BookmarkLocation,
-        ChangeCommandLineLocation,
-        ChangeNavigationSide,
-        CopyLocationToClipboard,
-        CopyMarkdownToClipboard,
-        Forward,
-        JumpToBookmarks,
-        JumpToCommandLine,
-        JumpToDocument,
-        JumpToHistory,
-        JumpToLocalBrowser,
-        JumpToSidebarView,
-        JumpToTableOfContents,
-        Reload,
-        SaveCopy,
-        SearchBookmarks,
-        SearchHistory,
-        ToggleLocalBrowserMode,
-    )
+    COMMAND_MESSAGES = MAIN_COMMAND_MESSAGES
 
     BINDINGS = Command.bindings(*COMMAND_MESSAGES)
     COMMANDS = {MainCommands}

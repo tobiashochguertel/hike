@@ -10,6 +10,14 @@ from types import SimpleNamespace
 import pytest
 
 ##############################################################################
+# Textual imports.
+from textual import events
+
+##############################################################################
+# Textual enhanced imports.
+from textual_enhanced.app import EnhancedApp
+
+##############################################################################
 # Typer imports.
 from typer.testing import CliRunner
 
@@ -162,7 +170,7 @@ def test_local_browser_mode_configuration_accepts_flat_list() -> None:
 def test_hike_applies_theme_and_binding_overrides_from_configuration(
     tmp_path: Path,
 ) -> None:
-    """Runtime startup should consume persisted theme and binding overrides."""
+    """Runtime setup should consume persisted theme and binding overrides."""
     override = tmp_path / "config.yaml"
 
     try:
@@ -175,11 +183,77 @@ def test_hike_applies_theme_and_binding_overrides_from_configuration(
         )
 
         app = Hike(OpenOptions())
+        app.on_load(events.Load())
 
         assert app.theme == "textual-light"
         assert app._keymap["JumpToBookmarks"] == "shift+f6"
     finally:
         set_configuration_file(None)
+
+
+##############################################################################
+def test_hike_help_quit_exits_immediately_by_default(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The default Ctrl+C behavior should quit promptly."""
+    override = tmp_path / "config.yaml"
+    calls: dict[str, bool] = {}
+
+    try:
+        set_configuration_file(override)
+        save_configuration(Configuration())
+        app = Hike(OpenOptions())
+        monkeypatch.setattr(app, "exit", lambda: calls.setdefault("exit", True))
+        monkeypatch.setattr(
+            EnhancedApp,
+            "action_help_quit",
+            lambda self: calls.setdefault("super", True),
+        )
+
+        app.action_help_quit()
+    finally:
+        set_configuration_file(None)
+
+    assert calls == {"exit": True}
+
+
+##############################################################################
+def test_hike_exposes_a_ctrl_c_binding() -> None:
+    """The TUI should bind Ctrl+C so users can always recover their shell."""
+    app = Hike(OpenOptions())
+
+    assert any(
+        binding.key == "ctrl+c" and binding.action == "help_quit"
+        for binding in app._bindings.key_to_bindings.get("ctrl+c", ())
+    )
+
+
+##############################################################################
+def test_hike_help_quit_can_still_use_legacy_behavior_when_disabled(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Users can still opt back into the legacy Textual help behavior."""
+    override = tmp_path / "config.yaml"
+    calls: dict[str, bool] = {}
+
+    try:
+        set_configuration_file(override)
+        save_configuration(Configuration(allow_traditional_quit=False))
+        app = Hike(OpenOptions())
+        monkeypatch.setattr(app, "exit", lambda: calls.setdefault("exit", True))
+        monkeypatch.setattr(
+            EnhancedApp,
+            "action_help_quit",
+            lambda self: calls.setdefault("super", True),
+        )
+
+        app.action_help_quit()
+    finally:
+        set_configuration_file(None)
+
+    assert calls == {"super": True}
 
 
 ##############################################################################
@@ -215,10 +289,6 @@ def test_config_init_migrates_legacy_json_to_default_yaml(
     config_root = _patch_config_locations(monkeypatch, tmp_path)
     legacy = config_root / "configuration.json"
     legacy.write_text('{"navigation_visible": false}\n', encoding="utf-8")
-    monkeypatch.setattr(
-        "hike.cli.app.load_hike_class",
-        lambda: pytest.fail("Config init should not load the TUI"),
-    )
 
     try:
         result = _RUNNER.invoke(cli_app, ["config", "init", "--force"])
