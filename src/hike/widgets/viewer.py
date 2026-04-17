@@ -46,10 +46,11 @@ from typing_extensions import Self
 # Local imports.
 from .. import USER_AGENT
 from ..commands import JumpToCommandLine
-from ..data import is_editable, load_configuration, looks_urllike
+from ..data import is_editable, looks_urllike
 from ..editor import Editor
 from ..markdown import wikilink_plugin
 from ..messages import CopyToClipboard, OpenLocation
+from ..runtime.config_access import load_app_configuration
 from ..support import is_copy_request_click, view_in_browser
 from ..types import HikeHistory, HikeLocation
 
@@ -153,7 +154,7 @@ class FrontMatter(Collapsible):
 
     def _watch_front_matter(self) -> None:
         self.set_class(
-            bool(self.front_matter) and load_configuration().show_front_matter,
+            bool(self.front_matter) and load_app_configuration(self).show_front_matter,
             "--exists",
         )
         self.query_one(Label).update(self.front_matter or "")
@@ -368,6 +369,7 @@ class Viewer(Vertical, can_focus=False):
 
         # Download the data from the remote location.
         try:
+            configuration = load_app_configuration(self)
             async with AsyncClient() as client:
                 response = await client.get(
                     location,
@@ -375,7 +377,7 @@ class Viewer(Vertical, can_focus=False):
                     headers={
                         "user-agent": USER_AGENT,
                         "Accept": ",".join(
-                            load_configuration().markdown_content_types + ["*/*;q=0.1"]
+                            configuration.markdown_content_types + ["*/*;q=0.1"]
                         ),
                     },
                 )
@@ -393,7 +395,7 @@ class Viewer(Vertical, can_focus=False):
         # At this point we've got a good response. Now let's be sure that
         # what we got back is something that admits to being markdown, or at
         # least a form of plain text we can render.
-        markdown_content_types = load_configuration().markdown_content_types
+        markdown_content_types = configuration.markdown_content_types
         if (content_type := response.headers.get("content-type")) and any(
             content_type.startswith(allowed_type)
             for allowed_type in markdown_content_types

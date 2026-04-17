@@ -60,6 +60,9 @@
 - Replaced ambient CLI config/env path overrides with an explicit runtime
   context layer so command invocations no longer leak path selection into later
   commands while the TUI still sees the intended config/env files.
+- Moved screen and widget configuration access behind the running Hike
+  application so UI code no longer reaches directly into config persistence
+  helpers.
 
 ## v1.4.0
 

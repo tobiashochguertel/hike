@@ -23,12 +23,12 @@ from textual_enhanced.binding import HelpfulBinding
 
 ##############################################################################
 # Local imports.
-from ...data import load_configuration, update_configuration
 from ...data.discovery import LocalDiscoveryOptions
 from ...data.local_browser import (
     LocalBrowserMode,
     local_browser_mode_from_configuration,
 )
+from ...runtime.config_access import update_app_configuration
 from .local_flat_view import LocalFlatView
 from .local_view import LocalView
 
@@ -97,7 +97,7 @@ class LocalBrowser(Vertical):
         self._root = path.expanduser().resolve()
         self._options = options or LocalDiscoveryOptions()
         self._initial_mode = mode or local_browser_mode_from_configuration(
-            load_configuration().local_browser_view_mode
+            LocalBrowserMode.FLAT_LIST.value
         )
         super().__init__(name=name, id=id, classes=classes, disabled=disabled)
         self.mode = self._initial_mode
@@ -147,7 +147,7 @@ class LocalBrowser(Vertical):
         """Set the active local browser mode."""
         self.mode = mode
         if persist:
-            with update_configuration() as config:
+            with update_app_configuration(self) as config:
                 config.local_browser_view_mode = mode.value
 
     def action_toggle_mode(self) -> None:

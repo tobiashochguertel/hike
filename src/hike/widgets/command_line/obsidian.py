@@ -10,8 +10,8 @@ from textual.widget import Widget
 
 ##############################################################################
 # Local imports.
-from ...data import load_configuration
 from ...messages import SetLocalViewRoot
+from ...runtime.config_access import load_app_configuration
 from .base_command import InputCommand
 
 
@@ -35,7 +35,11 @@ class ObsidianCommand(InputCommand):
         """
         if (
             cls.is_command(text)
-            and (vaults := Path(load_configuration().obsidian_vaults).expanduser())
+            and (
+                vaults := Path(
+                    load_app_configuration(for_widget).obsidian_vaults
+                ).expanduser()
+            )
             and vaults.exists()
             and vaults.is_dir()
         ):

@@ -32,7 +32,7 @@ from textual_enhanced.binding import HelpfulBinding
 ##############################################################################
 # Local imports.
 from ...commands import JumpToCommandLine
-from ...data import Bookmark, Bookmarks, load_configuration
+from ...data import Bookmark, Bookmarks
 from ...data.discovery import LocalDiscoveryOptions
 from ...data.layout import LayoutState
 from ...data.local_browser import (
@@ -148,6 +148,7 @@ class Navigation(Vertical):
         *,
         local_root: Path | None = None,
         local_options: LocalDiscoveryOptions | None = None,
+        local_browser_mode: str | None = None,
         name: str | None = None,
         id: str | None = None,
         classes: str | None = None,
@@ -155,11 +156,12 @@ class Navigation(Vertical):
     ) -> None:
         """Initialise the navigation panel."""
         self._local_root = (
-            Path(load_configuration().local_start_location).expanduser().resolve()
+            Path.home().resolve()
             if local_root is None
             else local_root.expanduser().resolve()
         )
         self._local_options = local_options or LocalDiscoveryOptions()
+        self._initial_local_browser_mode = local_browser_mode
         super().__init__(name=name, id=id, classes=classes, disabled=disabled)
 
     def action_return_to_tabs_or_bounce_out(self) -> None:
@@ -262,7 +264,8 @@ class Navigation(Vertical):
                     self._local_root,
                     options=self._local_options,
                     mode=local_browser_mode_from_configuration(
-                        load_configuration().local_browser_view_mode
+                        self._initial_local_browser_mode
+                        or LocalBrowserMode.FLAT_LIST.value
                     ),
                 )
             with TabPane("Bookmarks", id="bookmarks"):

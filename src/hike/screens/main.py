@@ -3,6 +3,7 @@
 ##############################################################################
 # Python imports.
 from collections.abc import Callable
+from contextlib import AbstractContextManager
 from functools import partial
 from pathlib import Path
 
@@ -53,16 +54,15 @@ from ..commands import (
     SaveCopy,
 )
 from ..data import (
+    Configuration,
     can_be_negotiated_to_markdown,
     load_bookmarks,
     load_command_history,
-    load_configuration,
     load_history,
     maybe_markdown,
     save_bookmarks,
     save_command_history,
     save_history,
-    update_configuration,
 )
 from ..data.discovery import LocalDiscoveryOptions, local_discovery_options
 from ..data.layout import LayoutMode, LayoutState, effective_layout_state, layout_policy
@@ -79,6 +79,7 @@ from ..messages import (
     SetLocalViewRoot,
 )
 from ..providers import BookmarkCommands, HistoryCommands, MainCommands
+from ..runtime.config_access import load_app_configuration, update_app_configuration
 from ..startup import OpenOptions, StartupTargetKind, classify_startup_target
 from ..support import view_in_browser
 from ..widgets import CommandLine, Navigation, Viewer
@@ -145,7 +146,7 @@ class Main(EnhancedScreen[None]):
 
     AUTO_FOCUS = "CommandLine Input"
 
-    def __init__(self, arguments: OpenOptions) -> None:
+    def __init__(self, arguments: OpenOptions, *, configuration: Configuration) -> None:
         """Initialise the main screen.
 
         Args:
@@ -153,6 +154,8 @@ class Main(EnhancedScreen[None]):
         """
         self._arguments = arguments
         """The arguments passed on the command line."""
+        self._initial_configuration = configuration
+        """The configuration snapshot available during screen construction."""
         self._startup_target = classify_startup_target(
             getattr(arguments, "target", None)
         )
@@ -166,6 +169,14 @@ class Main(EnhancedScreen[None]):
         self._local_options = LocalDiscoveryOptions()
         """The effective local browser discovery options."""
         super().__init__()
+
+    def _configuration(self) -> Configuration:
+        """Return the active configuration for this screen."""
+        return load_app_configuration(self)
+
+    def _update_configuration(self) -> AbstractContextManager[Configuration]:
+        """Return a context manager for updating configuration."""
+        return update_app_configuration(self)
 
     def _navigation(self) -> Navigation:
         """Return the navigation widget."""
@@ -181,13 +192,13 @@ class Main(EnhancedScreen[None]):
 
     def _is_narrow_layout(self, width: int | None = None) -> bool:
         """Return `True` when the current terminal should use single-pane mode."""
-        return layout_policy(load_configuration()).responsive.is_narrow(
+        return layout_policy(self._configuration()).responsive.is_narrow(
             self.size.width if width is None else width
         )
 
     def _store_navigation_enabled(self, enabled: bool) -> None:
         """Persist whether navigation should be available in wide layouts."""
-        with update_configuration() as config:
+        with self._update_configuration() as config:
             config.navigation_visible = enabled
 
     def _resolve_initial_local_root(self) -> Path:
@@ -198,7 +209,11 @@ class Main(EnhancedScreen[None]):
             self._startup_target.value, Path
         ):
             return self._startup_target.value
-        return Path(load_configuration().local_start_location).expanduser().resolve()
+        return (
+            Path(self._initial_configuration.local_start_location)
+            .expanduser()
+            .resolve()
+        )
 
     def _resolve_layout_state(
         self,
@@ -208,7 +223,7 @@ class Main(EnhancedScreen[None]):
         sidebar_content_width: int | None = None,
     ) -> LayoutState:
         """Resolve the effective layout state for the current terminal size."""
-        configuration = load_configuration()
+        configuration = self._configuration()
         return effective_layout_state(
             configuration,
             terminal_width=self.size.width,
@@ -293,6 +308,7 @@ class Main(EnhancedScreen[None]):
                     classes="panel",
                     local_root=self._initial_local_root,
                     local_options=self._local_options,
+                    local_browser_mode=self._initial_configuration.local_browser_view_mode,
                 )
                 yield Viewer(classes="panel")
             yield CommandLine(classes="panel")
@@ -300,7 +316,7 @@ class Main(EnhancedScreen[None]):
 
     def on_mount(self) -> None:
         """Configure the screen once the DOM is mounted."""
-        config = load_configuration()
+        config = self._configuration()
         self._local_options = local_discovery_options(self._arguments, config)
         if self._arguments.navigation is not None:
             self._store_navigation_enabled(self._arguments.navigation)
@@ -398,7 +414,7 @@ class Main(EnhancedScreen[None]):
             self.query_one(Viewer).goto_anchor_after_load(
                 message.anchor
             ).location = message.to_open
-            self._show_document(focus=load_configuration().focus_viewer_on_load)
+            self._show_document(focus=self._configuration().focus_viewer_on_load)
         else:
             view_in_browser(message.to_open)
 
@@ -572,7 +588,7 @@ class Main(EnhancedScreen[None]):
                 navigation = self._navigation()
                 navigation.call_after_refresh(navigation.run_action, "move_into_panel")
             return
-        self._set_navigation_visible(not load_configuration().navigation_visible)
+        self._set_navigation_visible(not self._configuration().navigation_visible)
 
     def action_toggle_local_browser_mode_command(self) -> None:
         """Toggle the local browser between tree and flat-list modes."""
@@ -581,13 +597,13 @@ class Main(EnhancedScreen[None]):
 
     def action_change_navigation_side_command(self) -> None:
         """Change the side that the navigation panel lives on."""
-        with update_configuration() as config:
+        with self._update_configuration() as config:
             config.navigation_on_right = not config.navigation_on_right
         self._refresh_layout_state()
 
     def action_change_command_line_location_command(self) -> None:
         """Change the location of the command line."""
-        with update_configuration() as config:
+        with self._update_configuration() as config:
             config.command_line_on_top = not config.command_line_on_top
         self._refresh_layout_state()
 
