@@ -1,58 +1,58 @@
-"""Tests for startup target handling and argv normalization."""
+"""Tests for startup target handling."""
 
 ##############################################################################
 # Python imports.
 from pathlib import Path
 
 ##############################################################################
+# Pytest imports.
+import pytest
+
+##############################################################################
 # Local imports.
-from hike.cli.app import normalize_argv
-from hike.startup import (
-    StartupTargetKind,
-    classify_startup_target,
-)
+from hike.__main__ import main as cli_main
+from hike.startup import StartupTargetKind, classify_startup_target
 
 
 ##############################################################################
-def test_normalize_argv_promotes_empty_invocation_to_open() -> None:
-    """Running `hike` with no subcommand should launch the open command."""
-    assert normalize_argv([]) == ["open"]
+class _FakeApp:
+    """Small stub for testing the CLI entrypoint argument handling."""
+
+    args: list[str] | None = None
+    prog_name: str | None = None
+
+    def __call__(self, *, args: list[str], prog_name: str) -> None:
+        """Capture the forwarded Typer arguments."""
+        self.args = args
+        self.prog_name = prog_name
 
 
 ##############################################################################
-def test_normalize_argv_promotes_positional_target_to_open(tmp_path: Path) -> None:
-    """A bare target should become `hike open TARGET`."""
-    target = tmp_path / "README.md"
-    target.write_text("# Hello\n", encoding="utf-8")
+def test_cli_main_maps_empty_invocation_to_root_help(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The installed entrypoint should show root help when no subcommand is given."""
+    fake_app = _FakeApp()
+    monkeypatch.setattr("hike.__main__.app", fake_app)
 
-    assert normalize_argv([str(target)]) == ["open", str(target)]
+    cli_main([])
 
-
-##############################################################################
-def test_normalize_argv_preserves_known_subcommands() -> None:
-    """Real subcommands should not be rewritten."""
-    assert normalize_argv(["config", "show"]) == ["config", "show"]
-
-
-##############################################################################
-def test_normalize_argv_collapses_legacy_command_tail() -> None:
-    """Legacy `--command foo bar` syntax should still normalize cleanly."""
-    assert normalize_argv(["--command", "gh", "davep/hike"]) == [
-        "open",
-        "--command",
-        "gh davep/hike",
-    ]
+    assert fake_app.args == ["--help"]
+    assert fake_app.prog_name == "hike"
 
 
 ##############################################################################
-def test_normalize_argv_preserves_root_help() -> None:
-    """Root help should stay on the root command so subcommands remain visible."""
-    assert normalize_argv(["--help"]) == ["--help"]
-    assert normalize_argv(["--config", "custom.yaml", "--help"]) == [
-        "--config",
-        "custom.yaml",
-        "--help",
-    ]
+def test_cli_main_preserves_explicit_subcommands(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Explicit subcommands should reach Typer unchanged."""
+    fake_app = _FakeApp()
+    monkeypatch.setattr("hike.__main__.app", fake_app)
+
+    cli_main(["open", "docs"])
+
+    assert fake_app.args == ["open", "docs"]
+    assert fake_app.prog_name == "hike"
 
 
 ##############################################################################

@@ -8,22 +8,18 @@ import sys
 from collections.abc import Sequence
 
 ##############################################################################
-# Typer imports.
-from typer.main import get_command
-
-##############################################################################
 # Local imports.
-from .cli.app import app, normalize_argv
+from .cli.app import app
 
 
 ##############################################################################
 def main(argv: Sequence[str] | None = None) -> None:
     """Run the Hike CLI."""
-    command = get_command(app)
-    command.main(
-        args=normalize_argv(sys.argv[1:] if argv is None else argv),
-        prog_name="hike",
-    )
+    args = list(sys.argv[1:] if argv is None else argv)
+    if not args:
+        args = ["--help"]
+
+    app(args=args, prog_name="hike")
 
 
 ##############################################################################

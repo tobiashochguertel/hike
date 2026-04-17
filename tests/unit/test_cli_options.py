@@ -172,4 +172,37 @@ def test_open_command_rejects_target_and_command_together(
     assert "mutually exclusive" in result.output
 
 
+##############################################################################
+def test_root_cli_help_lists_commands_without_launching_tui(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Root help should stay on the command tree and avoid launching the TUI."""
+    captured = _install_open_spy(monkeypatch)
+
+    result = _RUNNER.invoke(app, ["--help"])
+
+    assert result.exit_code == 0
+    assert "Usage: hike [OPTIONS] COMMAND [ARGS]..." in result.output
+    assert "open" in result.output
+    assert "config" in result.output
+    assert "ran" not in captured
+
+
+##############################################################################
+def test_root_cli_rejects_bare_target_without_open_subcommand(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A startup target should require the explicit `open` subcommand."""
+    target = tmp_path / "README.md"
+    target.write_text("# Hello\n", encoding="utf-8")
+    captured = _install_open_spy(monkeypatch)
+
+    result = _RUNNER.invoke(app, [str(target)])
+
+    assert result.exit_code != 0
+    assert "No such command" in result.output
+    assert "ran" not in captured
+
+
 ### test_cli_options.py ends here
