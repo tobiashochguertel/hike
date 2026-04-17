@@ -10,7 +10,8 @@ from functools import cache
 from io import StringIO
 from json import dumps, loads
 from pathlib import Path
-from typing import Any, cast, get_args, get_origin
+from types import UnionType
+from typing import Any, Union, cast, get_args, get_origin
 
 ##############################################################################
 # Pydantic imports.
@@ -334,7 +335,7 @@ def _type_name(annotation: Any) -> tuple[str, list[str] | None]:
         if annotation is type(None):
             return "null", None
         return getattr(annotation, "__name__", str(annotation)), None
-    if str(origin) in {"typing.Union", "types.UnionType"}:
+    if origin in {Union, UnionType}:
         parts: list[str] = []
         allowed: list[str] = []
         for item in get_args(annotation):

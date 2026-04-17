@@ -14,6 +14,7 @@ from hike.data.config import (
     Configuration,
     configuration_file,
     load_configuration,
+    render_default_configuration,
     save_configuration,
     set_configuration_file,
 )
@@ -150,6 +151,14 @@ def test_hike_applies_theme_and_binding_overrides_from_configuration(
         assert app._keymap["JumpToBookmarks"] == "shift+f6"
     finally:
         set_configuration_file(None)
+
+
+##############################################################################
+def test_render_default_configuration_uses_readable_optional_type_names() -> None:
+    """Optional fields should render human-readable union type comments."""
+    rendered = render_default_configuration()
+
+    assert "# Type:    string | null" in rendered
 
 
 ### test_config.py ends here
