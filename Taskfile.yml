@@ -55,7 +55,7 @@ tasks:
         fi
 
         uv tool install "$install_ref"
-        hike --bindings | grep -E 'ToggleLocalBrowserMode|JumpToSidebarView|JumpToDocument'
+        hike bindings list | grep -E 'ToggleLocalBrowserMode|JumpToSidebarView|JumpToDocument'
         EOF
 
   refresh-all-requested-features:

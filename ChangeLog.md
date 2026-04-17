@@ -41,6 +41,8 @@
 - Removed the implicit `hike <target>` / `hike --command ...` TUI launch
   shortcut so launching the TUI now requires the explicit `hike open ...`
   command.
+- Fixed the `Taskfile.yml` install verification step to use the new
+  `hike bindings list` subcommand instead of the removed legacy flag.
 
 ## v1.4.0
 
