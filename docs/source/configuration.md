@@ -257,6 +257,35 @@ Here is Hike with the navigation panel visible on the right:
 ```{.textual path="docs/screenshots/basic_app.py" title="Navigation panel on the right" lines=40 columns=120 press="tab,d,ctrl+t,shift+f2"}
 ```
 
+### Responsive layout and sidebar sizing
+
+The navigation panel can also be tuned so it takes less room on wider screens
+and automatically switches to a single-pane layout on narrower terminals.
+
+```json
+"sidebar_default_width_percent": 22,
+"sidebar_min_width": 24,
+"sidebar_max_width": 60,
+"sidebar_auto_fit": true,
+"responsive_auto_switch_narrow": true,
+"responsive_narrow_width": 100,
+"responsive_narrow_mode": "content-only"
+```
+
+- `sidebar_default_width_percent` controls the normal split-view width.
+- `sidebar_min_width` and `sidebar_max_width` clamp the sidebar when auto-fit is active.
+- `sidebar_auto_fit` enables content-aware sizing for the active navigation pane.
+- `responsive_auto_switch_narrow` enables the narrow-terminal single-pane mode.
+- `responsive_narrow_width` is the width threshold where the single-pane layout kicks in.
+- `responsive_narrow_mode` controls the default narrow-screen pane; valid values are
+  `"content-only"` and `"sidebar-only"`.
+
+When Hike is in single-pane mode, use `JumpToSidebarView`
+([`JumpToSidebarView`](#bindable-commands), bound to <kbd>Ctrl</kbd>+<kbd>N</kbd>
+by default) to switch to the active sidebar view, and `JumpToDocument`
+([`JumpToDocument`](#bindable-commands), bound to <kbd>Ctrl</kbd>+<kbd>G</kbd>
+by default) to return to the markdown content.
+
 ## Obsidian vaults location
 
 The command for quickly browsing [Obsidian](https://obsidian.md) vaults in

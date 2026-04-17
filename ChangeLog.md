@@ -11,6 +11,14 @@
   and `hike <url>` behave directly at launch.
 - Added a `--command` option for preserving the old "run an internal command on
   startup" workflow.
+- Refactored layout/state handling so screen orchestration and sidebar layout
+  policy are separated.
+- Added a smaller, auto-fitting navigation sidebar with width caps and
+  responsive single-pane behaviour for narrow terminals.
+- Added an explicit sidebar-view command and command-line shortcut to pair with
+  the document/content jump commands.
+- Added persistent configuration for sidebar sizing and responsive layout
+  defaults.
 
 ## v1.4.0
 

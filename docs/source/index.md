@@ -203,6 +203,14 @@ To open a URL directly:
 hike https://example.com/README.md
 ```
 
+### Responsive navigation
+
+On narrower terminals Hike now switches to a single-pane layout automatically.
+Use <kbd>Ctrl</kbd>+<kbd>N</kbd> to show the active sidebar view and
+<kbd>Ctrl</kbd>+<kbd>G</kbd> to return to the markdown content. The existing
+<kbd>F2</kbd> navigation toggle still works, and the sidebar will return to the
+normal split layout once the terminal is wide enough again.
+
 ## Getting help
 
 A great way to get to know Hike is to read the help screen. Once in the
