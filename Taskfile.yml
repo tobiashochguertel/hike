@@ -17,7 +17,7 @@ tasks:
         - SOURCE_BRANCH
     cmds:
       - |
-        bash -euo pipefail <<EOF
+        bash -euo pipefail <<'EOF'
         current_branch="$(git branch --show-current)"
         source_branch="{{.SOURCE_BRANCH}}"
         target_branch="{{.ALL_IN_BRANCH}}"
@@ -47,7 +47,7 @@ tasks:
     desc: Install hike from feature/all-requested-features with uv tool
     cmds:
       - |
-        bash -euo pipefail <<EOF
+        bash -euo pipefail <<'EOF'
         install_ref="git+{{.INSTALL_REPO}}@{{.ALL_IN_BRANCH}}"
 
         if uv tool list | grep -q '^hike '; then
