@@ -25,6 +25,9 @@
   not briefly flash the absolute path before settling.
 - Improved local tree sidebar sizing so deep nested paths can grow the sidebar
   up to the configured percentage-based cap.
+- Added a `Taskfile.yml` workflow for validating, merging feature branches into
+  `feature/all-requested-features`, and reinstalling the host tool from that
+  branch.
 
 ## v1.4.0
 

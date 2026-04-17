@@ -99,6 +99,41 @@ browser mode.
 For more information and details on configuring Hike, see [the online
 documentation](https://hike.davep.dev/).
 
+## Taskfile workflow
+
+This fork includes a `Taskfile.yml` for the "all requested features" workflow.
+
+List the available tasks:
+
+```sh
+task --list
+```
+
+Run the full validation suite:
+
+```sh
+task check
+```
+
+Merge a feature branch into `feature/all-requested-features`, validate the
+merged branch, and push it:
+
+```sh
+task merge-all-requested-features SOURCE_BRANCH=feat/local-browser-modes
+```
+
+Install Hike from `feature/all-requested-features`:
+
+```sh
+task install-all-requested-features
+```
+
+Or do the full merge + validate + push + install flow in one step:
+
+```sh
+task refresh-all-requested-features SOURCE_BRANCH=feat/local-browser-modes
+```
+
 ## Features
 
 - A command line where file names, URLs and commands can be entered.
