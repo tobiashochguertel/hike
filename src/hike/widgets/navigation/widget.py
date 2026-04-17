@@ -8,6 +8,11 @@ from __future__ import annotations
 # Python imports.
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
+
+##############################################################################
+# Rich imports.
+from rich.cells import cell_len
 
 ##############################################################################
 # Textual imports.
@@ -17,6 +22,7 @@ from textual.containers import Vertical
 from textual.message import Message
 from textual.reactive import var
 from textual.widgets import Markdown, TabbedContent, TabPane, Tabs, Tree
+from textual.widgets._tree import TreeNode
 from textual.widgets.markdown import MarkdownTableOfContents, TableOfContentsType
 
 ##############################################################################
@@ -36,13 +42,36 @@ from .local_view import LocalView
 
 
 ##############################################################################
+def _tree_node_depth(node: TreeNode[Any]) -> int:
+    """Return the depth of a tree node within its tree."""
+    depth = 0
+    current = node.parent
+    while current is not None:
+        depth += 1
+        current = current.parent
+    return depth
+
+
+##############################################################################
+def _visible_tree_width(node: TreeNode[Any]) -> int:
+    """Measure the visible width of a tree node and any expanded children."""
+    label = node.label if isinstance(node.label, str) else node.label.plain
+    width = cell_len(label) + 4 + (_tree_node_depth(node) * 2)
+    if node.is_expanded:
+        for child in node.children:
+            width = max(width, _visible_tree_width(child))
+    return width
+
+
+##############################################################################
 class Navigation(Vertical):
     """The navigation panel."""
 
     DEFAULT_CSS = """
     Navigation {
-        width: 27%;
-        min-width: 38;
+        width: 22%;
+        min-width: 24;
+        max-width: 60;
         dock: left;
         background: transparent;
 
@@ -152,6 +181,34 @@ class Navigation(Vertical):
         self.dock_right = layout_state.navigation_dock_right
         self.styles.width = layout_state.sidebar_width
 
+    @dataclass
+    class LayoutHintChanged(Message):
+        """Message sent when the sidebar width hint may have changed."""
+
+        navigation: Navigation
+        """The navigation widget sending the message."""
+
+    def _request_layout_hint_refresh(self) -> None:
+        """Request the screen to refresh the computed sidebar width."""
+        self.call_after_refresh(self.post_message, self.LayoutHintChanged(self))
+
+    def content_width_hint(self) -> int | None:
+        """Return the preferred width of the active navigation pane."""
+        if (active := self.query_one(TabbedContent).active_pane) is None:
+            return None
+        match active.id:
+            case "content":
+                return _visible_tree_width(
+                    self.query_one("MarkdownTableOfContents Tree", Tree).root
+                )
+            case "local":
+                return _visible_tree_width(self.query_one(LocalView).root)
+            case "bookmarks":
+                return self.query_one(BookmarksView).content_width_hint()
+            case "history":
+                return self.query_one(HistoryView).content_width_hint()
+        return None
+
     def _maybe_enable_tab(self, tab: str, data: object) -> bool:
         """Enable/disable a tab based on there being data.
 
@@ -178,11 +235,13 @@ class Navigation(Vertical):
         ).table_of_contents = self.table_of_contents
         if self._maybe_enable_tab("content", self.table_of_contents):
             self.query_one("MarkdownTableOfContents Tree", Tree).cursor_line = 0
+        self._request_layout_hint_refresh()
 
     def _watch_bookmarks(self) -> None:
         """React to the bookmarks being changed."""
         self.query_one(BookmarksView).update(self.bookmarks)
         self._maybe_enable_tab("bookmarks", self.bookmarks)
+        self._request_layout_hint_refresh()
 
     def compose(self) -> ComposeResult:
         """Compose the content of the widget."""
@@ -207,6 +266,7 @@ class Navigation(Vertical):
         """
         self.query_one(HistoryView).update(history)
         self._maybe_enable_tab("history", history)
+        self._request_layout_hint_refresh()
 
     def highlight_history(self, history: int) -> None:
         """Highlight a specific entry in history.
@@ -223,15 +283,18 @@ class Navigation(Vertical):
             root: The new root directory.
         """
         self.query_one(LocalView).path = root
+        self._request_layout_hint_refresh()
 
     def configure_local_view(self, options: LocalDiscoveryOptions) -> None:
         """Update the local browser's discovery options."""
         self._local_options = options
         self.query_one(LocalView).configure(options)
+        self._request_layout_hint_refresh()
 
     def refresh_local_view(self) -> None:
         """Refresh the local view."""
         self.query_one(LocalView).reload()
+        self._request_layout_hint_refresh()
 
     @dataclass
     class BookmarksUpdated(Message):
@@ -293,6 +356,17 @@ class Navigation(Vertical):
     def _activate(self, panel: str) -> None:
         self.query_one(TabbedContent).active = panel
         self.call_next(self.run_action, "move_into_panel")
+
+    @on(TabbedContent.TabActivated)
+    def _active_tab_changed(self, _: TabbedContent.TabActivated) -> None:
+        """React to the active navigation pane changing."""
+        self._request_layout_hint_refresh()
+
+    @on(Tree.NodeExpanded)
+    @on(Tree.NodeCollapsed)
+    def _tree_layout_changed(self, _: Message) -> None:
+        """Refresh the width hint when tree content changes."""
+        self._request_layout_hint_refresh()
 
     def jump_to_content(self) -> None:
         """Jump into the content panel, if possible."""

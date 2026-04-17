@@ -21,7 +21,7 @@ def test_effective_layout_state_defaults_to_split_with_navigation() -> None:
     assert state.navigation_visible is True
     assert state.sidebar_visible is True
     assert state.content_visible is True
-    assert state.sidebar_width == 43
+    assert state.sidebar_width == 35
 
 
 ##############################################################################
@@ -80,11 +80,42 @@ def test_sidebar_sizing_policy_clamps_width() -> None:
         default_width_percent=30,
         min_width=20,
         max_width=40,
+        auto_fit=False,
     )
 
     assert policy.default_width(30) == 20
     assert policy.default_width(120) == 36
     assert policy.default_width(200) == 40
+
+
+##############################################################################
+def test_sidebar_sizing_policy_prefers_content_width_when_auto_fit_enabled() -> None:
+    """Auto-fit should size the sidebar to the active navigation content."""
+    policy = SidebarSizingPolicy(
+        default_width_percent=30,
+        min_width=20,
+        max_width=40,
+        auto_fit=True,
+        content_padding=4,
+    )
+
+    assert policy.preferred_width(160, content_width=12) == 20
+    assert policy.preferred_width(160, content_width=26) == 30
+    assert policy.preferred_width(160, content_width=80) == 40
+
+
+##############################################################################
+def test_sidebar_sizing_policy_avoids_small_resize_jitter() -> None:
+    """Tiny width differences should keep the current sidebar size stable."""
+    policy = SidebarSizingPolicy(
+        min_width=20,
+        max_width=60,
+        auto_fit=True,
+        content_padding=4,
+        jitter_threshold=2,
+    )
+
+    assert policy.preferred_width(160, content_width=30, current_width=35) == 35
 
 
 ### test_layout.py ends here
