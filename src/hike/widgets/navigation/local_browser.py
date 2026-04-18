@@ -30,6 +30,7 @@ from ...data.local_browser import (
     local_browser_mode_from_configuration,
 )
 from ...data.local_index import (
+    LocalIndexBuildRequest,
     LocalIndexService,
     LocalIndexSnapshot,
     LocalIndexStatus,
@@ -130,6 +131,16 @@ class LocalBrowser(Vertical):
         """Start the shared local-index load after the browser mounts."""
         self.reload()
 
+    def on_unmount(self) -> None:
+        """Cancel any in-flight local-index build during shutdown/teardown."""
+        self.cancel_pending_work()
+
+    def cancel_pending_work(self) -> None:
+        """Cancel any in-flight local-index build owned by this browser."""
+        self._reload_generation += 1
+        self._index.cancel()
+        self.workers.cancel_group(self, "local-browser-index")
+
     def _watch_mode(self) -> None:
         """React to changes in the active local browser mode."""
         self.set_class(self.mode is LocalBrowserMode.TREE, "--tree")
@@ -155,10 +166,19 @@ class LocalBrowser(Vertical):
         self._request_layout_hint_refresh()
 
     @work(exclusive=True, group="local-browser-index")
-    async def _reload_index(self, generation: int) -> None:
+    async def _reload_index(
+        self,
+        generation: int,
+        request: LocalIndexBuildRequest,
+    ) -> None:
         """Build the shared local index off the UI thread and apply it."""
-        snapshot = await asyncio.to_thread(self._index.build_snapshot)
-        if generation != self._reload_generation:
+        snapshot = await asyncio.to_thread(self._index.build_snapshot, request)
+        if (
+            snapshot is None
+            or request.cancel_event.is_set()
+            or generation != self._reload_generation
+            or not self.is_mounted
+        ):
             return
         self._apply_snapshot(snapshot)
 
@@ -181,8 +201,10 @@ class LocalBrowser(Vertical):
     def reload(self) -> None:
         """Reload the shared index and fan it out to both local browser modes."""
         self._reload_generation += 1
-        self._apply_snapshot(self._index.loading_snapshot())
-        self._reload_index(self._reload_generation)
+        self.workers.cancel_group(self, "local-browser-index")
+        request = self._index.begin_build()
+        self._apply_snapshot(self._index.loading_snapshot(request.root))
+        self._reload_index(self._reload_generation, request)
 
     def highlight_path(self, path: Path) -> None:
         """Highlight a local path in both browser modes."""

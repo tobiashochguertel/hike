@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
+from threading import Event
 from typing import cast
 
 ##############################################################################
@@ -17,7 +18,7 @@ import pytest
 from hike.data.config import Configuration, save_configuration
 from hike.data.layout import LayoutMode
 from hike.data.local_browser import LocalBrowserMode
-from hike.data.local_index import LocalIndexService
+from hike.data.local_index import LocalIndexBuildRequest, LocalIndexService
 from hike.data.runtime_context import RuntimeContext, resolve_runtime_context
 from hike.hike import Hike
 from hike.screens.main import Main
@@ -243,9 +244,12 @@ async def test_tui_flat_list_shows_loading_placeholder_during_slow_scan(
 
     original_build_snapshot = LocalIndexService.build_snapshot
 
-    def slow_build_snapshot(self: LocalIndexService) -> object:
+    def slow_build_snapshot(
+        self: LocalIndexService,
+        request: LocalIndexBuildRequest | None = None,
+    ) -> object:
         time.sleep(0.5)
-        return original_build_snapshot(self)
+        return original_build_snapshot(self, request)
 
     monkeypatch.setattr(
         LocalIndexService,
@@ -264,6 +268,64 @@ async def test_tui_flat_list_shows_loading_placeholder_during_slow_scan(
         assert viewer.location == readme
         assert local_flat_view.option_count == 1
         assert "Loading local files..." in str(loading_option.prompt)
+
+
+##############################################################################
+@pytest.mark.anyio
+async def test_tui_quit_cancels_inflight_local_index_build(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Quitting should cancel a slow local-index build instead of waiting for it."""
+    config_path = tmp_path / "config.yaml"
+    docs_root = tmp_path / "docs"
+    docs_root.mkdir()
+    (docs_root / "README.md").write_text("# Hello\n", encoding="utf-8")
+    context = _context_for(config_path, cwd=tmp_path)
+    save_configuration(
+        Configuration(
+            local_browser_view_mode=LocalBrowserMode.FLAT_LIST.value,
+            startup_auto_open=False,
+        ),
+        context,
+    )
+
+    started = Event()
+    cancelled = Event()
+
+    def slow_build_snapshot(
+        self: LocalIndexService,
+        request: LocalIndexBuildRequest | None = None,
+    ) -> object:
+        started.set()
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            if request is not None and request.cancel_event.is_set():
+                cancelled.set()
+                return None
+            time.sleep(0.01)
+        return self.loading_snapshot()
+
+    monkeypatch.setattr(
+        LocalIndexService,
+        "build_snapshot",
+        slow_build_snapshot,
+    )
+    app = Hike(OpenOptions(target=str(docs_root), runtime_context=context))
+
+    exit_started = 0.0
+    async with app.run_test(size=(120, 32)) as pilot:
+        for _ in range(20):
+            if started.is_set():
+                break
+            await pilot.pause()
+        assert started.is_set()
+
+        exit_started = time.monotonic()
+        await pilot.press("ctrl+q")
+
+    assert cancelled.is_set()
+    assert time.monotonic() - exit_started < 1
 
 
 ### test_tui_e2e.py ends here

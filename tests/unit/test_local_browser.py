@@ -54,6 +54,7 @@ def test_flatten_local_paths_returns_relative_files_and_directories(
     (nested / "page.md").write_text("# Page\n", encoding="utf-8")
 
     snapshot = build_local_index_snapshot(root, LocalDiscoveryOptions())
+    assert snapshot is not None
     entries = iter_flat_index_nodes(snapshot)
 
     assert [
@@ -87,6 +88,7 @@ def test_flatten_local_paths_respects_discovery_filters(tmp_path: Path) -> None:
             exclude_patterns=("generated/",),
         ),
     )
+    assert snapshot is not None
     entries = iter_flat_index_nodes(snapshot)
 
     assert [
@@ -108,6 +110,7 @@ def test_flatten_local_paths_skips_empty_directories(tmp_path: Path) -> None:
     (nested / "page.md").write_text("# Page\n", encoding="utf-8")
 
     snapshot = build_local_index_snapshot(root, LocalDiscoveryOptions())
+    assert snapshot is not None
     entries = iter_flat_index_nodes(snapshot)
 
     assert [
@@ -129,6 +132,7 @@ def test_preferred_startup_path_prefers_configured_patterns(tmp_path: Path) -> N
     (tmp_path / "README.md").write_text("# Readme\n", encoding="utf-8")
 
     snapshot = build_local_index_snapshot(tmp_path, LocalDiscoveryOptions())
+    assert snapshot is not None
 
     assert preferred_startup_path(snapshot, ("README.md", "INDEX.md")) == (
         tmp_path / "README.md"
