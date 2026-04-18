@@ -29,30 +29,34 @@ from textual_enhanced.widgets import EnhancedOptionList
 
 ##############################################################################
 # Local imports.
-from ...data.discovery import LocalDiscoveryOptions
-from ...data.local_browser import (
-    LocalBrowserEntry,
-    flatten_local_paths,
-    stable_root_label,
+from ...data.local_browser import stable_root_label
+from ...data.local_index import (
+    LocalIndexNode,
+    LocalIndexSnapshot,
+    LocalIndexStatus,
+    iter_flat_index_nodes,
 )
 from ...icons import LOCAL_FILE_ICON
 from ...messages import OpenLocation, SetLocalViewRoot
 
 ##############################################################################
 _DIRECTORY_ICON = Emoji.replace(":file_folder:")
+_LOADING_OPTION_ID = "__loading__"
 
 
 ##############################################################################
 class LocalFlatEntry(Option):
     """The rendered view of a flat local browser entry."""
 
-    def __init__(self, entry: LocalBrowserEntry) -> None:
+    def __init__(self, entry: LocalIndexNode) -> None:
         """Initialise the entry view."""
         self.entry = entry
+        display_path = entry.relative_path.as_posix()
+        display_path = f"{display_path}/" if entry.is_dir else display_path
         super().__init__(
             Content.from_markup(
                 f"{_DIRECTORY_ICON if entry.is_dir else LOCAL_FILE_ICON} "
-                f"[bold]{entry.display_path}[/]"
+                f"[bold]{display_path}[/]"
             ),
             id=str(entry.path),
         )
@@ -101,50 +105,91 @@ class LocalFlatView(EnhancedOptionList):
     def __init__(
         self,
         path: str | Path,
-        *,
-        options: LocalDiscoveryOptions | None = None,
         display_root: str | None = None,
     ) -> None:
         """Initialise the flat local browser."""
         self._root = Path(path).expanduser().resolve()
-        self._discovery_options = options or LocalDiscoveryOptions()
+        self._snapshot = LocalIndexSnapshot(
+            root=self._root,
+            status=LocalIndexStatus.LOADING,
+        )
         self._display_root = display_root or stable_root_label(self._root)
         self._width_hint: int | None = None
+        self._pending_highlight: Path | None = None
+        self._is_loading = False
         super().__init__()
         self.border_title = self._display_root
-        self.reload()
+        self._set_loading_state()
 
     def _request_layout_hint_refresh(self) -> None:
         """Request a refresh of the sidebar width hint."""
         self.call_after_refresh(self.post_message, self.LayoutHintChanged(self))
+
+    def _set_loading_state(self) -> None:
+        """Show an immediate placeholder while the flat list is loading."""
+        self._is_loading = True
+        self._width_hint = None
+        self.clear_options()
+        self.add_option(
+            Option(
+                Content.from_markup("[dim]Loading local files...[/]"),
+                id=_LOADING_OPTION_ID,
+            )
+        )
+        self._request_layout_hint_refresh()
+
+    def _apply_entries(self, entries: tuple[LocalIndexNode, ...]) -> None:
+        """Apply a freshly-loaded set of entries to the visible option list."""
+        self._is_loading = False
+        self._width_hint = max(
+            (
+                cell_len(entry.relative_path.as_posix()) + (3 if entry.is_dir else 2)
+                for entry in entries
+            ),
+            default=None,
+        )
+        with self.preserved_highlight:
+            self.clear_options().add_options(LocalFlatEntry(entry) for entry in entries)
+        if self._pending_highlight is not None:
+            pending_highlight = self._pending_highlight
+            self._pending_highlight = None
+            self.highlight_path(pending_highlight)
+        self._request_layout_hint_refresh()
 
     def set_root(self, root: Path) -> None:
         """Set the root directory shown by the flat list."""
         self._root = root.expanduser().resolve()
         self._display_root = stable_root_label(self._root)
         self.border_title = self._display_root
-        self.reload()
+        self._snapshot = LocalIndexSnapshot(
+            root=self._root,
+            status=LocalIndexStatus.LOADING,
+        )
+        self._set_loading_state()
 
-    def configure(self, options: LocalDiscoveryOptions) -> None:
-        """Update the discovery options for the flat browser."""
-        self._discovery_options = options
-        self.reload()
+    def set_snapshot(self, snapshot: LocalIndexSnapshot) -> None:
+        """Render a new shared local-index snapshot."""
+        self._snapshot = snapshot
+        self._root = snapshot.root
+        self._display_root = stable_root_label(self._root)
+        self.border_title = self._display_root
+        if snapshot.status is LocalIndexStatus.LOADING:
+            self._set_loading_state()
+            return
+        self._apply_entries(iter_flat_index_nodes(snapshot))
 
     def reload(self) -> None:
-        """Reload the flat list from the current root and options."""
-        entries = flatten_local_paths(self._root, self._discovery_options)
-        self._width_hint = max(
-            (cell_len(entry.display_path) + 2 for entry in entries),
-            default=None,
-        )
-        with self.preserved_highlight:
-            self.clear_options().add_options(LocalFlatEntry(entry) for entry in entries)
-        self._request_layout_hint_refresh()
+        """Reset the widget to its loading placeholder state."""
+        self._set_loading_state()
 
     def highlight_path(self, path: Path) -> bool:
         """Highlight the entry matching the given path, if it exists."""
+        resolved = path.expanduser().resolve()
+        if self._is_loading:
+            self._pending_highlight = resolved
+            return False
         try:
-            highlighted = self.get_option_index(str(path.expanduser().resolve()))
+            highlighted = self.get_option_index(str(resolved))
         except OptionDoesNotExist:
             return False
         with self.prevent(EnhancedOptionList.OptionHighlighted):
@@ -159,7 +204,8 @@ class LocalFlatView(EnhancedOptionList):
     def _select_entry(self, message: EnhancedOptionList.OptionSelected) -> None:
         """Open a file or enter a directory from the flat list."""
         message.stop()
-        assert isinstance(message.option, LocalFlatEntry)
+        if not isinstance(message.option, LocalFlatEntry):
+            return
         if message.option.entry.is_dir:
             self.post_message(SetLocalViewRoot(message.option.entry.path))
         else:

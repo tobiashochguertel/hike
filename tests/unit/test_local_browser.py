@@ -13,9 +13,13 @@ import pytest
 from hike.data.discovery import LocalDiscoveryOptions
 from hike.data.local_browser import (
     LocalBrowserMode,
-    flatten_local_paths,
     local_browser_mode_from_configuration,
     stable_root_label,
+)
+from hike.data.local_index import (
+    build_local_index_snapshot,
+    iter_flat_index_nodes,
+    preferred_startup_path,
 )
 
 
@@ -49,9 +53,15 @@ def test_flatten_local_paths_returns_relative_files_and_directories(
     (root / "index.md").write_text("# Home\n", encoding="utf-8")
     (nested / "page.md").write_text("# Page\n", encoding="utf-8")
 
-    entries = flatten_local_paths(root, LocalDiscoveryOptions())
+    snapshot = build_local_index_snapshot(root, LocalDiscoveryOptions())
+    entries = iter_flat_index_nodes(snapshot)
 
-    assert [entry.display_path for entry in entries] == [
+    assert [
+        f"{entry.relative_path.as_posix()}/"
+        if entry.is_dir
+        else entry.relative_path.as_posix()
+        for entry in entries
+    ] == [
         "guide/",
         "index.md",
         "guide/deep/",
@@ -70,15 +80,21 @@ def test_flatten_local_paths_respects_discovery_filters(tmp_path: Path) -> None:
     generated.mkdir()
     (generated / "skip.md").write_text("# Skip\n", encoding="utf-8")
 
-    entries = flatten_local_paths(
+    snapshot = build_local_index_snapshot(
         root,
         LocalDiscoveryOptions(
             show_hidden=False,
             exclude_patterns=("generated/",),
         ),
     )
+    entries = iter_flat_index_nodes(snapshot)
 
-    assert [entry.display_path for entry in entries] == ["visible.md"]
+    assert [
+        f"{entry.relative_path.as_posix()}/"
+        if entry.is_dir
+        else entry.relative_path.as_posix()
+        for entry in entries
+    ] == ["visible.md"]
 
 
 ##############################################################################
@@ -91,13 +107,32 @@ def test_flatten_local_paths_skips_empty_directories(tmp_path: Path) -> None:
     nested.mkdir(parents=True)
     (nested / "page.md").write_text("# Page\n", encoding="utf-8")
 
-    entries = flatten_local_paths(root, LocalDiscoveryOptions())
+    snapshot = build_local_index_snapshot(root, LocalDiscoveryOptions())
+    entries = iter_flat_index_nodes(snapshot)
 
-    assert [entry.display_path for entry in entries] == [
+    assert [
+        f"{entry.relative_path.as_posix()}/"
+        if entry.is_dir
+        else entry.relative_path.as_posix()
+        for entry in entries
+    ] == [
         "guide/",
         "guide/deep/",
         "guide/deep/page.md",
     ]
+
+
+##############################################################################
+def test_preferred_startup_path_prefers_configured_patterns(tmp_path: Path) -> None:
+    """Startup selection should use the shared local index ordering and patterns."""
+    (tmp_path / "INDEX.md").write_text("# Index\n", encoding="utf-8")
+    (tmp_path / "README.md").write_text("# Readme\n", encoding="utf-8")
+
+    snapshot = build_local_index_snapshot(tmp_path, LocalDiscoveryOptions())
+
+    assert preferred_startup_path(snapshot, ("README.md", "INDEX.md")) == (
+        tmp_path / "README.md"
+    )
 
 
 ##############################################################################

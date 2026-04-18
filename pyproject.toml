@@ -87,6 +87,8 @@ dev = [
     "markdown-exec>=1.10.3",
     "codespell>=2.4.1",
     "ruff>=0.12.9",
+    "libtmux>=0.55.0",
+    "hypothesis>=6.152.1",
 ]
 
 [[tool.uv.index]]
@@ -99,6 +101,11 @@ explicit = true
 venvPath="."
 venv=".venv"
 exclude=[".venv"]
+
+[tool.pytest.ini_options]
+markers = [
+    "tmux: end-to-end tests that drive Hike inside an isolated tmux server",
+]
 
 [tool.ruff.lint]
 select = [

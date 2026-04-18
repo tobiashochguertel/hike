@@ -311,6 +311,14 @@ class Navigation(Vertical):
         self.query_one(LocalBrowser).highlight_path(path)
         self._request_layout_hint_refresh()
 
+    def local_index_loading(self) -> bool:
+        """Return `True` while the shared local index is still loading."""
+        return self.query_one(LocalBrowser).index_loading()
+
+    def preferred_local_startup_path(self, patterns: tuple[str, ...]) -> Path | None:
+        """Return the preferred startup path from the shared local index."""
+        return self.query_one(LocalBrowser).preferred_startup_path(patterns)
+
     def refresh_local_view(self) -> None:
         """Refresh the local view."""
         self.query_one(LocalBrowser).reload()
