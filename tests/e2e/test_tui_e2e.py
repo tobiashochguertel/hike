@@ -199,6 +199,7 @@ async def test_tui_narrow_layout_switches_between_document_and_sidebar(
         assert local_flat_view.has_focus
         assert screen._layout_state.mode.value == LayoutMode.SIDEBAR_ONLY.value
 
+        local_flat_view.highlighted = local_flat_view.get_option_index(str(readme))
         await pilot.press("enter")
         await pilot.pause()
 
@@ -326,6 +327,50 @@ async def test_tui_quit_cancels_inflight_local_index_build(
 
     assert cancelled.is_set()
     assert time.monotonic() - exit_started < 1
+
+
+##############################################################################
+@pytest.mark.anyio
+async def test_tui_flat_list_can_return_to_parent_directory(
+    tmp_path: Path,
+) -> None:
+    """Flat-list local navigation should support moving back to the parent root."""
+    config_path = tmp_path / "config.yaml"
+    docs_root = tmp_path / "docs"
+    docs_root.mkdir()
+    (docs_root / "README.md").write_text("# Docs\n", encoding="utf-8")
+    context = _context_for(config_path, cwd=tmp_path)
+    save_configuration(
+        Configuration(
+            local_browser_view_mode=LocalBrowserMode.FLAT_LIST.value,
+            startup_auto_open=False,
+        ),
+        context,
+    )
+    app = Hike(OpenOptions(target=str(tmp_path), runtime_context=context))
+
+    async with app.run_test(size=(120, 32)) as pilot:
+        await pilot.pause()
+        await pilot.pause()
+
+        local_browser = app.screen.query_one(LocalBrowser)
+        local_flat_view = app.screen.query_one(LocalFlatView)
+
+        assert local_browser.root == tmp_path.resolve()
+
+        local_flat_view.highlighted = local_flat_view.get_option_index(str(docs_root))
+        await pilot.press("enter")
+        await pilot.pause()
+        await pilot.pause()
+
+        assert local_browser.root == docs_root.resolve()
+        assert "../" in str(local_flat_view.get_option_at_index(0).prompt)
+
+        await pilot.press("backspace")
+        await pilot.pause()
+        await pilot.pause()
+
+        assert local_browser.root == tmp_path.resolve()
 
 
 ### test_tui_e2e.py ends here

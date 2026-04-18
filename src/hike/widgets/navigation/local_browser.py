@@ -67,7 +67,8 @@ class LocalBrowser(Vertical):
     ## Local Browser
 
     Press `m` while focused on the local browser to toggle between the tree and
-    flat-list modes.
+    flat-list modes. Press `Backspace` to move the local browser root to the
+    parent directory.
     """
 
     BINDINGS = [
@@ -77,6 +78,13 @@ class LocalBrowser(Vertical):
             "Mode",
             show=False,
             tooltip="Toggle the local browser between tree and flat-list modes",
+        ),
+        HelpfulBinding(
+            "backspace",
+            "go_parent",
+            "Parent",
+            show=False,
+            tooltip="Change the local browser root to the parent directory",
         ),
     ]
 
@@ -121,6 +129,11 @@ class LocalBrowser(Vertical):
         self._reload_generation = 0
         super().__init__(name=name, id=id, classes=classes, disabled=disabled)
         self.mode = self._initial_mode
+
+    @property
+    def root(self) -> Path:
+        """Return the current local browser root."""
+        return self._root
 
     def compose(self) -> ComposeResult:
         """Compose the local browser widgets."""
@@ -223,6 +236,14 @@ class LocalBrowser(Vertical):
             return None
         return preferred_startup_path(self._snapshot, patterns)
 
+    def go_parent(self) -> Path | None:
+        """Change the local browser root to its parent directory."""
+        parent = self._root.parent
+        if parent == self._root:
+            return None
+        self.set_root(parent)
+        return parent
+
     def set_mode(self, mode: LocalBrowserMode, *, persist: bool = True) -> None:
         """Set the active local browser mode."""
         self.mode = mode
@@ -233,6 +254,10 @@ class LocalBrowser(Vertical):
     def action_toggle_mode(self) -> None:
         """Toggle the local browser mode."""
         self.toggle_mode()
+
+    def action_go_parent(self) -> None:
+        """Change the local browser root to its parent directory."""
+        self.go_parent()
 
     def toggle_mode(self, *, persist: bool = True) -> LocalBrowserMode:
         """Toggle the local browser mode and return the new mode."""

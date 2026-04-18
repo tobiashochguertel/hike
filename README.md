@@ -93,9 +93,11 @@ The structured CLI now also includes:
 hike --version
 hike --license
 hike bindings list
+hike bindings sets
 hike themes list
 hike config init
 hike config show --format yaml
+hike config set binding_set mnemonic
 hike config set bindings.JumpToBookmarks shift+f6
 hike schema list
 hike schema export
@@ -129,7 +131,9 @@ On narrower terminals Hike automatically switches to a single-pane layout. Use
 
 The local browser can also switch between a tree and a flat list of relative
 paths. Use <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> to toggle the local
-browser mode.
+browser mode. In the local browser, press <kbd>Backspace</kbd> to move the
+browser root to the parent directory; in flat-list mode the first entry also
+becomes `../` when a parent directory is available.
 
 For more information and details on configuring Hike, see [the online
 documentation](https://hike.davep.dev/).

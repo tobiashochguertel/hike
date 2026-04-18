@@ -45,6 +45,10 @@ class OpenOptions(BaseModel):
         default=None,
         description="Override the configured Textual theme for this launch.",
     )
+    binding_set: str | None = Field(
+        default=None,
+        description="Override the configured keybinding set for this launch.",
+    )
     root: str | None = Field(
         default=None,
         description="Override the initial local browser root directory.",

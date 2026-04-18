@@ -45,6 +45,19 @@ _LOADING_OPTION_ID = "__loading__"
 
 
 ##############################################################################
+class LocalParentEntry(Option):
+    """The rendered view of the parent-directory action."""
+
+    def __init__(self, path: Path) -> None:
+        """Initialise the parent-directory entry view."""
+        self.path = path
+        super().__init__(
+            Content.from_markup(f"{_DIRECTORY_ICON} [bold]../[/] [dim]{path}[/]"),
+            id=str(path),
+        )
+
+
+##############################################################################
 class LocalFlatEntry(Option):
     """The rendered view of a flat local browser entry."""
 
@@ -82,7 +95,8 @@ class LocalFlatView(EnhancedOptionList):
     ## Flat Local Browser
 
     This view shows Markdown files and directories as relative paths from the
-    current local browser root.
+    current local browser root. Press `Enter` to open or enter a selection, and
+    `Backspace` to move back to the parent directory.
     """
 
     BINDINGS = [
@@ -92,6 +106,13 @@ class LocalFlatView(EnhancedOptionList):
             "Open / enter",
             show=False,
             tooltip="Open a file or change the root to a selected directory",
+        ),
+        HelpfulBinding(
+            "backspace",
+            "go_parent",
+            "Parent",
+            show=False,
+            tooltip="Change the local browser root to the parent directory",
         ),
     ]
 
@@ -141,15 +162,25 @@ class LocalFlatView(EnhancedOptionList):
     def _apply_entries(self, entries: tuple[LocalIndexNode, ...]) -> None:
         """Apply a freshly-loaded set of entries to the visible option list."""
         self._is_loading = False
+        options: list[Option] = []
+        width_candidates: list[int] = []
+        if self._root.parent != self._root:
+            options.append(LocalParentEntry(self._root.parent))
+            width_candidates.append(cell_len("../"))
         self._width_hint = max(
             (
                 cell_len(entry.relative_path.as_posix()) + (3 if entry.is_dir else 2)
                 for entry in entries
             ),
-            default=None,
+            default=None if not width_candidates else max(width_candidates),
         )
         with self.preserved_highlight:
-            self.clear_options().add_options(LocalFlatEntry(entry) for entry in entries)
+            self.clear_options().add_options(
+                (
+                    *options,
+                    *(LocalFlatEntry(entry) for entry in entries),
+                )
+            )
         if self._pending_highlight is not None:
             pending_highlight = self._pending_highlight
             self._pending_highlight = None
@@ -200,10 +231,19 @@ class LocalFlatView(EnhancedOptionList):
         """Return the preferred width of the current flat list."""
         return self._width_hint
 
+    def action_go_parent(self) -> None:
+        """Change the local browser root to its parent directory."""
+        parent = self._root.parent
+        if parent != self._root:
+            self.post_message(SetLocalViewRoot(parent))
+
     @on(EnhancedOptionList.OptionSelected)
     def _select_entry(self, message: EnhancedOptionList.OptionSelected) -> None:
         """Open a file or enter a directory from the flat list."""
         message.stop()
+        if isinstance(message.option, LocalParentEntry):
+            self.post_message(SetLocalViewRoot(message.option.path))
+            return
         if not isinstance(message.option, LocalFlatEntry):
             return
         if message.option.entry.is_dir:

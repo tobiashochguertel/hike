@@ -15,7 +15,7 @@ from typing import Any, Union, cast, get_args, get_origin
 
 ##############################################################################
 # Pydantic imports.
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 ##############################################################################
 # Ruamel imports.
@@ -23,6 +23,7 @@ from ruamel.yaml import YAML
 
 ##############################################################################
 # Local imports.
+from ..keybinding_catalog import DEFAULT_KEYBINDING_SET, keybinding_set_names
 from .locations import config_dir
 from .runtime_context import (
     RuntimeContext,
@@ -141,6 +142,14 @@ class Configuration(BaseModel):
         default="flat-list",
         description="Default rendering mode for the local browser.",
     )
+    binding_set: str = Field(
+        default=DEFAULT_KEYBINDING_SET,
+        description="Named keybinding set to activate by default.",
+    )
+    binding_sets: dict[str, dict[str, str]] = Field(
+        default_factory=dict,
+        description="Custom named keybinding sets keyed by set name and command class.",
+    )
     bindings: dict[str, str] = Field(
         default_factory=dict,
         description="Keyboard binding overrides keyed by Hike command class name.",
@@ -157,6 +166,15 @@ class Configuration(BaseModel):
         default=True,
         description="Allow Ctrl+C to quit immediately and restore the shell promptly.",
     )
+
+    @model_validator(mode="after")
+    def _validate_binding_set(self) -> Configuration:
+        """Ensure the selected keybinding set exists."""
+        available = keybinding_set_names(self.binding_sets)
+        if self.binding_set not in available:
+            allowed = ", ".join(available)
+            raise ValueError(f"binding_set must reference one of: {allowed}")
+        return self
 
 
 ##############################################################################

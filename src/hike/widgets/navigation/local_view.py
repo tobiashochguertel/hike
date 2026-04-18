@@ -25,10 +25,14 @@ from textual.widgets._directory_tree import DirEntry
 from textual.widgets._tree import TreeNode
 
 ##############################################################################
+# Textual enhanced imports.
+from textual_enhanced.binding import HelpfulBinding
+
+##############################################################################
 # Local imports.
 from ...data.local_browser import stable_root_label
 from ...data.local_index import LocalIndexSnapshot, LocalIndexStatus, children_for_path
-from ...messages import OpenLocation
+from ...messages import OpenLocation, SetLocalViewRoot
 
 
 ##############################################################################
@@ -56,6 +60,16 @@ def _visible_tree_width(node: TreeNode[Any]) -> int:
 ##############################################################################
 class LocalView(DirectoryTree):
     """A tree browser for the local filesystem."""
+
+    BINDINGS = [
+        HelpfulBinding(
+            "backspace",
+            "go_parent",
+            "Parent",
+            show=False,
+            tooltip="Change the local browser root to the parent directory",
+        ),
+    ]
 
     @dataclass
     class LayoutHintChanged(Message):
@@ -180,6 +194,13 @@ class LocalView(DirectoryTree):
         if not self.root.children:
             return None
         return max(_visible_tree_width(child) for child in self.root.children)
+
+    def action_go_parent(self) -> None:
+        """Change the local browser root to its parent directory."""
+        root = Path(self.path).resolve()
+        parent = root.parent
+        if parent != root:
+            self.post_message(SetLocalViewRoot(parent))
 
     def _directory_content(self, location: Path, worker: Any) -> Iterator[Path]:
         """Load child paths from the shared local-index snapshot."""
