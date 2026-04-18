@@ -82,6 +82,7 @@ from ..runtime.config_access import load_app_configuration, update_app_configura
 from ..startup import OpenOptions, resolve_startup_plan
 from ..support import view_in_browser
 from ..widgets import CommandLine, Navigation, Viewer
+from ..widgets.navigation.local_browser import LocalBrowser
 
 
 ##############################################################################
@@ -167,6 +168,8 @@ class Main(EnhancedScreen[None]):
         """The effective layout state."""
         self._mode_override: LayoutMode | None = None
         """An optional single-pane mode override for responsive layouts."""
+        self._startup_handled = False
+        """Has the startup plan already been fully handled?"""
         super().__init__()
 
     def _configuration(self) -> Configuration:
@@ -305,7 +308,6 @@ class Main(EnhancedScreen[None]):
             self._store_navigation_enabled(self._arguments.navigation)
         self._refresh_layout_state()
         self._navigation().bookmarks = (bookmarks := load_bookmarks())
-        self._navigation().configure_local_view(self._local_options)
         BookmarkCommands.bookmarks = bookmarks
         self._viewer().history = load_history()
         self._command_line().history = load_command_history()
@@ -320,17 +322,12 @@ class Main(EnhancedScreen[None]):
 
     def _handle_startup_input(self) -> None:
         """Handle any startup target or startup command."""
+        if self._startup_handled:
+            return
         startup_plan = self._startup_plan
         if startup_plan.command_input is not None:
             self.post_message(HandleInput(startup_plan.command_input))
-            return
-        if startup_plan.selected_path is not None:
-            self._navigation().highlight_local_path(startup_plan.selected_path)
-        if startup_plan.open_target is not None:
-            self.post_message(OpenLocation(startup_plan.open_target))
-            return
-        if startup_plan.focus_local_browser:
-            self._show_navigation(Navigation.jump_to_local)
+            self._startup_handled = True
             return
         if startup_plan.error_message is not None:
             self.notify(
@@ -339,6 +336,36 @@ class Main(EnhancedScreen[None]):
                 severity="error",
                 timeout=8,
             )
+            self._startup_handled = True
+            return
+        if startup_plan.selected_path is not None:
+            self._navigation().highlight_local_path(startup_plan.selected_path)
+        if startup_plan.open_target is not None:
+            self.post_message(OpenLocation(startup_plan.open_target))
+            self._startup_handled = True
+            return
+        if startup_plan.resolve_from_index:
+            if self._navigation().local_index_loading():
+                return
+            if candidate := self._navigation().preferred_local_startup_path(
+                tuple(self._configuration().startup_auto_open_patterns)
+            ):
+                self._navigation().highlight_local_path(candidate)
+                self.post_message(OpenLocation(candidate))
+                self._startup_handled = True
+                return
+            self._show_navigation(Navigation.jump_to_local)
+            self._startup_handled = True
+            return
+        if startup_plan.focus_local_browser:
+            self._show_navigation(Navigation.jump_to_local)
+            self._startup_handled = True
+            return
+
+    @on(LocalBrowser.SnapshotUpdated)
+    def _local_index_updated(self, _: LocalBrowser.SnapshotUpdated) -> None:
+        """Retry deferred startup handling when the shared local index updates."""
+        self.call_after_refresh(self._handle_startup_input)
 
     @on(Help)
     async def _show_help(self) -> None:

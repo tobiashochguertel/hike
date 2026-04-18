@@ -6,7 +6,7 @@ from __future__ import annotations
 
 ##############################################################################
 # Python imports.
-from collections.abc import Iterable
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -26,8 +26,8 @@ from textual.widgets._tree import TreeNode
 
 ##############################################################################
 # Local imports.
-from ...data.discovery import LocalDiscoveryOptions, should_include_path
 from ...data.local_browser import stable_root_label
+from ...data.local_index import LocalIndexSnapshot, LocalIndexStatus, children_for_path
 from ...messages import OpenLocation
 
 
@@ -67,14 +67,16 @@ class LocalView(DirectoryTree):
     def __init__(
         self,
         path: str | Path,
-        *,
-        options: LocalDiscoveryOptions | None = None,
         display_root: str | None = None,
     ) -> None:
         """Initialise the local browser tree."""
         resolved = Path(path).expanduser().resolve()
-        self._options = options or LocalDiscoveryOptions()
+        self._snapshot = LocalIndexSnapshot(
+            root=resolved,
+            status=LocalIndexStatus.LOADING,
+        )
         self._display_root = display_root or stable_root_label(resolved)
+        self._pending_highlight: Path | None = None
         super().__init__(resolved)
         self.show_root = False
         self.border_title = self._display_root
@@ -100,9 +102,27 @@ class LocalView(DirectoryTree):
     def set_root(self, root: Path) -> None:
         """Set the root directory shown by the tree."""
         resolved = root.expanduser().resolve()
+        self._snapshot = LocalIndexSnapshot(
+            root=resolved,
+            status=LocalIndexStatus.LOADING,
+        )
         self._display_root = stable_root_label(resolved)
         self.border_title = self._display_root
         self.path = resolved
+
+    def set_snapshot(self, snapshot: LocalIndexSnapshot) -> None:
+        """Render a new shared local-index snapshot."""
+        self._snapshot = snapshot
+        self._display_root = stable_root_label(snapshot.root)
+        self.border_title = self._display_root
+        self.path = snapshot.root
+        if (
+            snapshot.status is LocalIndexStatus.READY
+            and self._pending_highlight is not None
+        ):
+            pending_highlight = self._pending_highlight
+            self._pending_highlight = None
+            self.highlight_path(pending_highlight)
 
     async def _reveal_path(self, path: Path) -> bool:
         """Expand and highlight a visible path within the tree."""
@@ -139,6 +159,9 @@ class LocalView(DirectoryTree):
 
     def highlight_path(self, path: Path) -> None:
         """Schedule a highlight update for the given tree path."""
+        if self._snapshot.status is LocalIndexStatus.LOADING:
+            self._pending_highlight = path.expanduser().resolve()
+            return
         self.run_worker(
             self._reveal_path(path),
             name="local-view-highlight",
@@ -152,30 +175,22 @@ class LocalView(DirectoryTree):
         self.set_timer(0.05, self._request_layout_hint_refresh)
         return reloaded
 
-    def configure(self, options: LocalDiscoveryOptions) -> None:
-        """Update the discovery options for the local browser."""
-        self._options = options
-        if self.is_mounted:
-            self.reload()
-            self._request_layout_hint_refresh()
-
     def content_width_hint(self) -> int | None:
         """Return the preferred width of the currently-visible tree."""
         if not self.root.children:
             return None
         return max(_visible_tree_width(child) for child in self.root.children)
 
-    def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
-        """Filter a directory for things that look like Markdown."""
-        return (
-            path
-            for path in paths
-            if should_include_path(
-                path,
-                root=Path(self.path),
-                options=self._options,
-            )
-        )
+    def _directory_content(self, location: Path, worker: Any) -> Iterator[Path]:
+        """Load child paths from the shared local-index snapshot."""
+        if self._snapshot.status is LocalIndexStatus.LOADING:
+            return iter(())
+        paths: list[Path] = []
+        for node in children_for_path(self._snapshot, location):
+            if worker.is_cancelled:
+                break
+            paths.append(node.path)
+        return iter(paths)
 
     @on(Tree.NodeExpanded)
     @on(Tree.NodeCollapsed)

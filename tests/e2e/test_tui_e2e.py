@@ -4,6 +4,7 @@
 # Python imports.
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import cast
 
@@ -16,6 +17,7 @@ import pytest
 from hike.data.config import Configuration, save_configuration
 from hike.data.layout import LayoutMode
 from hike.data.local_browser import LocalBrowserMode
+from hike.data.local_index import LocalIndexService
 from hike.data.runtime_context import RuntimeContext, resolve_runtime_context
 from hike.hike import Hike
 from hike.screens.main import Main
@@ -218,6 +220,50 @@ async def test_tui_narrow_layout_switches_between_document_and_sidebar(
 
         assert screen._layout_state.mode.value == LayoutMode.CONTENT_ONLY.value
         assert viewer.query_one("#document").has_focus
+
+
+##############################################################################
+@pytest.mark.anyio
+async def test_tui_flat_list_shows_loading_placeholder_during_slow_scan(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Slow flat-list scans should no longer block the first rendered frame."""
+    config_path = tmp_path / "config.yaml"
+    readme = tmp_path / "README.md"
+    readme.write_text("# Hello\n", encoding="utf-8")
+    context = _context_for(config_path, cwd=tmp_path)
+    save_configuration(
+        Configuration(
+            local_browser_view_mode=LocalBrowserMode.FLAT_LIST.value,
+            startup_auto_open=False,
+        ),
+        context,
+    )
+
+    original_build_snapshot = LocalIndexService.build_snapshot
+
+    def slow_build_snapshot(self: LocalIndexService) -> object:
+        time.sleep(0.5)
+        return original_build_snapshot(self)
+
+    monkeypatch.setattr(
+        LocalIndexService,
+        "build_snapshot",
+        slow_build_snapshot,
+    )
+    app = Hike(OpenOptions(target=str(readme), runtime_context=context))
+
+    async with app.run_test(size=(120, 32)) as pilot:
+        await pilot.pause()
+
+        viewer = app.screen.query_one(Viewer)
+        local_flat_view = app.screen.query_one(LocalFlatView)
+        loading_option = local_flat_view.get_option_at_index(0)
+
+        assert viewer.location == readme
+        assert local_flat_view.option_count == 1
+        assert "Loading local files..." in str(loading_option.prompt)
 
 
 ### test_tui_e2e.py ends here

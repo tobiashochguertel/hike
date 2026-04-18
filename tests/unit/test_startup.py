@@ -146,9 +146,7 @@ def test_main_uses_file_parent_as_initial_local_root(tmp_path: Path) -> None:
 
 ##############################################################################
 def test_resolve_startup_plan_uses_cwd_for_open_without_target(tmp_path: Path) -> None:
-    """`hike open` should use the current working directory by default."""
-    readme = tmp_path / "README.md"
-    readme.write_text("# Hello\n", encoding="utf-8")
+    """`hike open` should defer startup file selection to the shared index."""
     options = OpenOptions(runtime_context=resolve_runtime_context(cwd=tmp_path))
     configuration = Configuration()
 
@@ -159,17 +157,14 @@ def test_resolve_startup_plan_uses_cwd_for_open_without_target(tmp_path: Path) -
     )
 
     assert plan.local_root == tmp_path.resolve()
-    assert plan.open_target == readme.resolve()
-    assert plan.selected_path == readme.resolve()
+    assert plan.resolve_from_index is True
+    assert plan.open_target is None
+    assert plan.selected_path is None
 
 
 ##############################################################################
 def test_resolve_startup_plan_prefers_index_before_readme(tmp_path: Path) -> None:
-    """Startup auto-open should prefer INDEX.md before README.md."""
-    index = tmp_path / "INDEX.md"
-    readme = tmp_path / "README.md"
-    index.write_text("# Index\n", encoding="utf-8")
-    readme.write_text("# Readme\n", encoding="utf-8")
+    """Startup auto-open should defer filename priority to the shared index."""
     options = OpenOptions(runtime_context=resolve_runtime_context(cwd=tmp_path))
     configuration = Configuration()
 
@@ -179,21 +174,16 @@ def test_resolve_startup_plan_prefers_index_before_readme(tmp_path: Path) -> Non
         local_discovery_options(options, configuration),
     )
 
-    assert plan.open_target == index.resolve()
-    assert plan.selected_path == index.resolve()
+    assert plan.resolve_from_index is True
+    assert plan.open_target is None
+    assert plan.selected_path is None
 
 
 ##############################################################################
 def test_resolve_startup_plan_uses_first_visible_file_when_no_pattern_matches(
     tmp_path: Path,
 ) -> None:
-    """Startup auto-open should fall back to the first visible file."""
-    guide = tmp_path / "guide"
-    guide.mkdir()
-    first = tmp_path / "alpha.md"
-    second = guide / "page.md"
-    first.write_text("# Alpha\n", encoding="utf-8")
-    second.write_text("# Page\n", encoding="utf-8")
+    """No-match fallback should now be resolved from the shared index."""
     options = OpenOptions(runtime_context=resolve_runtime_context(cwd=tmp_path))
     configuration = Configuration(startup_auto_open_patterns=["welcome*.md"])
 
@@ -203,17 +193,14 @@ def test_resolve_startup_plan_uses_first_visible_file_when_no_pattern_matches(
         local_discovery_options(options, configuration),
     )
 
-    assert plan.open_target == first.resolve()
-    assert plan.selected_path == first.resolve()
+    assert plan.resolve_from_index is True
+    assert plan.open_target is None
+    assert plan.selected_path is None
 
 
 ##############################################################################
 def test_resolve_startup_plan_respects_custom_priority_patterns(tmp_path: Path) -> None:
-    """Custom startup patterns should override the default filename order."""
-    welcome = tmp_path / "welcome-home.md"
-    readme = tmp_path / "README.md"
-    welcome.write_text("# Welcome\n", encoding="utf-8")
-    readme.write_text("# Readme\n", encoding="utf-8")
+    """Pattern priority should be resolved later from the shared index."""
     options = OpenOptions(runtime_context=resolve_runtime_context(cwd=tmp_path))
     configuration = Configuration(
         startup_auto_open_patterns=["welcome*.md", "README.md"]
@@ -225,7 +212,8 @@ def test_resolve_startup_plan_respects_custom_priority_patterns(tmp_path: Path) 
         local_discovery_options(options, configuration),
     )
 
-    assert plan.open_target == welcome.resolve()
+    assert plan.resolve_from_index is True
+    assert plan.open_target is None
 
 
 ##############################################################################
@@ -287,11 +275,9 @@ def test_resolve_startup_plan_preserves_url_targets(tmp_path: Path) -> None:
 
 ##############################################################################
 def test_resolve_startup_plan_honors_explicit_root_override(tmp_path: Path) -> None:
-    """An explicit root should drive auto-open selection."""
+    """An explicit root should drive deferred startup selection."""
     docs = tmp_path / "docs"
     docs.mkdir()
-    readme = docs / "README.md"
-    readme.write_text("# Hello\n", encoding="utf-8")
     options = OpenOptions(
         root=str(docs),
         runtime_context=resolve_runtime_context(cwd=tmp_path),
@@ -305,7 +291,8 @@ def test_resolve_startup_plan_honors_explicit_root_override(tmp_path: Path) -> N
     )
 
     assert plan.local_root == docs.resolve()
-    assert plan.open_target == readme.resolve()
+    assert plan.resolve_from_index is True
+    assert plan.open_target is None
 
 
 ##############################################################################
