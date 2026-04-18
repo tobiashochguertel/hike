@@ -56,6 +56,28 @@ async def test_tui_directory_startup_focuses_visible_local_browser(
 
 ##############################################################################
 @pytest.mark.anyio
+async def test_tui_file_startup_opens_document_after_first_refresh(
+    tmp_path: Path,
+) -> None:
+    """A file target should open cleanly during startup."""
+    config_path = tmp_path / "config.yaml"
+    readme = tmp_path / "README.md"
+    readme.write_text("# Hello\n", encoding="utf-8")
+    context = _context_for(config_path, cwd=tmp_path)
+    save_configuration(Configuration(), context)
+    app = Hike(OpenOptions(target=str(readme), runtime_context=context))
+
+    async with app.run_test(size=(120, 32)) as pilot:
+        await pilot.pause()
+
+        viewer = app.screen.query_one(Viewer)
+
+        assert viewer.location == readme
+        assert viewer.query_one("#document").has_focus
+
+
+##############################################################################
+@pytest.mark.anyio
 async def test_tui_narrow_layout_switches_between_document_and_sidebar(
     tmp_path: Path,
 ) -> None:

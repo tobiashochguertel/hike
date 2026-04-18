@@ -30,7 +30,7 @@ from ..data import (
     load_runtime_settings,
 )
 from ..data.settings import runtime_settings_from_file
-from .common import config_path_option, env_path_option, resolve_cli_runtime_context
+from .common import runtime_context_from_typer_context
 
 ##############################################################################
 app = typer.Typer(
@@ -108,6 +108,7 @@ def _render_env_template(
 ##############################################################################
 @app.command("init")
 def init_env(
+    ctx: typer.Context,
     force: bool = typer.Option(
         False,
         "--force",
@@ -118,11 +119,9 @@ def init_env(
         "--example",
         help="Write placeholder values instead of resolved current values.",
     ),
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
 ) -> None:
     """Create a commented environment file."""
-    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    runtime_context = runtime_context_from_typer_context(ctx)
     target = environment_file(runtime_context)
     if target.exists() and not force:
         _fail(f"Environment file already exists: {target}", code=1)
@@ -137,16 +136,15 @@ def init_env(
 ##############################################################################
 @app.command("show")
 def show_env(
+    ctx: typer.Context,
     reveal: bool = typer.Option(
         False,
         "--reveal",
         help="Show values without redaction.",
     ),
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
 ) -> None:
     """Display the current environment file contents."""
-    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    runtime_context = runtime_context_from_typer_context(ctx)
     values = load_environment_values(context=runtime_context)
     for field_name in RuntimeSettings.model_fields:
         env_names = environment_variable_names(field_name)
@@ -158,11 +156,10 @@ def show_env(
 ##############################################################################
 @app.command("list")
 def list_env(
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
+    ctx: typer.Context,
 ) -> None:
     """List supported environment variables."""
-    resolve_cli_runtime_context(config_path, env_path)
+    runtime_context_from_typer_context(ctx)
     for field_name, field in RuntimeSettings.model_fields.items():
         names = environment_variable_names(field_name)
         typer.echo(f"{names[0]}\t{field.description}")
@@ -171,12 +168,11 @@ def list_env(
 ##############################################################################
 @app.command("get")
 def get_env(
+    ctx: typer.Context,
     variable: str = typer.Argument(..., help="Environment variable name."),
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
 ) -> None:
     """Get a value from the environment file."""
-    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    runtime_context = runtime_context_from_typer_context(ctx)
     values = load_environment_values(context=runtime_context)
     if variable not in values:
         _fail(f"Environment variable not found: {variable}", code=1)
@@ -186,13 +182,12 @@ def get_env(
 ##############################################################################
 @app.command("set")
 def set_env(
+    ctx: typer.Context,
     variable: str = typer.Argument(..., help="Environment variable name."),
     value: str = typer.Argument(..., help="Environment variable value."),
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
 ) -> None:
     """Set a value in the environment file."""
-    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    runtime_context = runtime_context_from_typer_context(ctx)
     target = environment_file(runtime_context)
     target.parent.mkdir(parents=True, exist_ok=True)
     set_key(str(target), variable, value)
@@ -206,12 +201,11 @@ def set_env(
 ##############################################################################
 @app.command("unset")
 def unset_env_value(
+    ctx: typer.Context,
     variable: str = typer.Argument(..., help="Environment variable name."),
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
 ) -> None:
     """Unset a value in the environment file."""
-    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    runtime_context = runtime_context_from_typer_context(ctx)
     target = environment_file(runtime_context)
     if not target.exists():
         _fail(f"Environment file not found: {target}", code=1)
@@ -222,11 +216,10 @@ def unset_env_value(
 ##############################################################################
 @app.command("validate")
 def validate_env(
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
+    ctx: typer.Context,
 ) -> None:
     """Validate the current environment file."""
-    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    runtime_context = runtime_context_from_typer_context(ctx)
     target = environment_file(runtime_context)
     if target.exists():
         try:
@@ -239,11 +232,10 @@ def validate_env(
 ##############################################################################
 @app.command("path")
 def env_path_cmd(
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
+    ctx: typer.Context,
 ) -> None:
     """Print the effective environment-file path."""
-    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    runtime_context = runtime_context_from_typer_context(ctx)
     typer.echo(environment_file(runtime_context))
 
 

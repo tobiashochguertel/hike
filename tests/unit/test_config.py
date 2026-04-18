@@ -322,7 +322,7 @@ def test_cli_config_path_does_not_leak_explicit_context_between_invocations(
     config_root = _patch_config_locations(monkeypatch, tmp_path)
     explicit = tmp_path / "custom" / "work.yaml"
 
-    first = _RUNNER.invoke(cli_app, ["config", "path", "--config", str(explicit)])
+    first = _RUNNER.invoke(cli_app, ["--config", str(explicit), "config", "path"])
     second = _RUNNER.invoke(cli_app, ["config", "path"])
 
     assert first.exit_code == 0

@@ -3,7 +3,7 @@
 ##############################################################################
 # Python imports.
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 ##############################################################################
 # Pytest imports.
@@ -16,6 +16,7 @@ from typer.testing import CliRunner
 ##############################################################################
 # Local imports.
 from hike.cli.app import app
+from hike.cli.common import CLIContext
 from hike.data import resolve_runtime_context
 from hike.startup import OpenOptions
 
@@ -44,6 +45,22 @@ def _install_open_spy(monkeypatch: pytest.MonkeyPatch) -> dict[str, object]:
     """Patch the open command so tests can inspect the captured options."""
     captured: dict[str, object] = {}
     _FakeHike.captured = captured
+
+    def _set_cli_context(
+        ctx: Any, *, config_path: Path | None, env_path: Path | None
+    ) -> CLIContext:
+        runtime_context = resolve_runtime_context(
+            config_path=config_path, env_path=env_path
+        )
+        captured.update({"config_path": config_path, "env_path": env_path})
+        cli_context = CLIContext(
+            config_path=config_path,
+            env_path=env_path,
+            runtime_context=runtime_context,
+        )
+        ctx.obj = cli_context
+        return cli_context
+
     monkeypatch.setattr(
         "hike.cli.app.run_hike",
         lambda options: (
@@ -51,13 +68,7 @@ def _install_open_spy(monkeypatch: pytest.MonkeyPatch) -> dict[str, object]:
             None,
         )[1],
     )
-    monkeypatch.setattr(
-        "hike.cli.app.resolve_cli_runtime_context",
-        lambda config_path, env_path: (
-            captured.update({"config_path": config_path, "env_path": env_path}),
-            resolve_runtime_context(config_path=config_path, env_path=env_path),
-        )[1],
-    )
+    monkeypatch.setattr("hike.cli.app.set_cli_context", _set_cli_context)
     return captured
 
 
@@ -127,17 +138,17 @@ def test_open_command_accepts_repeatable_excludes(
 def test_open_command_applies_runtime_path_overrides(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Alternate config and env paths should be accepted."""
+    """Root-level config and env overrides should feed into `open`."""
     captured = _install_open_spy(monkeypatch)
 
     result = _RUNNER.invoke(
         app,
         [
-            "open",
             "--config",
             "custom-hike.yaml",
             "--env-file",
             "custom-hike.env",
+            "open",
         ],
     )
 
@@ -216,20 +227,35 @@ def test_root_cli_version_does_not_launch_tui(
 
 
 ##############################################################################
+def test_root_cli_license_does_not_launch_tui(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The root callback should expose `--license` without loading the TUI."""
+    monkeypatch.setattr(
+        "hike.cli.app.run_hike",
+        lambda _options: pytest.fail("Root --license should not load the TUI"),
+    )
+
+    result = _RUNNER.invoke(app, ["--license"])
+
+    assert result.exit_code == 0
+    assert "GNU General Public License" in result.output
+
+
+##############################################################################
 def test_open_command_theme_question_uses_theme_service(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """`--theme ?` should list themes without launching the TUI."""
-    monkeypatch.setattr("hike.cli.app.theme_names", lambda: ["dark", "light"])
+    """`--theme ?` should point users at the dedicated theme command."""
     monkeypatch.setattr(
         "hike.cli.app.run_hike",
-        lambda _options: pytest.fail("Theme listing should not launch the TUI"),
+        lambda _options: pytest.fail("Theme question should not launch the TUI"),
     )
 
     result = _RUNNER.invoke(app, ["open", "--theme", "?"])
 
-    assert result.exit_code == 0
-    assert result.output.splitlines() == ["dark", "light"]
+    assert result.exit_code != 0
+    assert "Use `hike themes list`" in result.output
 
 
 ##############################################################################

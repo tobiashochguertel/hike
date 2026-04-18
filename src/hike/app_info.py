@@ -3,11 +3,13 @@
 ##############################################################################
 # Local imports.
 from . import __version__
+from .build_info import build_info
 
 ##############################################################################
 APP_NAME = "Hike"
 APP_DESCRIPTION = "A Markdown browser for the terminal."
 APP_VERSION = __version__
+APP_BUILD_INFO = build_info()
 HELP_TITLE = f"{APP_NAME} v{APP_VERSION}"
 HELP_ABOUT = """
 `Hike` is a terminal-based Markdown viewer; it was created

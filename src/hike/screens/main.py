@@ -209,6 +209,10 @@ class Main(EnhancedScreen[None]):
         """Resolve the initial root directory for the local browser."""
         if self._arguments.root is not None:
             return Path(self._arguments.root).expanduser().resolve()
+        if self._startup_target.kind is StartupTargetKind.FILE and isinstance(
+            self._startup_target.value, Path
+        ):
+            return self._startup_target.value.parent
         if self._startup_target.kind is StartupTargetKind.DIRECTORY and isinstance(
             self._startup_target.value, Path
         ):
@@ -343,7 +347,10 @@ class Main(EnhancedScreen[None]):
         """Handle any startup target or startup command."""
         startup_command = self._arguments.command
         if startup_command:
-            self.post_message(HandleInput(" ".join(startup_command)))
+            self.call_after_refresh(
+                self.post_message,
+                HandleInput(" ".join(startup_command)),
+            )
             return
         startup_target = self._startup_target
         if startup_target.kind is StartupTargetKind.NONE:
@@ -351,12 +358,18 @@ class Main(EnhancedScreen[None]):
         if startup_target.kind is StartupTargetKind.FILE and isinstance(
             startup_target.value, Path
         ):
-            self.post_message(OpenLocation(startup_target.value))
+            self.call_after_refresh(
+                self.post_message,
+                OpenLocation(startup_target.value),
+            )
             return
         if startup_target.kind is StartupTargetKind.URL and isinstance(
             startup_target.value, URL
         ):
-            self.post_message(OpenLocation(startup_target.value))
+            self.call_after_refresh(
+                self.post_message,
+                OpenLocation(startup_target.value),
+            )
             return
         if startup_target.kind is StartupTargetKind.DIRECTORY and isinstance(
             startup_target.value, Path

@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 from json import dumps
-from pathlib import Path
 
 ##############################################################################
 # Typer imports.
@@ -25,7 +24,7 @@ from ..data import (
     unset_configuration_value,
     validate_configuration_file,
 )
-from .common import config_path_option, env_path_option, resolve_cli_runtime_context
+from .common import runtime_context_from_typer_context
 from .services import initialize_configuration
 
 ##############################################################################
@@ -46,16 +45,15 @@ def _fail(message: str, code: int = 1) -> None:
 ##############################################################################
 @app.command("init")
 def init_config(
+    ctx: typer.Context,
     force: bool = typer.Option(
         False,
         "--force",
         help="Overwrite an existing configuration file after creating a backup.",
     ),
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
 ) -> None:
     """Create a commented default configuration file."""
-    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    runtime_context = runtime_context_from_typer_context(ctx)
     try:
         result = initialize_configuration(force, runtime_context)
     except FileExistsError as error:
@@ -68,6 +66,7 @@ def init_config(
 ##############################################################################
 @app.command("show")
 def show_config(
+    ctx: typer.Context,
     format_name: str = typer.Option(
         "yaml",
         "--format",
@@ -75,11 +74,9 @@ def show_config(
         show_default=True,
         case_sensitive=False,
     ),
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
 ) -> None:
     """Display the current configuration."""
-    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    runtime_context = runtime_context_from_typer_context(ctx)
     try:
         validate_configuration_file(context=runtime_context)
     except FileNotFoundError as error:
@@ -92,12 +89,11 @@ def show_config(
 ##############################################################################
 @app.command("get")
 def get_config(
+    ctx: typer.Context,
     property_path: str = typer.Argument(..., help="Dot/bracket property path to read."),
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
 ) -> None:
     """Read a single configuration property."""
-    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    runtime_context = runtime_context_from_typer_context(ctx)
     try:
         value = get_configuration_value(property_path, context=runtime_context)
     except KeyError:
@@ -108,15 +104,14 @@ def get_config(
 ##############################################################################
 @app.command("set")
 def set_config(
+    ctx: typer.Context,
     property_path: str = typer.Argument(
         ..., help="Dot/bracket property path to update."
     ),
     value: str = typer.Argument(..., help="Value to set, parsed with YAML rules."),
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
 ) -> None:
     """Set a configuration property."""
-    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    runtime_context = runtime_context_from_typer_context(ctx)
     try:
         set_configuration_value(property_path, value, context=runtime_context)
     except (KeyError, ValueError) as error:
@@ -129,14 +124,13 @@ def set_config(
 ##############################################################################
 @app.command("unset")
 def unset_config(
+    ctx: typer.Context,
     property_path: str = typer.Argument(
         ..., help="Dot/bracket property path to remove."
     ),
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
 ) -> None:
     """Unset a configuration property."""
-    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    runtime_context = runtime_context_from_typer_context(ctx)
     try:
         unset_configuration_value(property_path, context=runtime_context)
     except KeyError:
@@ -149,11 +143,10 @@ def unset_config(
 ##############################################################################
 @app.command("validate")
 def validate_config(
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
+    ctx: typer.Context,
 ) -> None:
     """Validate the active configuration file."""
-    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    runtime_context = runtime_context_from_typer_context(ctx)
     try:
         configuration = validate_configuration_file(context=runtime_context)
     except FileNotFoundError as error:
@@ -168,11 +161,10 @@ def validate_config(
 ##############################################################################
 @app.command("path")
 def config_path(
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
+    ctx: typer.Context,
 ) -> None:
     """Print the effective configuration file path."""
-    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    runtime_context = runtime_context_from_typer_context(ctx)
     typer.echo(configuration_file(runtime_context))
 
 

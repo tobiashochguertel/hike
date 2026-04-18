@@ -11,7 +11,9 @@ import pytest
 ##############################################################################
 # Local imports.
 from hike.__main__ import main as cli_main
-from hike.startup import StartupTargetKind, classify_startup_target
+from hike.data.config import Configuration
+from hike.screens.main import Main
+from hike.startup import OpenOptions, StartupTargetKind, classify_startup_target
 
 
 ##############################################################################
@@ -89,6 +91,18 @@ def test_classify_startup_target_handles_directory(tmp_path: Path) -> None:
 
     assert startup.kind is StartupTargetKind.DIRECTORY
     assert startup.value == target.resolve()
+
+
+##############################################################################
+def test_main_uses_file_parent_as_initial_local_root(tmp_path: Path) -> None:
+    """A file startup target should keep the browser rooted beside that file."""
+    target = tmp_path / "docs" / "README.md"
+    target.parent.mkdir()
+    target.write_text("# Hello\n", encoding="utf-8")
+
+    screen = Main(OpenOptions(target=str(target)), configuration=Configuration())
+
+    assert screen._initial_local_root == target.parent.resolve()
 
 
 ##############################################################################

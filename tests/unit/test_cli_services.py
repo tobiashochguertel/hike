@@ -10,7 +10,8 @@ import pytest
 
 ##############################################################################
 # Local imports.
-from hike.cli.services import run_hike, theme_names
+from hike.build_info import BuildInfo
+from hike.cli.services import run_hike, theme_names, version_text
 from hike.startup import OpenOptions
 
 
@@ -44,6 +45,32 @@ def test_run_hike_delegates_to_runtime_bootstrap(
     run_hike(OpenOptions(target="docs"))
 
     assert captured["options"] == OpenOptions(target="docs")
+
+
+##############################################################################
+def test_version_text_includes_build_metadata(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Version output should include build metadata when available."""
+    monkeypatch.setattr(
+        "hike.cli.services.APP_BUILD_INFO",
+        BuildInfo(
+            version="1.5.0",
+            git_sha="abc123",
+            git_branch="feature/all-requested-features",
+            build_timestamp="2026-04-18T08:30:00+02:00",
+        ),
+    )
+    monkeypatch.setattr("hike.cli.services.APP_VERSION", "1.5.0")
+
+    assert version_text() == "\n".join(
+        [
+            "hike v1.5.0",
+            "commit: abc123",
+            "branch: feature/all-requested-features",
+            "built: 2026-04-18T08:30:00+02:00",
+        ]
+    )
 
 
 ### test_cli_services.py ends here

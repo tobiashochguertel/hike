@@ -73,7 +73,7 @@ hike open --command "gh davep/hike"
 hike open README.md
 hike open docs/
 hike open https://example.com/README.md
-hike open --config ~/.config/hike/work-docs.yaml --root docs
+hike --config ~/.config/hike/work-docs.yaml open --root docs
 hike open --root docs --exclude generated/ --hidden
 hike open --no-ignore
 ```
@@ -81,6 +81,7 @@ The structured CLI now also includes:
 
 ```sh
 hike --version
+hike --license
 hike bindings list
 hike themes list
 hike config init
@@ -91,6 +92,9 @@ hike schema export
 hike env init
 hike env validate
 ```
+
+`hike --version` now includes the package version plus the best available build
+metadata, including git commit, branch, and build/install timestamp.
 
 If you still have a legacy `~/.config/hike/configuration.json`, running
 `hike config init --force` now migrates you onto the modern YAML config path.

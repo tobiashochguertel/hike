@@ -27,7 +27,7 @@ If you want to use a different configuration file for a specific workflow, you
 can point Hike at it with:
 
 ```sh
-hike open --config ~/.config/hike/work-docs.yaml
+hike --config ~/.config/hike/work-docs.yaml open
 ```
 
 ## Command line location
