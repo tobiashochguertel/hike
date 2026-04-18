@@ -104,6 +104,48 @@ class LocalView(DirectoryTree):
         self.border_title = self._display_root
         self.path = resolved
 
+    async def _reveal_path(self, path: Path) -> bool:
+        """Expand and highlight a visible path within the tree."""
+        target = path.expanduser().resolve()
+        root = Path(self.path).resolve()
+        try:
+            relative_target = target.relative_to(root)
+        except ValueError:
+            return False
+
+        current = self.root
+        await self._add_to_load_queue(current)
+        next_path = root
+        for segment in relative_target.parts:
+            next_path = next_path / segment
+            child = next(
+                (
+                    node
+                    for node in current.children
+                    if node.data is not None and node.data.path.resolve() == next_path
+                ),
+                None,
+            )
+            if child is None:
+                return False
+            current = child
+            if current.allow_expand:
+                current.expand()
+                await self._add_to_load_queue(current)
+
+        self.move_cursor(current, animate=False)
+        self.select_node(current)
+        return True
+
+    def highlight_path(self, path: Path) -> None:
+        """Schedule a highlight update for the given tree path."""
+        self.run_worker(
+            self._reveal_path(path),
+            name="local-view-highlight",
+            group="local-view-highlight",
+            exclusive=True,
+        )
+
     def reload(self) -> AwaitComplete:
         """Reload the tree and schedule a width-hint refresh."""
         reloaded = super().reload()

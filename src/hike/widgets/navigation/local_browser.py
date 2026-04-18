@@ -143,6 +143,13 @@ class LocalBrowser(Vertical):
         self.query_one(LocalFlatView).reload()
         self._request_layout_hint_refresh()
 
+    def highlight_path(self, path: Path) -> None:
+        """Highlight a local path in both browser modes."""
+        resolved = path.expanduser().resolve()
+        self.query_one(LocalView).highlight_path(resolved)
+        self.query_one(LocalFlatView).highlight_path(resolved)
+        self._request_layout_hint_refresh()
+
     def set_mode(self, mode: LocalBrowserMode, *, persist: bool = True) -> None:
         """Set the active local browser mode."""
         self.mode = mode

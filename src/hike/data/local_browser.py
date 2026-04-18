@@ -2,6 +2,7 @@
 
 ##############################################################################
 # Python imports.
+from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum
 from os import walk
@@ -68,13 +69,20 @@ def flatten_local_paths(
     options: LocalDiscoveryOptions,
 ) -> tuple[LocalBrowserEntry, ...]:
     """Flatten the browsable subtree into a relative file/directory list."""
+    return tuple(iter_local_paths(root, options))
+
+
+##############################################################################
+def iter_local_paths(
+    root: Path,
+    options: LocalDiscoveryOptions,
+) -> Iterator[LocalBrowserEntry]:
+    """Yield the browsable subtree in the order shown by the local browser."""
     resolved_root = root.resolve()
     if not resolved_root.is_dir():
-        return ()
+        return
 
-    def visit(current_path: Path) -> list[LocalBrowserEntry]:
-        entries: list[LocalBrowserEntry] = []
-        nested_entries: list[LocalBrowserEntry] = []
+    def visit(current_path: Path) -> Iterator[LocalBrowserEntry]:
         visible_directories: list[list[LocalBrowserEntry]] = []
         discovered: dict[Path, tuple[list[str], list[str]]] = {}
         for walked_path, directories, files in walk(current_path, topdown=True):
@@ -96,33 +104,27 @@ def flatten_local_paths(
         directories, files = discovered.get(current_path, ([], []))
         for directory in directories:
             path = current_path / directory
-            discovered_entries = visit(path)
+            discovered_entries = list(visit(path))
             if not discovered_entries:
                 continue
-            entries.append(
-                LocalBrowserEntry(
-                    path=path,
-                    relative_path=path.relative_to(resolved_root),
-                    is_dir=True,
-                )
+            yield LocalBrowserEntry(
+                path=path,
+                relative_path=path.relative_to(resolved_root),
+                is_dir=True,
             )
             visible_directories.append(discovered_entries)
         for filename in files:
             path = current_path / filename
             if should_include_path(path, root=resolved_root, options=options):
-                entries.append(
-                    LocalBrowserEntry(
-                        path=path,
-                        relative_path=path.relative_to(resolved_root),
-                        is_dir=False,
-                    )
+                yield LocalBrowserEntry(
+                    path=path,
+                    relative_path=path.relative_to(resolved_root),
+                    is_dir=False,
                 )
         for discovered_entries in visible_directories:
-            nested_entries.extend(discovered_entries)
-        entries.extend(nested_entries)
-        return entries
+            yield from discovered_entries
 
-    return tuple(visit(resolved_root))
+    yield from visit(resolved_root)
 
 
 ### local_browser.py ends here

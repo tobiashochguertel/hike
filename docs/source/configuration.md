@@ -136,18 +136,42 @@ widgets that support text selection.
 ## Local file system start location
 
 By default Hike's local file system browser (the tree that appears in the
-navigation panel) will always start out browsing the user's home directory.
-If you prefer that it starts viewing somewhere else, you can change this
-value in the configuration file.
-
-```json
-"local_start_location": "~",
-```
-
-For example, if you wanted it to always start with the current directory, you could change it to this:
+navigation panel) starts from the current working directory when you launch
+`hike open` without an explicit target. If you prefer that it starts somewhere
+else, you can change this value in the configuration file.
 
 ```json
 "local_start_location": ".",
+```
+
+For example, if you wanted it to always start in a dedicated docs directory, you
+could change it to this:
+
+```json
+"local_start_location": "~/notes/docs",
+```
+
+## Startup auto-open
+
+When Hike starts from a directory (including `hike open` with no target), it
+can automatically open a preferred Markdown file and select it in the local
+browser.
+
+```json
+"startup_auto_open": true,
+"startup_auto_open_patterns": [
+    "INDEX.md",
+    "README.md",
+    "getting-started*.md"
+],
+```
+
+Patterns are checked in order. Plain filenames are matched against each file's
+basename; patterns containing a slash are matched against the file's path
+relative to the local browser root. If no configured pattern matches, Hike
+falls back to the first visible Markdown file in local-browser order. Set
+`"startup_auto_open": false` if you want startup to stay in the sidebar instead
+of auto-opening a document.
 ```
 
 ## Local file browser discovery

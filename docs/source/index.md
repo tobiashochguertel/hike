@@ -185,8 +185,21 @@ hike open --command "gh davep/org-davep-2bit"
 #### Startup targets
 
 Use the `open` subcommand for startup targets. If the target is a file, it is
-opened immediately. If it is a directory, the local browser is rooted there.
-If it is a URL, it is loaded directly.
+opened immediately. If it is a directory, the local browser is rooted there and
+Hike will try to auto-open a preferred document. If it is a URL, it is loaded
+directly. With no target, `hike open` starts from the configured local browser
+root (the current working directory by default) and uses the same auto-open
+rules.
+
+By default Hike prefers `INDEX.md`, then `README.md`, then the first visible
+Markdown file in local-browser order. You can change or disable that behavior
+through the configuration file.
+
+To start from the current directory and let Hike choose the initial document:
+
+```sh
+hike open
+```
 
 To open a file:
 

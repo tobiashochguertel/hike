@@ -139,6 +139,16 @@ def test_discovery_options_use_configuration_defaults(tmp_path: Path) -> None:
 
 
 ##############################################################################
+def test_configuration_defaults_include_startup_auto_open_behavior() -> None:
+    """Startup defaults should use cwd roots and ordered filename preferences."""
+    configuration = Configuration()
+
+    assert configuration.local_start_location == "."
+    assert configuration.startup_auto_open is True
+    assert configuration.startup_auto_open_patterns == ["INDEX.md", "README.md"]
+
+
+##############################################################################
 def test_layout_policy_uses_configuration_defaults() -> None:
     """Layout policy should be derived from persisted configuration values."""
     policy = layout_policy(

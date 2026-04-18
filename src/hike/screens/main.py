@@ -5,11 +5,6 @@
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from functools import partial
-from pathlib import Path
-
-##############################################################################
-# httpx imports.
-from httpx import URL
 
 ##############################################################################
 # Pyperclip imports.
@@ -64,7 +59,7 @@ from ..data import (
     save_command_history,
     save_history,
 )
-from ..data.discovery import LocalDiscoveryOptions, local_discovery_options
+from ..data.discovery import local_discovery_options
 from ..data.layout import LayoutMode, LayoutState, effective_layout_state, layout_policy
 from ..data.location_types import (
     markdown_content_types_from_configuration,
@@ -84,7 +79,7 @@ from ..messages import (
 )
 from ..providers import BookmarkCommands, HistoryCommands, MainCommands
 from ..runtime.config_access import load_app_configuration, update_app_configuration
-from ..startup import OpenOptions, StartupTargetKind, classify_startup_target
+from ..startup import OpenOptions, resolve_startup_plan
 from ..support import view_in_browser
 from ..widgets import CommandLine, Navigation, Viewer
 
@@ -160,18 +155,18 @@ class Main(EnhancedScreen[None]):
         """The arguments passed on the command line."""
         self._initial_configuration = configuration
         """The configuration snapshot available during screen construction."""
-        self._startup_target = classify_startup_target(
-            getattr(arguments, "target", None)
+        self._local_options = local_discovery_options(arguments, configuration)
+        """The effective local browser discovery options."""
+        self._startup_plan = resolve_startup_plan(
+            arguments,
+            configuration,
+            self._local_options,
         )
-        """The classified startup target."""
-        self._initial_local_root = self._resolve_initial_local_root()
-        """The initial root directory for the local browser."""
+        """The resolved startup plan."""
         self._layout_state = LayoutState()
         """The effective layout state."""
         self._mode_override: LayoutMode | None = None
         """An optional single-pane mode override for responsive layouts."""
-        self._local_options = LocalDiscoveryOptions()
-        """The effective local browser discovery options."""
         super().__init__()
 
     def _configuration(self) -> Configuration:
@@ -204,24 +199,6 @@ class Main(EnhancedScreen[None]):
         """Persist whether navigation should be available in wide layouts."""
         with self._update_configuration() as config:
             config.navigation_visible = enabled
-
-    def _resolve_initial_local_root(self) -> Path:
-        """Resolve the initial root directory for the local browser."""
-        if self._arguments.root is not None:
-            return Path(self._arguments.root).expanduser().resolve()
-        if self._startup_target.kind is StartupTargetKind.FILE and isinstance(
-            self._startup_target.value, Path
-        ):
-            return self._startup_target.value.parent
-        if self._startup_target.kind is StartupTargetKind.DIRECTORY and isinstance(
-            self._startup_target.value, Path
-        ):
-            return self._startup_target.value
-        return (
-            Path(self._initial_configuration.local_start_location)
-            .expanduser()
-            .resolve()
-        )
 
     def _resolve_layout_state(
         self,
@@ -314,7 +291,7 @@ class Main(EnhancedScreen[None]):
             with Horizontal(id="workspace"):
                 yield Navigation(
                     classes="panel",
-                    local_root=self._initial_local_root,
+                    local_root=self._startup_plan.local_root,
                     local_options=self._local_options,
                     local_browser_mode=self._initial_configuration.local_browser_view_mode,
                 )
@@ -324,8 +301,6 @@ class Main(EnhancedScreen[None]):
 
     def on_mount(self) -> None:
         """Configure the screen once the DOM is mounted."""
-        config = self._configuration()
-        self._local_options = local_discovery_options(self._arguments, config)
         if self._arguments.navigation is not None:
             self._store_navigation_enabled(self._arguments.navigation)
         self._refresh_layout_state()
@@ -334,7 +309,7 @@ class Main(EnhancedScreen[None]):
         BookmarkCommands.bookmarks = bookmarks
         self._viewer().history = load_history()
         self._command_line().history = load_command_history()
-        self._handle_startup_input()
+        self.call_after_refresh(self._handle_startup_input)
 
     def on_resize(self) -> None:
         """Keep the layout state in sync with terminal width changes."""
@@ -345,43 +320,25 @@ class Main(EnhancedScreen[None]):
 
     def _handle_startup_input(self) -> None:
         """Handle any startup target or startup command."""
-        startup_command = self._arguments.command
-        if startup_command:
-            self.call_after_refresh(
-                self.post_message,
-                HandleInput(" ".join(startup_command)),
+        startup_plan = self._startup_plan
+        if startup_plan.command_input is not None:
+            self.post_message(HandleInput(startup_plan.command_input))
+            return
+        if startup_plan.selected_path is not None:
+            self._navigation().highlight_local_path(startup_plan.selected_path)
+        if startup_plan.open_target is not None:
+            self.post_message(OpenLocation(startup_plan.open_target))
+            return
+        if startup_plan.focus_local_browser:
+            self._show_navigation(Navigation.jump_to_local)
+            return
+        if startup_plan.error_message is not None:
+            self.notify(
+                startup_plan.error_message,
+                title="Startup target error",
+                severity="error",
+                timeout=8,
             )
-            return
-        startup_target = self._startup_target
-        if startup_target.kind is StartupTargetKind.NONE:
-            return
-        if startup_target.kind is StartupTargetKind.FILE and isinstance(
-            startup_target.value, Path
-        ):
-            self.call_after_refresh(
-                self.post_message,
-                OpenLocation(startup_target.value),
-            )
-            return
-        if startup_target.kind is StartupTargetKind.URL and isinstance(
-            startup_target.value, URL
-        ):
-            self.call_after_refresh(
-                self.post_message,
-                OpenLocation(startup_target.value),
-            )
-            return
-        if startup_target.kind is StartupTargetKind.DIRECTORY and isinstance(
-            startup_target.value, Path
-        ):
-            self.call_after_refresh(self._show_navigation, Navigation.jump_to_local)
-            return
-        self.notify(
-            f"Could not locate {startup_target.value!r}",
-            title="Startup target error",
-            severity="error",
-            timeout=8,
-        )
 
     @on(Help)
     async def _show_help(self) -> None:

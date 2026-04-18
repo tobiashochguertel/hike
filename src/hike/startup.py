@@ -4,7 +4,9 @@
 # Python imports.
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import StrEnum
+from fnmatch import fnmatch
 from pathlib import Path
 
 ##############################################################################
@@ -18,6 +20,9 @@ from pydantic import BaseModel, ConfigDict, Field
 ##############################################################################
 # Local imports.
 from .data import RuntimeContext, looks_urllike
+from .data.config import Configuration
+from .data.discovery import LocalDiscoveryOptions
+from .data.local_browser import LocalBrowserEntry, iter_local_paths
 
 
 ##############################################################################
@@ -86,6 +91,19 @@ class StartupTarget(BaseModel):
 
 
 ##############################################################################
+@dataclass(frozen=True, slots=True)
+class StartupPlan:
+    """The resolved startup behavior for an `open` invocation."""
+
+    local_root: Path
+    open_target: Path | URL | None = None
+    selected_path: Path | None = None
+    command_input: str | None = None
+    focus_local_browser: bool = False
+    error_message: str | None = None
+
+
+##############################################################################
 def classify_startup_target(target: str | None) -> StartupTarget:
     """Classify a startup target from the command line."""
     if target is None:
@@ -98,6 +116,141 @@ def classify_startup_target(target: str | None) -> StartupTarget:
     if path.is_dir():
         return StartupTarget(kind=StartupTargetKind.DIRECTORY, value=path.resolve())
     return StartupTarget(kind=StartupTargetKind.MISSING, value=target)
+
+
+##############################################################################
+def _runtime_cwd(options: OpenOptions) -> Path:
+    """Return the cwd associated with the open request."""
+    if options.runtime_context is not None:
+        return options.runtime_context.cwd
+    return Path.cwd()
+
+
+##############################################################################
+def _default_local_root(
+    options: OpenOptions,
+    configuration: Configuration,
+) -> Path:
+    """Resolve the configured default local browser root."""
+    configured = Path(configuration.local_start_location).expanduser()
+    if not configured.is_absolute():
+        configured = _runtime_cwd(options) / configured
+    return configured.resolve()
+
+
+##############################################################################
+def _resolve_local_root(
+    options: OpenOptions,
+    configuration: Configuration,
+    startup_target: StartupTarget,
+) -> Path:
+    """Resolve the initial local browser root for the startup request."""
+    if options.root is not None:
+        return Path(options.root).expanduser().resolve()
+    if startup_target.kind is StartupTargetKind.FILE and isinstance(
+        startup_target.value, Path
+    ):
+        return startup_target.value.parent
+    if startup_target.kind is StartupTargetKind.DIRECTORY and isinstance(
+        startup_target.value, Path
+    ):
+        return startup_target.value
+    return _default_local_root(options, configuration)
+
+
+##############################################################################
+def _matches_startup_pattern(entry: LocalBrowserEntry, pattern: str) -> bool:
+    """Return `True` when an entry matches a configured startup pattern."""
+    candidate = entry.relative_path.as_posix()
+    if "/" in pattern or "\\" in pattern:
+        return fnmatch(candidate, pattern.replace("\\", "/"))
+    return fnmatch(entry.path.name, pattern)
+
+
+##############################################################################
+def _preferred_startup_file(
+    root: Path,
+    options: LocalDiscoveryOptions,
+    configuration: Configuration,
+) -> Path | None:
+    """Return the preferred startup file within a local root, if any."""
+    if not configuration.startup_auto_open:
+        return None
+
+    first_visible: Path | None = None
+    matched_patterns: dict[str, Path] = {}
+    patterns = tuple(configuration.startup_auto_open_patterns)
+
+    for entry in iter_local_paths(root, options):
+        if entry.is_dir:
+            continue
+        if first_visible is None:
+            first_visible = entry.path
+        for pattern in patterns:
+            if pattern not in matched_patterns and _matches_startup_pattern(
+                entry, pattern
+            ):
+                matched_patterns[pattern] = entry.path
+        if patterns and patterns[0] in matched_patterns:
+            return matched_patterns[patterns[0]]
+
+    for pattern in patterns:
+        if pattern in matched_patterns:
+            return matched_patterns[pattern]
+    return first_visible
+
+
+##############################################################################
+def resolve_startup_plan(
+    options: OpenOptions,
+    configuration: Configuration,
+    local_options: LocalDiscoveryOptions,
+) -> StartupPlan:
+    """Resolve the startup behavior for an `open` request."""
+    startup_target = classify_startup_target(options.target)
+    local_root = _resolve_local_root(options, configuration, startup_target)
+
+    if options.command:
+        return StartupPlan(
+            local_root=local_root,
+            command_input=" ".join(options.command),
+        )
+
+    if startup_target.kind is StartupTargetKind.MISSING:
+        return StartupPlan(
+            local_root=local_root,
+            error_message=f"Could not locate {startup_target.value!r}",
+        )
+
+    if startup_target.kind is StartupTargetKind.FILE and isinstance(
+        startup_target.value, Path
+    ):
+        return StartupPlan(
+            local_root=local_root,
+            open_target=startup_target.value,
+            selected_path=startup_target.value,
+        )
+
+    if startup_target.kind is StartupTargetKind.URL and isinstance(
+        startup_target.value, URL
+    ):
+        return StartupPlan(local_root=local_root, open_target=startup_target.value)
+
+    if startup_target.kind in (
+        StartupTargetKind.NONE,
+        StartupTargetKind.DIRECTORY,
+    ):
+        if candidate := _preferred_startup_file(
+            local_root, local_options, configuration
+        ):
+            return StartupPlan(
+                local_root=local_root,
+                open_target=candidate,
+                selected_path=candidate,
+            )
+        return StartupPlan(local_root=local_root, focus_local_browser=True)
+
+    return StartupPlan(local_root=local_root, focus_local_browser=True)
 
 
 ### startup.py ends here

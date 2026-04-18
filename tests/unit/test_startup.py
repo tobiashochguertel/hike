@@ -12,8 +12,15 @@ import pytest
 # Local imports.
 from hike.__main__ import main as cli_main
 from hike.data.config import Configuration
+from hike.data.discovery import local_discovery_options
+from hike.data.runtime_context import resolve_runtime_context
 from hike.screens.main import Main
-from hike.startup import OpenOptions, StartupTargetKind, classify_startup_target
+from hike.startup import (
+    OpenOptions,
+    StartupTargetKind,
+    classify_startup_target,
+    resolve_startup_plan,
+)
 
 
 ##############################################################################
@@ -94,6 +101,38 @@ def test_classify_startup_target_handles_directory(tmp_path: Path) -> None:
 
 
 ##############################################################################
+def test_classify_startup_target_handles_relative_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Relative file targets should resolve from cwd."""
+    target = tmp_path / "README.md"
+    target.write_text("# Hello\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    startup = classify_startup_target("README.md")
+
+    assert startup.kind is StartupTargetKind.FILE
+    assert startup.value == target.resolve()
+
+
+##############################################################################
+def test_classify_startup_target_handles_relative_directory(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Relative directory targets should resolve from cwd."""
+    target = tmp_path / "docs"
+    target.mkdir()
+    monkeypatch.chdir(tmp_path)
+
+    startup = classify_startup_target("docs")
+
+    assert startup.kind is StartupTargetKind.DIRECTORY
+    assert startup.value == target.resolve()
+
+
+##############################################################################
 def test_main_uses_file_parent_as_initial_local_root(tmp_path: Path) -> None:
     """A file startup target should keep the browser rooted beside that file."""
     target = tmp_path / "docs" / "README.md"
@@ -102,7 +141,190 @@ def test_main_uses_file_parent_as_initial_local_root(tmp_path: Path) -> None:
 
     screen = Main(OpenOptions(target=str(target)), configuration=Configuration())
 
-    assert screen._initial_local_root == target.parent.resolve()
+    assert screen._startup_plan.local_root == target.parent.resolve()
+
+
+##############################################################################
+def test_resolve_startup_plan_uses_cwd_for_open_without_target(tmp_path: Path) -> None:
+    """`hike open` should use the current working directory by default."""
+    readme = tmp_path / "README.md"
+    readme.write_text("# Hello\n", encoding="utf-8")
+    options = OpenOptions(runtime_context=resolve_runtime_context(cwd=tmp_path))
+    configuration = Configuration()
+
+    plan = resolve_startup_plan(
+        options,
+        configuration,
+        local_discovery_options(options, configuration),
+    )
+
+    assert plan.local_root == tmp_path.resolve()
+    assert plan.open_target == readme.resolve()
+    assert plan.selected_path == readme.resolve()
+
+
+##############################################################################
+def test_resolve_startup_plan_prefers_index_before_readme(tmp_path: Path) -> None:
+    """Startup auto-open should prefer INDEX.md before README.md."""
+    index = tmp_path / "INDEX.md"
+    readme = tmp_path / "README.md"
+    index.write_text("# Index\n", encoding="utf-8")
+    readme.write_text("# Readme\n", encoding="utf-8")
+    options = OpenOptions(runtime_context=resolve_runtime_context(cwd=tmp_path))
+    configuration = Configuration()
+
+    plan = resolve_startup_plan(
+        options,
+        configuration,
+        local_discovery_options(options, configuration),
+    )
+
+    assert plan.open_target == index.resolve()
+    assert plan.selected_path == index.resolve()
+
+
+##############################################################################
+def test_resolve_startup_plan_uses_first_visible_file_when_no_pattern_matches(
+    tmp_path: Path,
+) -> None:
+    """Startup auto-open should fall back to the first visible file."""
+    guide = tmp_path / "guide"
+    guide.mkdir()
+    first = tmp_path / "alpha.md"
+    second = guide / "page.md"
+    first.write_text("# Alpha\n", encoding="utf-8")
+    second.write_text("# Page\n", encoding="utf-8")
+    options = OpenOptions(runtime_context=resolve_runtime_context(cwd=tmp_path))
+    configuration = Configuration(startup_auto_open_patterns=["welcome*.md"])
+
+    plan = resolve_startup_plan(
+        options,
+        configuration,
+        local_discovery_options(options, configuration),
+    )
+
+    assert plan.open_target == first.resolve()
+    assert plan.selected_path == first.resolve()
+
+
+##############################################################################
+def test_resolve_startup_plan_respects_custom_priority_patterns(tmp_path: Path) -> None:
+    """Custom startup patterns should override the default filename order."""
+    welcome = tmp_path / "welcome-home.md"
+    readme = tmp_path / "README.md"
+    welcome.write_text("# Welcome\n", encoding="utf-8")
+    readme.write_text("# Readme\n", encoding="utf-8")
+    options = OpenOptions(runtime_context=resolve_runtime_context(cwd=tmp_path))
+    configuration = Configuration(
+        startup_auto_open_patterns=["welcome*.md", "README.md"]
+    )
+
+    plan = resolve_startup_plan(
+        options,
+        configuration,
+        local_discovery_options(options, configuration),
+    )
+
+    assert plan.open_target == welcome.resolve()
+
+
+##############################################################################
+def test_resolve_startup_plan_can_disable_auto_open(tmp_path: Path) -> None:
+    """Startup auto-open can be turned off in configuration."""
+    readme = tmp_path / "README.md"
+    readme.write_text("# Hello\n", encoding="utf-8")
+    options = OpenOptions(runtime_context=resolve_runtime_context(cwd=tmp_path))
+    configuration = Configuration(startup_auto_open=False)
+
+    plan = resolve_startup_plan(
+        options,
+        configuration,
+        local_discovery_options(options, configuration),
+    )
+
+    assert plan.local_root == tmp_path.resolve()
+    assert plan.open_target is None
+    assert plan.focus_local_browser is True
+
+
+##############################################################################
+def test_resolve_startup_plan_preserves_commands(tmp_path: Path) -> None:
+    """Startup commands should bypass auto-open location resolution."""
+    options = OpenOptions(
+        command=("gh", "davep/hike"),
+        runtime_context=resolve_runtime_context(cwd=tmp_path),
+    )
+    configuration = Configuration()
+
+    plan = resolve_startup_plan(
+        options,
+        configuration,
+        local_discovery_options(options, configuration),
+    )
+
+    assert plan.command_input == "gh davep/hike"
+    assert plan.open_target is None
+
+
+##############################################################################
+def test_resolve_startup_plan_preserves_url_targets(tmp_path: Path) -> None:
+    """URL startup targets should still open directly without sidebar selection."""
+    options = OpenOptions(
+        target="https://example.com/README.md",
+        runtime_context=resolve_runtime_context(cwd=tmp_path),
+    )
+    configuration = Configuration()
+
+    plan = resolve_startup_plan(
+        options,
+        configuration,
+        local_discovery_options(options, configuration),
+    )
+
+    assert str(plan.open_target) == "https://example.com/README.md"
+    assert plan.selected_path is None
+
+
+##############################################################################
+def test_resolve_startup_plan_honors_explicit_root_override(tmp_path: Path) -> None:
+    """An explicit root should drive auto-open selection."""
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    readme = docs / "README.md"
+    readme.write_text("# Hello\n", encoding="utf-8")
+    options = OpenOptions(
+        root=str(docs),
+        runtime_context=resolve_runtime_context(cwd=tmp_path),
+    )
+    configuration = Configuration()
+
+    plan = resolve_startup_plan(
+        options,
+        configuration,
+        local_discovery_options(options, configuration),
+    )
+
+    assert plan.local_root == docs.resolve()
+    assert plan.open_target == readme.resolve()
+
+
+##############################################################################
+def test_resolve_startup_plan_marks_missing_target_as_error(tmp_path: Path) -> None:
+    """Missing paths should surface a startup error."""
+    missing = tmp_path / "missing.md"
+    options = OpenOptions(
+        target=str(missing),
+        runtime_context=resolve_runtime_context(cwd=tmp_path),
+    )
+    configuration = Configuration()
+
+    plan = resolve_startup_plan(
+        options,
+        configuration,
+        local_discovery_options(options, configuration),
+    )
+
+    assert "Could not locate" in (plan.error_message or "")
 
 
 ##############################################################################
