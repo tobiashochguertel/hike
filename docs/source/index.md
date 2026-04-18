@@ -128,6 +128,9 @@ hike open --theme=?
 
 Prints the version number of Hike.
 
+When build metadata is available, the output also includes the git commit,
+branch, and build/install timestamp.
+
 ```sh
 hike --version
 ```
@@ -138,6 +141,12 @@ hike --version
 #### `open --config`
 
 Use an alternate configuration file.
+
+Prefer the root-level form:
+
+```sh
+hike --config ~/.config/hike/work-docs.yaml open
+```
 
 #### `open --root`
 

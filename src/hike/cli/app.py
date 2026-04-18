@@ -14,8 +14,12 @@ import typer
 # Local imports.
 from ..app_info import APP_DESCRIPTION, APP_NAME
 from .bindings_cmd import app as bindings_app
-from .bindings_cmd import list_bindings
-from .common import config_path_option, env_path_option, resolve_cli_runtime_context
+from .common import (
+    config_path_option,
+    env_path_option,
+    runtime_context_from_typer_context,
+    set_cli_context,
+)
 from .config_cmd import app as config_app
 from .contracts import OpenCommandRequest
 from .env_cmd import app as env_app
@@ -24,7 +28,6 @@ from .services import (
     build_open_options,
     license_text,
     run_hike,
-    theme_names,
     version_text,
 )
 from .themes_cmd import app as themes_app
@@ -48,16 +51,29 @@ app.add_typer(themes_app, name="themes")
 @app.callback()
 def main_callback(
     ctx: typer.Context,
+    config_path: Path | None = config_path_option(),
+    env_path: Path | None = env_path_option(),
     version: bool = typer.Option(
         False,
         "--version",
         help="Show version information and exit.",
         is_eager=True,
     ),
+    license_output: bool = typer.Option(
+        False,
+        "--license",
+        "--licence",
+        help="Show license information and exit.",
+        is_eager=True,
+    ),
 ) -> None:
     """Manage Hike from a structured Typer CLI."""
+    set_cli_context(ctx, config_path=config_path, env_path=env_path)
     if version:
         typer.echo(version_text())
+        raise typer.Exit()
+    if license_output:
+        typer.echo(license_text())
         raise typer.Exit()
     if ctx.invoked_subcommand is None and not ctx.args:
         typer.echo(ctx.get_help(), nl=False)
@@ -74,6 +90,7 @@ def show_license() -> None:
 ##############################################################################
 @app.command("open")
 def open_command(
+    ctx: typer.Context,
     target: str | None = typer.Argument(
         None,
         help="Startup file, directory, or URL to open.",
@@ -95,7 +112,7 @@ def open_command(
         None,
         "--theme",
         "-t",
-        help="Set the theme for the application. Use '?' to list themes.",
+        help="Set the theme for the application for this launch only.",
         show_default=False,
     ),
     root: Path | None = typer.Option(
@@ -122,33 +139,12 @@ def open_command(
         help="Add an exclude glob for the local browser (repeatable).",
         show_default=False,
     ),
-    bindings: bool = typer.Option(
-        False,
-        "--bindings",
-        help="List commands that can have their bindings changed.",
-    ),
-    license_text: bool = typer.Option(
-        False,
-        "--license",
-        "--licence",
-        help="Show license information instead of launching the TUI.",
-    ),
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
 ) -> None:
     """Launch the Hike TUI."""
-    if license_text:
-        show_license()
-        raise typer.Exit()
-    if bindings:
-        list_bindings(config_path=config_path, env_path=env_path)
-        raise typer.Exit()
     if theme == "?":
-        for item in theme_names():
-            typer.echo(item)
-        raise typer.Exit()
+        raise typer.BadParameter("Use `hike themes list` to inspect available themes.")
     try:
-        runtime_context = resolve_cli_runtime_context(config_path, env_path)
+        runtime_context = runtime_context_from_typer_context(ctx)
         options = build_open_options(
             OpenCommandRequest(
                 target=target,

@@ -12,7 +12,7 @@ from shlex import split as split_shell_words
 
 ##############################################################################
 # Local imports.
-from ..app_info import APP_VERSION, HELP_LICENSE
+from ..app_info import APP_BUILD_INFO, APP_VERSION, HELP_LICENSE
 from ..command_catalog import MAIN_COMMAND_MESSAGES
 from ..data import (
     Configuration,
@@ -51,7 +51,14 @@ class ConfigInitResult:
 ##############################################################################
 def version_text() -> str:
     """Return the CLI version string."""
-    return f"hike v{APP_VERSION}"
+    lines = [f"hike v{APP_VERSION}"]
+    if APP_BUILD_INFO.git_sha is not None:
+        lines.append(f"commit: {APP_BUILD_INFO.git_sha}")
+    if APP_BUILD_INFO.git_branch is not None:
+        lines.append(f"branch: {APP_BUILD_INFO.git_branch}")
+    if APP_BUILD_INFO.build_timestamp is not None:
+        lines.append(f"built: {APP_BUILD_INFO.build_timestamp}")
+    return "\n".join(lines)
 
 
 ##############################################################################

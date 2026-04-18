@@ -38,26 +38,26 @@ def test_cli_config_round_trip_works_with_real_files(tmp_path: Path) -> None:
 
     init_result = _RUNNER.invoke(
         app,
-        ["config", "init", "--config", str(config_path)],
+        ["--config", str(config_path), "config", "init"],
     )
     set_result = _RUNNER.invoke(
         app,
         [
+            "--config",
+            str(config_path),
             "config",
             "set",
             "theme",
             "textual-light",
-            "--config",
-            str(config_path),
         ],
     )
     get_result = _RUNNER.invoke(
         app,
-        ["config", "get", "theme", "--config", str(config_path)],
+        ["--config", str(config_path), "config", "get", "theme"],
     )
     validate_result = _RUNNER.invoke(
         app,
-        ["config", "validate", "--config", str(config_path)],
+        ["--config", str(config_path), "config", "validate"],
     )
 
     assert init_result.exit_code == 0
@@ -91,6 +91,20 @@ def test_cli_schema_and_metadata_commands_work_end_to_end(tmp_path: Path) -> Non
     assert bindings_result.exit_code == 0
     assert "JumpToSidebarView" in bindings_result.stdout
     assert "ToggleLocalBrowserMode" in bindings_result.stdout
+
+
+##############################################################################
+def test_cli_root_metadata_flags_work_end_to_end() -> None:
+    """Version and license flags should be available on the root command."""
+    version_result = _RUNNER.invoke(app, ["--version"])
+    license_result = _RUNNER.invoke(app, ["--license"])
+
+    assert version_result.exit_code == 0
+    assert "hike v1.5.0" in version_result.stdout
+    assert "commit:" in version_result.stdout
+    assert "branch:" in version_result.stdout
+    assert license_result.exit_code == 0
+    assert "GNU General Public License" in license_result.stdout
 
 
 ### test_cli_e2e.py ends here

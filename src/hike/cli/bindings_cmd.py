@@ -4,8 +4,6 @@
 # Python imports.
 from __future__ import annotations
 
-from pathlib import Path
-
 ##############################################################################
 # Typer imports.
 import typer
@@ -13,10 +11,8 @@ import typer
 ##############################################################################
 # Local imports.
 from .common import (
-    config_path_option,
     console,
-    env_path_option,
-    resolve_cli_runtime_context,
+    runtime_context_from_typer_context,
 )
 from .services import binding_summaries
 
@@ -31,11 +27,10 @@ app = typer.Typer(
 ##############################################################################
 @app.command("list")
 def list_bindings(
-    config_path: Path | None = config_path_option(),
-    env_path: Path | None = env_path_option(),
+    ctx: typer.Context,
 ) -> None:
     """List commands that support keybinding overrides."""
-    runtime_context = resolve_cli_runtime_context(config_path, env_path)
+    runtime_context = runtime_context_from_typer_context(ctx)
     for summary in binding_summaries(runtime_context):
         console.print(
             f"[bold]{summary.command_name}[/] [dim]- {summary.tooltip}[/]\n"

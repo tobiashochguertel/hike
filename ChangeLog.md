@@ -68,6 +68,14 @@
   remote-opening flows.
 - Added end-to-end coverage for the Typer CLI and the Textual TUI using
   `CliRunner` and Textual's `run_test()` / `Pilot` APIs.
+- Moved shared `--config` and `--env-file` handling to root-level CLI options,
+  added a root `--license` flag, and trimmed `hike open` back to TUI launch
+  concerns.
+- Expanded `hike --version` output with build metadata when available,
+  including git commit, branch, and build/install timestamp details.
+- Fixed file startup so `hike open README.md` roots the local browser beside the
+  requested document instead of scanning the configured home-directory default
+  during startup.
 
 ## v1.4.0
 
