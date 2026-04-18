@@ -26,6 +26,7 @@ from .data import (
 from .data import (
     update_configuration as update_runtime_configuration,
 )
+from .keybinding_catalog import resolve_keybindings
 from .screens import Main
 from .startup import OpenOptions
 from .widgets.navigation.local_browser import LocalBrowser
@@ -61,8 +62,13 @@ class Hike(EnhancedApp[None]):
                 self.theme = theme_name
             except InvalidThemeError:
                 pass
-        if configuration.bindings:
-            self.set_keymap(configuration.bindings)
+        keymap = resolve_keybindings(
+            self._arguments.binding_set or configuration.binding_set,
+            custom_sets=configuration.binding_sets,
+            overrides=configuration.bindings,
+        )
+        if keymap:
+            self.set_keymap(keymap)
 
     def configuration(self) -> Configuration:
         """Return the active configuration for this app instance."""

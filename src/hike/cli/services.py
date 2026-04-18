@@ -23,6 +23,13 @@ from ..data import (
     resolve_runtime_context,
     save_configuration,
 )
+from ..keybinding_catalog import (
+    keybinding_set_names as static_keybinding_set_names,
+)
+from ..keybinding_catalog import (
+    keybinding_set_source,
+    resolve_keybindings,
+)
 from ..startup import OpenOptions
 from ..theme_catalog import theme_names as static_theme_names
 from .contracts import OpenCommandRequest
@@ -37,6 +44,16 @@ class BindingSummary:
     tooltip: str
     default_key: str
     current_key: str
+
+
+##############################################################################
+@dataclass(frozen=True)
+class BindingSetSummary:
+    """A user-facing description of an available keybinding set."""
+
+    name: str
+    source: str
+    active: bool
 
 
 ##############################################################################
@@ -74,11 +91,32 @@ def theme_names() -> list[str]:
 
 
 ##############################################################################
+def keybinding_set_summaries(
+    context: RuntimeContext | None = None,
+) -> list[BindingSetSummary]:
+    """Return the available keybinding sets and the active one."""
+    configuration = load_configuration(context)
+    return [
+        BindingSetSummary(
+            name=name,
+            source=keybinding_set_source(name, configuration.binding_sets),
+            active=name == configuration.binding_set,
+        )
+        for name in static_keybinding_set_names(configuration.binding_sets)
+    ]
+
+
+##############################################################################
 def binding_summaries(
     context: RuntimeContext | None = None,
 ) -> list[BindingSummary]:
     """Return the configurable keybinding summaries."""
-    overrides = load_configuration(context).bindings
+    configuration = load_configuration(context)
+    keymap = resolve_keybindings(
+        configuration.binding_set,
+        custom_sets=configuration.binding_sets,
+        overrides=configuration.bindings,
+    )
     summaries: list[BindingSummary] = []
     for command in sorted(MAIN_COMMAND_MESSAGES, key=attrgetter("__name__")):
         if command().has_binding:
@@ -87,7 +125,7 @@ def binding_summaries(
                     command_name=command.__name__,
                     tooltip=command.tooltip(),
                     default_key=command.binding().key,
-                    current_key=overrides.get(command.__name__, command.binding().key),
+                    current_key=keymap.get(command.__name__, command.binding().key),
                 )
             )
     return summaries
@@ -103,6 +141,16 @@ def build_open_options(
         raise ValueError("--root must point to an existing directory")
     if request.target is not None and request.command is not None:
         raise ValueError("TARGET and --command are mutually exclusive")
+    if (
+        request.binding_set is not None
+        and request.binding_set
+        not in static_keybinding_set_names(
+            load_configuration(runtime_context).binding_sets
+        )
+    ):
+        raise ValueError(
+            f"Unknown --binding-set {request.binding_set!r}; use `hike bindings sets` to inspect available sets."
+        )
     return OpenOptions(
         target=request.target,
         command=(
@@ -112,6 +160,7 @@ def build_open_options(
         ),
         navigation=request.navigation,
         theme=request.theme,
+        binding_set=request.binding_set,
         root=None if request.root is None else str(request.root),
         ignore=request.ignore,
         hidden=request.hidden,

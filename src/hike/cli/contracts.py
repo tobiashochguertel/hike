@@ -17,6 +17,7 @@ class OpenCommandRequest:
     command: str | None
     navigation: bool | None
     theme: str | None
+    binding_set: str | None
     root: Path | None
     ignore: bool | None
     hidden: bool | None

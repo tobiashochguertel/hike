@@ -115,6 +115,12 @@ def open_command(
         help="Set the theme for the application for this launch only.",
         show_default=False,
     ),
+    binding_set: str | None = typer.Option(
+        None,
+        "--binding-set",
+        help="Use a named keybinding set for this launch only.",
+        show_default=False,
+    ),
     root: Path | None = typer.Option(
         None,
         "--root",
@@ -143,6 +149,10 @@ def open_command(
     """Launch the Hike TUI."""
     if theme == "?":
         raise typer.BadParameter("Use `hike themes list` to inspect available themes.")
+    if binding_set == "?":
+        raise typer.BadParameter(
+            "Use `hike bindings sets` to inspect available keybinding sets."
+        )
     try:
         runtime_context = runtime_context_from_typer_context(ctx)
         options = build_open_options(
@@ -151,6 +161,7 @@ def open_command(
                 command=command,
                 navigation=navigation,
                 theme=theme,
+                binding_set=binding_set,
                 root=root,
                 ignore=ignore,
                 hidden=hidden,

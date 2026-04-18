@@ -146,6 +146,7 @@ def test_configuration_defaults_include_startup_auto_open_behavior() -> None:
     assert configuration.local_start_location == "."
     assert configuration.startup_auto_open is True
     assert configuration.startup_auto_open_patterns == ["INDEX.md", "README.md"]
+    assert configuration.binding_set == "default"
 
 
 ##############################################################################
@@ -193,16 +194,17 @@ def test_local_browser_mode_configuration_accepts_flat_list() -> None:
 
 
 ##############################################################################
-def test_hike_applies_theme_and_binding_overrides_from_configuration(
+def test_hike_applies_theme_binding_set_and_overrides_from_configuration(
     tmp_path: Path,
 ) -> None:
-    """Runtime setup should consume persisted theme and binding overrides."""
+    """Runtime setup should consume persisted themes, presets, and overrides."""
     override = tmp_path / "config.yaml"
     context = _context_for(override)
 
     save_configuration(
         Configuration(
             theme="textual-light",
+            binding_set="mnemonic",
             bindings={"JumpToBookmarks": "shift+f6"},
         ),
         context,
@@ -212,7 +214,16 @@ def test_hike_applies_theme_and_binding_overrides_from_configuration(
     app.on_load(events.Load())
 
     assert app.theme == "textual-light"
+    assert app._keymap["ToggleNavigation"] == "ctrl+shift+n"
+    assert app._keymap["Quit"] == "ctrl+q"
     assert app._keymap["JumpToBookmarks"] == "shift+f6"
+
+
+##############################################################################
+def test_configuration_rejects_unknown_binding_set() -> None:
+    """Unknown binding-set names should fail validation."""
+    with pytest.raises(ValueError, match="binding_set"):
+        Configuration(binding_set="missing")
 
 
 ##############################################################################

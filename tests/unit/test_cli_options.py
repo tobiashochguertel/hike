@@ -89,6 +89,19 @@ def test_open_command_accepts_root_override(
 
 
 ##############################################################################
+def test_open_command_accepts_binding_set(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The launch-time binding set should be configurable from the CLI."""
+    captured = _install_open_spy(monkeypatch)
+
+    result = _RUNNER.invoke(app, ["open", "--binding-set", "mnemonic"])
+
+    assert result.exit_code == 0
+    assert cast(OpenOptions, captured["options"]).binding_set == "mnemonic"
+
+
+##############################################################################
 def test_open_command_rejects_missing_root_directory(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -269,6 +282,15 @@ def test_open_command_theme_question_uses_theme_service(
 
     assert result.exit_code != 0
     assert "Use `hike themes list`" in result.output
+
+
+##############################################################################
+def test_open_command_binding_set_question_uses_binding_service() -> None:
+    """`--binding-set ?` should point users at the dedicated bindings command."""
+    result = _RUNNER.invoke(app, ["open", "--binding-set", "?"])
+
+    assert result.exit_code != 0
+    assert "Use `hike bindings sets`" in result.output
 
 
 ##############################################################################

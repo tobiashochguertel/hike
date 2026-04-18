@@ -82,6 +82,7 @@ def test_cli_schema_and_metadata_commands_work_end_to_end(tmp_path: Path) -> Non
     )
     themes_result = _RUNNER.invoke(app, ["themes", "list"])
     bindings_result = _RUNNER.invoke(app, ["bindings", "list"])
+    binding_sets_result = _RUNNER.invoke(app, ["bindings", "sets"])
 
     assert schema_result.exit_code == 0
     assert (export_root / "hike.config.schema.json").is_file()
@@ -91,6 +92,9 @@ def test_cli_schema_and_metadata_commands_work_end_to_end(tmp_path: Path) -> Non
     assert bindings_result.exit_code == 0
     assert "JumpToSidebarView" in bindings_result.stdout
     assert "ToggleLocalBrowserMode" in bindings_result.stdout
+    assert binding_sets_result.exit_code == 0
+    assert "default" in binding_sets_result.stdout
+    assert "mnemonic" in binding_sets_result.stdout
 
 
 ##############################################################################

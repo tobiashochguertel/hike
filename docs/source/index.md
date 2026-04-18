@@ -75,6 +75,7 @@ Hike now exposes a structured CLI. The most useful entry points are:
 ```sh
 hike open README.md
 hike bindings list
+hike bindings sets
 hike themes list
 hike config init
 hike schema list
@@ -122,6 +123,16 @@ hike open --theme=?
 ```
 ```bash exec="on" result="text"
 hike open --theme=?
+```
+
+#### `open --binding-set`
+
+Use a named keybinding set for this launch only.
+
+To see the available built-in and custom keybinding sets:
+
+```sh
+hike bindings sets
 ```
 
 #### `--version`

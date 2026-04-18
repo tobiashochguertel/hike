@@ -14,6 +14,7 @@ points are:
 hike config init
 hike config show --format yaml
 hike bindings list
+hike bindings sets
 ```
 
 The active configuration file is resolved in this order:
@@ -58,6 +59,36 @@ Hike allows for a degree of configuration of its keyboard bindings;
 providing a method for setting up replacement bindings for the commands that
 appear in the [command palette](index.md#the-command-palette).
 
+You can choose a named keybinding set with `binding_set`, and you can define
+your own named sets in `binding_sets`. The built-in sets are:
+
+```bash exec="on"
+hike bindings sets
+```
+
+The default configuration keeps Hike's original bindings:
+
+```yaml
+binding_set: default
+```
+
+If you would prefer the built-in non-function-key preset:
+
+```yaml
+binding_set: mnemonic
+```
+
+You can also define project- or user-specific sets and then activate them:
+
+```yaml
+binding_set: work
+binding_sets:
+  work:
+    ToggleNavigation: ctrl+shift+n
+    Edit: ctrl+e
+    Quit: ctrl+q
+```
+
 ### Bindable commands
 
 The following commands can have their keyboard bindings set:
@@ -86,6 +117,10 @@ You can also update a single binding from the CLI:
 ```sh
 hike config set bindings.BookmarkLocation f6
 ```
+
+Per-command `bindings` overrides are applied after the selected `binding_set`,
+so they are the right place for one-off tweaks on top of a built-in or custom
+preset.
 
 The designations used for keys is based on the internal system used by
 [Textual](https://textual.textualize.io); as such [its caveats about what
@@ -188,6 +223,10 @@ and which extra exclude globs should always be applied:
     "node_modules/"
 ],
 ```
+
+When you're browsing locally, press <kbd>Backspace</kbd> to move the browser
+root to the parent directory. In flat-list mode Hike also shows a `../` entry
+at the top whenever the current root has a parent.
 
 ## Main forge branches
 
