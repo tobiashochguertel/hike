@@ -23,6 +23,7 @@ from hike.startup import OpenOptions
 from hike.widgets import Viewer
 from hike.widgets.navigation.local_browser import LocalBrowser
 from hike.widgets.navigation.local_flat_view import LocalFlatView
+from hike.widgets.navigation.local_view import LocalView
 
 
 ##############################################################################
@@ -39,19 +40,27 @@ def _context_for(path: Path, *, cwd: Path | None = None) -> RuntimeContext:
 async def test_tui_directory_startup_focuses_visible_local_browser(
     tmp_path: Path,
 ) -> None:
-    """Opening a directory should land focus in the visible local browser."""
+    """Opening a directory should auto-open and select the preferred file."""
     config_path = tmp_path / "config.yaml"
     docs_root = tmp_path / "docs"
     docs_root.mkdir()
-    (docs_root / "README.md").write_text("# Docs\n", encoding="utf-8")
+    readme = docs_root / "README.md"
+    readme.write_text("# Docs\n", encoding="utf-8")
     context = _context_for(config_path, cwd=tmp_path)
     save_configuration(Configuration(), context)
     app = Hike(OpenOptions(target=str(docs_root), runtime_context=context))
 
     async with app.run_test(size=(140, 40)) as pilot:
         await pilot.pause()
+        await pilot.pause()
 
-        assert app.screen.query_one(LocalFlatView).has_focus
+        viewer = app.screen.query_one(Viewer)
+        local_flat_view = app.screen.query_one(LocalFlatView)
+
+        assert viewer.location == readme
+        assert local_flat_view.highlighted == local_flat_view.get_option_index(
+            str(readme)
+        )
 
 
 ##############################################################################
@@ -71,9 +80,96 @@ async def test_tui_file_startup_opens_document_after_first_refresh(
         await pilot.pause()
 
         viewer = app.screen.query_one(Viewer)
+        local_flat_view = app.screen.query_one(LocalFlatView)
 
         assert viewer.location == readme
         assert viewer.query_one("#document").has_focus
+        assert local_flat_view.highlighted == local_flat_view.get_option_index(
+            str(readme)
+        )
+
+
+##############################################################################
+@pytest.mark.anyio
+async def test_tui_open_without_target_uses_cwd_and_auto_opens_default_file(
+    tmp_path: Path,
+) -> None:
+    """`hike open` without a target should use cwd and auto-open a default file."""
+    config_path = tmp_path / "config.yaml"
+    readme = tmp_path / "README.md"
+    readme.write_text("# Home\n", encoding="utf-8")
+    context = _context_for(config_path, cwd=tmp_path)
+    save_configuration(Configuration(), context)
+    app = Hike(OpenOptions(runtime_context=context))
+
+    async with app.run_test(size=(120, 32)) as pilot:
+        await pilot.pause()
+        await pilot.pause()
+
+        viewer = app.screen.query_one(Viewer)
+        local_flat_view = app.screen.query_one(LocalFlatView)
+
+        assert viewer.location == readme
+        assert local_flat_view.highlighted == local_flat_view.get_option_index(
+            str(readme)
+        )
+
+
+##############################################################################
+@pytest.mark.anyio
+async def test_tui_startup_prefers_index_before_readme(
+    tmp_path: Path,
+) -> None:
+    """Startup auto-open should prefer INDEX.md before README.md."""
+    config_path = tmp_path / "config.yaml"
+    index = tmp_path / "INDEX.md"
+    readme = tmp_path / "README.md"
+    index.write_text("# Index\n", encoding="utf-8")
+    readme.write_text("# Readme\n", encoding="utf-8")
+    context = _context_for(config_path, cwd=tmp_path)
+    save_configuration(Configuration(), context)
+    app = Hike(OpenOptions(runtime_context=context))
+
+    async with app.run_test(size=(120, 32)) as pilot:
+        await pilot.pause()
+        await pilot.pause()
+
+        viewer = app.screen.query_one(Viewer)
+        local_flat_view = app.screen.query_one(LocalFlatView)
+
+        assert viewer.location == index
+        assert local_flat_view.highlighted == local_flat_view.get_option_index(
+            str(index)
+        )
+
+
+##############################################################################
+@pytest.mark.anyio
+async def test_tui_tree_mode_startup_highlights_selected_file(
+    tmp_path: Path,
+) -> None:
+    """Tree mode should also highlight the startup file in the sidebar."""
+    config_path = tmp_path / "config.yaml"
+    readme = tmp_path / "README.md"
+    readme.write_text("# Home\n", encoding="utf-8")
+    context = _context_for(config_path, cwd=tmp_path)
+    save_configuration(
+        Configuration(local_browser_view_mode=LocalBrowserMode.TREE.value),
+        context,
+    )
+    app = Hike(OpenOptions(runtime_context=context))
+
+    async with app.run_test(size=(120, 32)) as pilot:
+        await pilot.pause()
+        await pilot.pause()
+
+        local_browser = app.screen.query_one(LocalBrowser)
+        local_view = app.screen.query_one(LocalView)
+
+        assert local_browser.mode is LocalBrowserMode.TREE
+        assert local_view.cursor_node is not None
+        assert local_view.cursor_node.data is not None
+        assert local_view.cursor_node.data.path.resolve() == readme.resolve()
 
 
 ##############################################################################
@@ -86,7 +182,7 @@ async def test_tui_narrow_layout_switches_between_document_and_sidebar(
     readme = tmp_path / "README.md"
     readme.write_text("# Hello\n\n## Section\n\nBody.\n", encoding="utf-8")
     context = _context_for(config_path, cwd=tmp_path)
-    save_configuration(Configuration(), context)
+    save_configuration(Configuration(startup_auto_open=False), context)
     app = Hike(OpenOptions(target=str(tmp_path), runtime_context=context))
 
     async with app.run_test(size=(80, 24)) as pilot:

@@ -135,6 +135,19 @@ def test_open_command_accepts_repeatable_excludes(
 
 
 ##############################################################################
+def test_open_command_accepts_no_target(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`hike open` without a target should still launch the TUI."""
+    captured = _install_open_spy(monkeypatch)
+
+    result = _RUNNER.invoke(app, ["open"])
+
+    assert result.exit_code == 0
+    assert cast(OpenOptions, captured["options"]).target is None
+
+
+##############################################################################
 def test_open_command_applies_runtime_path_overrides(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

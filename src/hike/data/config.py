@@ -108,8 +108,22 @@ class Configuration(BaseModel):
         description="Directory that contains Obsidian vaults for the forge/open commands.",
     )
     local_start_location: str = Field(
-        default="~",
+        default=".",
         description="Default starting directory for the local Markdown browser.",
+    )
+    startup_auto_open: bool = Field(
+        default=True,
+        description=(
+            "Automatically open a default Markdown file when starting from a "
+            "directory or without an explicit target."
+        ),
+    )
+    startup_auto_open_patterns: list[str] = Field(
+        default_factory=lambda: ["INDEX.md", "README.md"],
+        description=(
+            "Ordered filename or glob patterns used to prefer startup "
+            "documents before falling back to the first visible file."
+        ),
     )
     local_use_ignore_files: bool = Field(
         default=True,

@@ -306,6 +306,11 @@ class Navigation(Vertical):
         self.query_one(LocalBrowser).configure(options)
         self._request_layout_hint_refresh()
 
+    def highlight_local_path(self, path: Path) -> None:
+        """Highlight a path in the local browser."""
+        self.query_one(LocalBrowser).highlight_path(path)
+        self._request_layout_hint_refresh()
+
     def refresh_local_view(self) -> None:
         """Refresh the local view."""
         self.query_one(LocalBrowser).reload()

@@ -19,6 +19,7 @@ from rich.emoji import Emoji
 from textual import on
 from textual.content import Content
 from textual.message import Message
+from textual.widgets._option_list import OptionDoesNotExist
 from textual.widgets.option_list import Option
 
 ##############################################################################
@@ -139,6 +140,16 @@ class LocalFlatView(EnhancedOptionList):
         with self.preserved_highlight:
             self.clear_options().add_options(LocalFlatEntry(entry) for entry in entries)
         self._request_layout_hint_refresh()
+
+    def highlight_path(self, path: Path) -> bool:
+        """Highlight the entry matching the given path, if it exists."""
+        try:
+            highlighted = self.get_option_index(str(path.expanduser().resolve()))
+        except OptionDoesNotExist:
+            return False
+        with self.prevent(EnhancedOptionList.OptionHighlighted):
+            self.highlighted = highlighted
+        return True
 
     def content_width_hint(self) -> int | None:
         """Return the preferred width of the current flat list."""

@@ -69,6 +69,7 @@ application using the `hike` command.
 Common startup patterns include:
 
 ```sh
+hike open
 hike open --command "gh davep/hike"
 hike open README.md
 hike open docs/
@@ -77,6 +78,15 @@ hike --config ~/.config/hike/work-docs.yaml open --root docs
 hike open --root docs --exclude generated/ --hidden
 hike open --no-ignore
 ```
+
+When you start Hike without an explicit file target, it now roots the local
+browser at the configured start location (the current working directory by
+default), then auto-opens a preferred document if one is available. The default
+preference order is `INDEX.md`, then `README.md`, then the first visible
+Markdown file in local-browser order. You can tune this with
+`startup_auto_open`, `startup_auto_open_patterns`, and `local_start_location`
+in the config file.
+
 The structured CLI now also includes:
 
 ```sh

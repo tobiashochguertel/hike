@@ -76,6 +76,12 @@
 - Fixed file startup so `hike open README.md` roots the local browser beside the
   requested document instead of scanning the configured home-directory default
   during startup.
+- Centralized `hike open` startup resolution behind a single startup-planning
+  service so file, directory, URL, command, and no-target launches share one
+  path.
+- `hike open` without a target now starts from the current working directory by
+  default, auto-opens preferred files such as `INDEX.md` / `README.md`, and
+  highlights the selected file in both flat-list and tree browser modes.
 
 ## v1.4.0
 
