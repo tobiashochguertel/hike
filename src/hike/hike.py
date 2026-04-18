@@ -3,6 +3,7 @@
 ##############################################################################
 # Python imports.
 from contextlib import AbstractContextManager
+from typing import Any
 
 ##############################################################################
 # Textual imports.
@@ -27,6 +28,7 @@ from .data import (
 )
 from .screens import Main
 from .startup import OpenOptions
+from .widgets.navigation.local_browser import LocalBrowser
 
 
 ##############################################################################
@@ -89,6 +91,17 @@ class Hike(EnhancedApp[None]):
             self.exit()
         else:
             super().action_help_quit()
+
+    def exit(
+        self,
+        result: None = None,
+        return_code: int = 0,
+        message: Any = None,
+    ) -> None:
+        """Cancel background browser indexing before handing shutdown to Textual."""
+        for local_browser in self.query(LocalBrowser):
+            local_browser.cancel_pending_work()
+        super().exit(result=result, return_code=return_code, message=message)
 
 
 ### hike.py ends here
