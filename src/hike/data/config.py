@@ -1,136 +1,655 @@
-"""Code relating to the application's configuration file."""
+"""Code relating to Hike's typed configuration file."""
 
 ##############################################################################
 # Python imports.
+from __future__ import annotations
+
 from collections.abc import Iterator
 from contextlib import contextmanager
-from dataclasses import asdict, dataclass, field
 from functools import cache
-from json import dumps, loads
+from io import StringIO
+from json import JSONDecodeError, dumps, loads
 from pathlib import Path
+from types import UnionType
+from typing import Any, Union, cast, get_args, get_origin
+
+##############################################################################
+# Pydantic imports.
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+##############################################################################
+# Ruamel imports.
+from ruamel.yaml import YAML
 
 ##############################################################################
 # Local imports.
+from ..keybinding_catalog import DEFAULT_KEYBINDING_SET, keybinding_set_names
 from .locations import config_dir
-
+from .runtime_context import (
+    RuntimeContext,
+    current_runtime_context,
+    resolve_runtime_context,
+)
+from .settings import load_runtime_settings
 
 ##############################################################################
-@dataclass
-class Configuration:
-    """The configuration data for the application."""
+_CONFIG_FILENAME = "config.yaml"
+_PROJECT_CONFIG_FILENAME = "hike.config.yaml"
+_LEGACY_CONFIG_FILENAME = "configuration.json"
+_LEGACY_DOTFILE_NAME = ".hike.yaml"
 
-    theme: str | None = None
-    """The theme for the application."""
 
-    navigation_visible: bool = True
-    """Should the navigation panel be visible?"""
+class Configuration(BaseModel):
+    """The typed configuration data for the application."""
 
-    navigation_on_right: bool = False
-    """Should the navigation panel live on the right?"""
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
 
-    markdown_extensions: list[str] = field(default_factory=lambda: [".md", ".markdown"])
-    """The file extensions to consider to be Markdown files."""
-
-    markdown_content_types: list[str] = field(
-        default_factory=lambda: ["text/plain", "text/markdown", "text/x-markdown"]
+    theme: str | None = Field(
+        default=None,
+        description="The Textual theme for the application.",
     )
-    """The content types to consider when looking for remote Markdown content."""
-
-    command_line_on_top: bool = False
-    """Should the command line live at the top of the screen?"""
-
-    main_branches: list[str] = field(default_factory=lambda: ["main", "master"])
-    """The branches considered to be main branches on forges."""
-
-    obsidian_vaults: str = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents"
-    """The path to the root of all Obsidian vaults."""
-
-    local_start_location: str = "~"
-    """The start location for the local file system browser."""
-
-    bindings: dict[str, str] = field(default_factory=dict)
-    """Command keyboard binding overrides."""
-
-    focus_viewer_on_load: bool = True
-    """Should the viewer get focus when a file is loaded?"""
-
-    show_front_matter: bool = True
-    """Should the viewer allow for the viewing of front matter?"""
-
-    allow_traditional_quit: bool = False
-    """Ignore Textual's safety net for Ctrl+c?"""
-
-
-##############################################################################
-def configuration_file() -> Path:
-    """The path to the file that holds the application configuration.
-
-    Returns:
-        The path to the configuration file.
-    """
-    return config_dir() / "configuration.json"
-
-
-##############################################################################
-def save_configuration(configuration: Configuration) -> Configuration:
-    """Save the given configuration.
-
-    Args:
-        The configuration to store.
-
-    Returns:
-        The configuration.
-    """
-    load_configuration.cache_clear()
-    configuration_file().write_text(
-        dumps(asdict(configuration), indent=4), encoding="utf-8"
+    navigation_visible: bool = Field(
+        default=True,
+        description="Show the navigation sidebar by default on wide terminals.",
     )
-    return load_configuration()
+    navigation_on_right: bool = Field(
+        default=False,
+        description="Dock the navigation sidebar on the right side of the screen.",
+    )
+    sidebar_default_width_percent: int = Field(
+        default=22,
+        description="Default sidebar width as a percentage of the terminal width.",
+    )
+    sidebar_min_width: int = Field(
+        default=24,
+        description="Minimum sidebar width in terminal cells.",
+    )
+    sidebar_max_width: int = Field(
+        default=60,
+        description="Maximum sidebar width in terminal cells.",
+    )
+    sidebar_max_width_percent: int = Field(
+        default=45,
+        description="Maximum sidebar width as a percentage of the terminal width.",
+    )
+    sidebar_auto_fit: bool = Field(
+        default=True,
+        description="Automatically grow or shrink the sidebar to fit visible content.",
+    )
+    markdown_extensions: list[str] = Field(
+        default_factory=lambda: [".md", ".markdown"],
+        description="File extensions that should be treated as Markdown documents.",
+    )
+    markdown_content_types: list[str] = Field(
+        default_factory=lambda: ["text/plain", "text/markdown", "text/x-markdown"],
+        description="HTTP content types that should be treated as Markdown.",
+    )
+    command_line_on_top: bool = Field(
+        default=False,
+        description="Place the command line at the top of the screen instead of the bottom.",
+    )
+    responsive_auto_switch_narrow: bool = Field(
+        default=True,
+        description="Automatically switch to a single-pane layout on narrow terminals.",
+    )
+    responsive_narrow_width: int = Field(
+        default=100,
+        description="Terminal width threshold where Hike switches to narrow responsive mode.",
+    )
+    responsive_narrow_mode: str = Field(
+        default="content-only",
+        description="Default pane shown when narrow responsive mode activates.",
+    )
+    main_branches: list[str] = Field(
+        default_factory=lambda: ["main", "master"],
+        description="Branch names that should be considered main branches on forges.",
+    )
+    obsidian_vaults: str = Field(
+        default="~/Library/Mobile Documents/iCloud~md~obsidian/Documents",
+        description="Directory that contains Obsidian vaults for the forge/open commands.",
+    )
+    local_start_location: str = Field(
+        default=".",
+        description="Default starting directory for the local Markdown browser.",
+    )
+    startup_auto_open: bool = Field(
+        default=True,
+        description=(
+            "Automatically open a default Markdown file when starting from a "
+            "directory or without an explicit target."
+        ),
+    )
+    startup_auto_open_patterns: list[str] = Field(
+        default_factory=lambda: ["INDEX.md", "README.md"],
+        description=(
+            "Ordered filename or glob patterns used to prefer startup "
+            "documents before falling back to the first visible file."
+        ),
+    )
+    local_use_ignore_files: bool = Field(
+        default=True,
+        description="Respect .gitignore and .ignore files in the local browser.",
+    )
+    local_show_hidden: bool = Field(
+        default=False,
+        description="Show hidden files and directories in the local browser.",
+    )
+    local_exclude_patterns: list[str] = Field(
+        default_factory=list,
+        description="Additional glob patterns to exclude from the local browser.",
+    )
+    local_browser_view_mode: str = Field(
+        default="flat-list",
+        description="Default rendering mode for the local browser.",
+    )
+    binding_set: str = Field(
+        default=DEFAULT_KEYBINDING_SET,
+        description="Named keybinding set to activate by default.",
+    )
+    binding_sets: dict[str, dict[str, str]] = Field(
+        default_factory=dict,
+        description="Custom named keybinding sets keyed by set name and command class.",
+    )
+    bindings: dict[str, str] = Field(
+        default_factory=dict,
+        description="Keyboard binding overrides keyed by Hike command class name.",
+    )
+    focus_viewer_on_load: bool = Field(
+        default=True,
+        description="Move focus to the document viewer when a Markdown file loads.",
+    )
+    show_front_matter: bool = Field(
+        default=True,
+        description="Show front matter blocks in the document viewer when present.",
+    )
+    allow_traditional_quit: bool = Field(
+        default=True,
+        description="Allow Ctrl+C to quit immediately and restore the shell promptly.",
+    )
+
+    @model_validator(mode="after")
+    def _validate_binding_set(self) -> Configuration:
+        """Ensure the selected keybinding set exists."""
+        available = keybinding_set_names(self.binding_sets)
+        if self.binding_set not in available:
+            allowed = ", ".join(available)
+            raise ValueError(f"binding_set must reference one of: {allowed}")
+        return self
+
+
+##############################################################################
+def _yaml() -> YAML:
+    """Create a configured YAML serializer."""
+    yaml = YAML()
+    yaml.default_flow_style = False
+    yaml.indent(mapping=2, sequence=4, offset=2)
+    return yaml
+
+
+##############################################################################
+def _normalize_configuration_path(
+    path: str | Path,
+    *,
+    cwd: Path | None = None,
+) -> Path:
+    """Normalise a configuration file path."""
+    normalized = Path(path).expanduser()
+    if not normalized.is_absolute():
+        normalized = (Path.cwd() if cwd is None else cwd) / normalized
+    return normalized
+
+
+##############################################################################
+def _active_context(context: RuntimeContext | None = None) -> RuntimeContext:
+    """Return the explicit or ambient runtime context."""
+    active = current_runtime_context() if context is None else context
+    return resolve_runtime_context() if active is None else active
+
+
+##############################################################################
+def project_configuration_file(context: RuntimeContext | None = None) -> Path:
+    """Return the project-local configuration file path."""
+    active = _active_context(context)
+    return active.cwd / _PROJECT_CONFIG_FILENAME
+
+
+##############################################################################
+def default_configuration_file() -> Path:
+    """Return the default user-scoped configuration file path."""
+    return config_dir() / _CONFIG_FILENAME
+
+
+##############################################################################
+def legacy_configuration_file() -> Path:
+    """Return the legacy JSON configuration path."""
+    return config_dir() / _LEGACY_CONFIG_FILENAME
+
+
+##############################################################################
+def _explicit_configuration_file(
+    context: RuntimeContext | None = None,
+) -> Path | None:
+    """Return an explicitly selected configuration file path, if any."""
+    active = _active_context(context)
+    if active.config_path is not None:
+        return active.config_path
+    settings = load_runtime_settings(active)
+    if settings.config_path is not None:
+        return _normalize_configuration_path(
+            settings.config_path,
+            cwd=active.cwd,
+        )
+    return None
+
+
+##############################################################################
+def _legacy_dotfile() -> Path:
+    """Return the legacy dotfile configuration path."""
+    return Path.home() / _LEGACY_DOTFILE_NAME
+
+
+##############################################################################
+def configuration_file(context: RuntimeContext | None = None) -> Path:
+    """Return the effective configuration file path."""
+    active = _active_context(context)
+    if explicit := _explicit_configuration_file(active):
+        return explicit
+    for candidate in (
+        project_configuration_file(active),
+        default_configuration_file(),
+        _legacy_dotfile(),
+        legacy_configuration_file(),
+    ):
+        if candidate.exists():
+            return candidate
+    return default_configuration_file()
+
+
+##############################################################################
+def configuration_init_paths(
+    context: RuntimeContext | None = None,
+) -> tuple[Path, Path | None]:
+    """Return the preferred init target and any existing file that should be replaced."""
+    active = _active_context(context)
+    if explicit := _explicit_configuration_file(active):
+        return explicit, explicit if explicit.exists() else None
+
+    project = project_configuration_file(active)
+    if project.exists():
+        return project, project
+
+    default = default_configuration_file()
+    if default.exists():
+        return default, default
+
+    for legacy in (_legacy_dotfile(), legacy_configuration_file()):
+        if legacy.exists():
+            return default, legacy
+
+    return default, None
+
+
+##############################################################################
+def _load_json_configuration(path: Path) -> dict[str, Any]:
+    """Load legacy JSON configuration data."""
+    raw = path.read_text(encoding="utf-8")
+    try:
+        loaded = loads(raw)
+    except JSONDecodeError:
+        # Older typed-config builds could mistakenly write YAML into the legacy
+        # JSON path during `config init --force`; accept that shape so users can
+        # recover without manually editing files first.
+        loaded = _yaml().load(raw)
+    if not isinstance(loaded, dict):
+        raise ValueError(f"Configuration root must be an object: {path}")
+    return cast(dict[str, Any], loaded)
+
+
+##############################################################################
+def _load_yaml_configuration(path: Path) -> dict[str, Any]:
+    """Load YAML configuration data."""
+    loaded = _yaml().load(path.read_text(encoding="utf-8"))
+    return {} if loaded is None else loaded
+
+
+##############################################################################
+def _load_configuration_data(path: Path) -> dict[str, Any]:
+    """Load configuration data from the given path."""
+    if path.suffix.lower() == ".json":
+        return _load_json_configuration(path)
+    return _load_yaml_configuration(path)
+
+
+##############################################################################
+def _write_yaml(path: Path, data: dict[str, Any]) -> None:
+    """Write YAML configuration data."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as handle:
+        _yaml().dump(data, handle)
+
+
+##############################################################################
+def save_configuration(
+    configuration: Configuration,
+    context: RuntimeContext | None = None,
+) -> Configuration:
+    """Save the given configuration."""
+    clear_configuration_cache()
+    target = configuration_file(context)
+    data = configuration.model_dump(mode="json", exclude_none=False)
+    if target.suffix.lower() == ".json":
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(dumps(data, indent=4), encoding="utf-8")
+    else:
+        _write_yaml(target, data)
+    return load_configuration(context)
 
 
 ##############################################################################
 @cache
-def load_configuration() -> Configuration:
-    """Load the configuration.
+def _load_configuration_cached(
+    context: RuntimeContext | None,
+) -> Configuration:
+    """Load the current configuration."""
+    source = configuration_file(context)
+    if not source.exists():
+        return Configuration()
+    return Configuration.model_validate(_load_configuration_data(source))
 
-    Returns:
-        The configuration.
 
-    Note:
-        As a side-effect, if the configuration doesn't exist a default one
-        will be saved to storage.
+##############################################################################
+def clear_configuration_cache() -> None:
+    """Clear cached configuration values."""
+    _load_configuration_cached.cache_clear()
 
-        This function is designed so that it's safe and low-cost to
-        repeatedly call it. The configuration is cached and will only be
-        loaded from storage when necessary.
-    """
-    source = configuration_file()
-    return (
-        Configuration(**loads(source.read_text(encoding="utf-8")))
-        if source.exists()
-        else save_configuration(Configuration())
-    )
+
+##############################################################################
+def load_configuration(context: RuntimeContext | None = None) -> Configuration:
+    """Load the current configuration."""
+    return _load_configuration_cached(_active_context(context))
 
 
 ##############################################################################
 @contextmanager
-def update_configuration() -> Iterator[Configuration]:
-    """Context manager for updating the configuration.
-
-    Loads the configuration and makes it available, then ensures it is
-    saved.
-
-    Example:
-        ```python
-        with update_configuration() as config:
-            config.meaning = 42
-        ```
-    """
-    configuration = load_configuration()
+def update_configuration(
+    context: RuntimeContext | None = None,
+) -> Iterator[Configuration]:
+    """Context manager for updating the configuration."""
+    configuration = load_configuration(context)
     try:
         yield configuration
     finally:
-        save_configuration(configuration)
+        save_configuration(configuration, context)
+
+
+##############################################################################
+def configuration_schema() -> dict[str, Any]:
+    """Return the JSON schema for the configuration model."""
+    return Configuration.model_json_schema()
+
+
+##############################################################################
+def dump_configuration(
+    format_name: str = "yaml",
+    context: RuntimeContext | None = None,
+) -> str:
+    """Dump the active configuration in the requested format."""
+    data = load_configuration(context).model_dump(mode="json", exclude_none=False)
+    match format_name:
+        case "json":
+            return dumps(data, indent=2) + "\n"
+        case "yaml":
+            buffer = StringIO()
+            _yaml().dump(data, buffer)
+            return buffer.getvalue()
+        case _:
+            raise ValueError(f"Unsupported configuration format: {format_name}")
+
+
+##############################################################################
+def validate_configuration_file(
+    path: str | Path | None = None,
+    context: RuntimeContext | None = None,
+) -> Configuration:
+    """Validate the configuration file at the given path or the active path."""
+    active = _active_context(context)
+    source = (
+        configuration_file(active)
+        if path is None
+        else _normalize_configuration_path(path, cwd=active.cwd)
+    )
+    if not source.exists():
+        raise FileNotFoundError(source)
+    return Configuration.model_validate(_load_configuration_data(source))
+
+
+##############################################################################
+def _type_name(annotation: Any) -> tuple[str, list[str] | None]:
+    """Return a human-readable type name and optional allowed values."""
+    origin = get_origin(annotation)
+    if origin is None:
+        if annotation is str:
+            return "string", None
+        if annotation is bool:
+            return "boolean", None
+        if annotation is int:
+            return "integer", None
+        if annotation is float:
+            return "number", None
+        if annotation is dict[str, str] or annotation is dict:
+            return "mapping", None
+        if annotation is list[str] or annotation is list:
+            return "list", None
+        if annotation is type(None):
+            return "null", None
+        return getattr(annotation, "__name__", str(annotation)), None
+    if origin in {Union, UnionType}:
+        parts: list[str] = []
+        allowed: list[str] = []
+        for item in get_args(annotation):
+            item_type, item_allowed = _type_name(item)
+            if item_type not in parts:
+                parts.append(item_type)
+            if item_allowed is not None:
+                allowed.extend(item_allowed)
+        return " | ".join(parts), allowed or None
+    if str(origin).endswith("Literal"):
+        values = [str(value) for value in get_args(annotation)]
+        return "string", values
+    if origin is list:
+        return f"list[{_type_name(get_args(annotation)[0])[0]}]", None
+    if origin is dict:
+        return "mapping", None
+    return str(origin), None
+
+
+##############################################################################
+def _yaml_fragment(name: str, value: Any) -> list[str]:
+    """Dump a single top-level field as YAML lines."""
+    buffer = StringIO()
+    _yaml().dump({name: value}, buffer)
+    return buffer.getvalue().rstrip().splitlines()
+
+
+##############################################################################
+def render_default_configuration() -> str:
+    """Render a commented default configuration file."""
+    lines = [
+        "# ---------------------------------------------------------------------------",
+        "# Hike configuration — generated by `hike config init`",
+        "# Edit values below and run `hike config validate` after changes.",
+        "# ---------------------------------------------------------------------------",
+        "",
+    ]
+    defaults = Configuration().model_dump(mode="json", exclude_none=False)
+    for name, field in Configuration.model_fields.items():
+        type_name, allowed = _type_name(field.annotation)
+        description = field.description or f"Configure `{name}`."
+        default = defaults.get(name)
+        lines.append(f"# {description}")
+        lines.append(f"# Type:    {type_name}")
+        if allowed:
+            lines.append(f"# Allowed: {' | '.join(allowed)}")
+        if default is None:
+            lines.append(
+                "# OPTIONAL — uncomment and set a value to override the default"
+            )
+            lines.append(f"# {name}: null")
+        else:
+            lines.append(f"# Default: {default!r}")
+            lines.extend(_yaml_fragment(name, default))
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+##############################################################################
+def _parse_property_path(path: str) -> list[str | int]:
+    """Parse a dot/bracket property path."""
+    tokens: list[str | int] = []
+    current = ""
+    index = 0
+    while index < len(path):
+        character = path[index]
+        if character == ".":
+            if current:
+                tokens.append(current)
+                current = ""
+            index += 1
+            continue
+        if character == "[":
+            if current:
+                tokens.append(current)
+                current = ""
+            end = path.find("]", index)
+            if end == -1:
+                raise ValueError(f"Invalid property path: {path}")
+            raw = path[index + 1 : end]
+            tokens.append(int(raw) if raw.isdigit() else raw)
+            index = end + 1
+            continue
+        current += character
+        index += 1
+    if current:
+        tokens.append(current)
+    if not tokens:
+        raise ValueError("Property path must not be empty")
+    return tokens
+
+
+##############################################################################
+def _load_raw_configuration(context: RuntimeContext | None = None) -> dict[str, Any]:
+    """Return the current configuration as a mutable raw mapping."""
+    source = configuration_file(context)
+    if source.exists():
+        return _load_configuration_data(source)
+    return {}
+
+
+##############################################################################
+def _get_value(data: Any, path: list[str | int]) -> Any:
+    """Resolve a nested property path from data."""
+    current = data
+    for part in path:
+        if isinstance(part, int):
+            if not isinstance(current, list):
+                raise KeyError(part)
+            current = current[part]
+            continue
+        if not isinstance(current, dict):
+            raise KeyError(part)
+        current = current[part]
+    return current
+
+
+##############################################################################
+def _set_value(data: Any, path: list[str | int], value: Any) -> None:
+    """Set a nested property path within data."""
+    current = data
+    for part in path[:-1]:
+        if isinstance(part, int):
+            if not isinstance(current, list):
+                raise KeyError(part)
+            current = current[part]
+            continue
+        current = current.setdefault(part, {})
+    final = path[-1]
+    if isinstance(final, int):
+        if not isinstance(current, list):
+            raise KeyError(final)
+        while len(current) <= final:
+            current.append(None)
+        current[final] = value
+        return
+    if not isinstance(current, dict):
+        raise KeyError(final)
+    current[final] = value
+
+
+##############################################################################
+def _unset_value(data: Any, path: list[str | int]) -> None:
+    """Unset a nested property path within data."""
+    current = data
+    for part in path[:-1]:
+        if isinstance(part, int):
+            if not isinstance(current, list):
+                raise KeyError(part)
+            current = current[part]
+            continue
+        if not isinstance(current, dict):
+            raise KeyError(part)
+        current = current[part]
+    final = path[-1]
+    if isinstance(final, int):
+        if not isinstance(current, list):
+            raise KeyError(final)
+        del current[final]
+        return
+    if not isinstance(current, dict):
+        raise KeyError(final)
+    del current[final]
+
+
+##############################################################################
+def _coerce_value(raw: str) -> Any:
+    """Coerce a CLI value using YAML parsing rules."""
+    parsed = _yaml().load(raw)
+    return (
+        raw if parsed is None and raw.strip().lower() not in {"null", "~"} else parsed
+    )
+
+
+##############################################################################
+def get_configuration_value(
+    path: str,
+    context: RuntimeContext | None = None,
+) -> Any:
+    """Return a single configuration property."""
+    return _get_value(
+        load_configuration(context).model_dump(mode="json"), _parse_property_path(path)
+    )
+
+
+##############################################################################
+def set_configuration_value(
+    path: str,
+    raw_value: str,
+    context: RuntimeContext | None = None,
+) -> Configuration:
+    """Set a single configuration property and validate the result."""
+    data = _load_raw_configuration(context)
+    _set_value(data, _parse_property_path(path), _coerce_value(raw_value))
+    return save_configuration(Configuration.model_validate(data), context)
+
+
+##############################################################################
+def unset_configuration_value(
+    path: str,
+    context: RuntimeContext | None = None,
+) -> Configuration:
+    """Unset a configuration property and validate the result."""
+    data = _load_raw_configuration(context)
+    _unset_value(data, _parse_property_path(path))
+    return save_configuration(Configuration.model_validate(data), context)
 
 
 ### config.py ends here

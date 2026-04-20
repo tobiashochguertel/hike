@@ -11,7 +11,7 @@ from textual.widget import Widget
 
 ##############################################################################
 # Local imports.
-from ...data import load_configuration
+from ...data.config import Configuration
 from ...messages import OpenFromForge
 from .base_command import InputCommand
 
@@ -50,8 +50,8 @@ class OpenFromForgeCommand(InputCommand):
     | `<owner>/<repo>:<branch> <file>` | Open a specific file from a specific branch of a repository |
     | `<owner> <repo>:<branch> <file>` | Open a specific file from a specific branch of a repository |
 
-    If `<branch>` is omitted the requested file is looked for in the following branches:
-    {", ".join(f"`{branch}`" for branch in load_configuration().main_branches)}.
+    If `<branch>` is omitted Hike checks the configured main branches
+    (by default {", ".join(f"`{branch}`" for branch in Configuration().main_branches)}).
     """
 
     @classmethod

@@ -81,7 +81,8 @@ checkall: spellcheck codestyle lint stricttypecheck test # Check all the things
 # Documentation.
 .PHONY: docs
 docs:                           # Generate the system documentation
-	$(mkdocs) build
+	$(test) tests/unit/test_docs_screenshots.py -q
+	$(mkdocs) build --strict
 
 .PHONY: rtfm
 rtfm:				# Locally read the library documentation

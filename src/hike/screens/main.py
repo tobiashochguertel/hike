@@ -2,7 +2,8 @@
 
 ##############################################################################
 # Python imports.
-from argparse import Namespace
+from collections.abc import Callable
+from contextlib import AbstractContextManager
 from functools import partial
 
 ##############################################################################
@@ -15,12 +16,11 @@ from pyperclip import copy as copy_to_clipboard
 from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import Horizontal, VerticalGroup
-from textual.reactive import var
 from textual.widgets import Footer, Header, Markdown
 
 ##############################################################################
 # Textual enhanced imports.
-from textual_enhanced.commands import ChangeTheme, Command, Help, Quit
+from textual_enhanced.commands import Command, Help, Quit
 from textual_enhanced.dialogs import ModalInput
 from textual_enhanced.screen import EnhancedScreen
 from textual_enhanced.tools import add_key
@@ -32,38 +32,38 @@ from textual_fspicker import FileOpen, FileSave, Filters
 ##############################################################################
 # Local imports.
 from .. import __version__
+from ..command_catalog import MAIN_COMMAND_MESSAGES
 from ..commands import (
     Backward,
     BookmarkLocation,
-    ChangeCommandLineLocation,
-    ChangeNavigationSide,
     CopyLocationToClipboard,
     CopyMarkdownToClipboard,
     Edit,
     Forward,
     JumpToBookmarks,
-    JumpToCommandLine,
-    JumpToDocument,
     JumpToHistory,
     JumpToLocalBrowser,
+    JumpToSidebarView,
     JumpToTableOfContents,
     Reload,
     SaveCopy,
-    SearchBookmarks,
-    SearchHistory,
-    ToggleNavigation,
 )
 from ..data import (
+    Configuration,
     can_be_negotiated_to_markdown,
     load_bookmarks,
     load_command_history,
-    load_configuration,
     load_history,
     maybe_markdown,
     save_bookmarks,
     save_command_history,
     save_history,
-    update_configuration,
+)
+from ..data.discovery import local_discovery_options
+from ..data.layout import LayoutMode, LayoutState, effective_layout_state, layout_policy
+from ..data.location_types import (
+    markdown_content_types_from_configuration,
+    markdown_extensions_from_configuration,
 )
 from ..messages import (
     ClearHistory,
@@ -78,8 +78,11 @@ from ..messages import (
     SetLocalViewRoot,
 )
 from ..providers import BookmarkCommands, HistoryCommands, MainCommands
+from ..runtime.config_access import load_app_configuration, update_app_configuration
+from ..startup import OpenOptions, resolve_startup_plan
 from ..support import view_in_browser
 from ..widgets import CommandLine, Navigation, Viewer
+from ..widgets.navigation.local_browser import LocalBrowser
 
 
 ##############################################################################
@@ -120,8 +123,12 @@ class Main(EnhancedScreen[None]):
         Navigation {
             display: none;
         }
-        &.navigation Navigation {
+        &.layout-split Navigation,
+        &.layout-sidebar-only Navigation {
             display: block;
+        }
+        &.layout-sidebar-only Viewer {
+            display: none;
         }
     }
     """
@@ -132,43 +139,14 @@ class Main(EnhancedScreen[None]):
     The following key bindings and commands are available:
     """
 
-    COMMAND_MESSAGES = (
-        # Keep these together as they're bound to function keys and destined
-        # for the footer.
-        Help,
-        ToggleNavigation,
-        Edit,
-        ChangeTheme,
-        Quit,
-        # Everything else.
-        Backward,
-        BookmarkLocation,
-        ChangeCommandLineLocation,
-        ChangeNavigationSide,
-        CopyLocationToClipboard,
-        CopyMarkdownToClipboard,
-        Forward,
-        JumpToBookmarks,
-        JumpToCommandLine,
-        JumpToDocument,
-        JumpToHistory,
-        JumpToLocalBrowser,
-        JumpToTableOfContents,
-        Reload,
-        SaveCopy,
-        SearchBookmarks,
-        SearchHistory,
-    )
+    COMMAND_MESSAGES = MAIN_COMMAND_MESSAGES
 
     BINDINGS = Command.bindings(*COMMAND_MESSAGES)
     COMMANDS = {MainCommands}
 
     AUTO_FOCUS = "CommandLine Input"
 
-    navigation_visible: var[bool] = var(True)
-    """Set if the navigation panel is visible or not."""
-
-    def __init__(self, arguments: Namespace) -> None:
+    def __init__(self, arguments: OpenOptions, *, configuration: Configuration) -> None:
         """Initialise the main screen.
 
         Args:
@@ -176,40 +154,218 @@ class Main(EnhancedScreen[None]):
         """
         self._arguments = arguments
         """The arguments passed on the command line."""
+        self._initial_configuration = configuration
+        """The configuration snapshot available during screen construction."""
+        self._local_options = local_discovery_options(arguments, configuration)
+        """The effective local browser discovery options."""
+        self._startup_plan = resolve_startup_plan(
+            arguments,
+            configuration,
+            self._local_options,
+        )
+        """The resolved startup plan."""
+        self._layout_state = LayoutState()
+        """The effective layout state."""
+        self._mode_override: LayoutMode | None = None
+        """An optional single-pane mode override for responsive layouts."""
+        self._startup_handled = False
+        """Has the startup plan already been fully handled?"""
         super().__init__()
+
+    def _configuration(self) -> Configuration:
+        """Return the active configuration for this screen."""
+        return load_app_configuration(self)
+
+    def _update_configuration(self) -> AbstractContextManager[Configuration]:
+        """Return a context manager for updating configuration."""
+        return update_app_configuration(self)
+
+    def _navigation(self) -> Navigation:
+        """Return the navigation widget."""
+        return self.query_one(Navigation)
+
+    def _viewer(self) -> Viewer:
+        """Return the viewer widget."""
+        return self.query_one(Viewer)
+
+    def _command_line(self) -> CommandLine:
+        """Return the command line widget."""
+        return self.query_one(CommandLine)
+
+    def _is_narrow_layout(self, width: int | None = None) -> bool:
+        """Return `True` when the current terminal should use single-pane mode."""
+        return layout_policy(self._configuration()).responsive.is_narrow(
+            self.size.width if width is None else width
+        )
+
+    def _store_navigation_enabled(self, enabled: bool) -> None:
+        """Persist whether navigation should be available in wide layouts."""
+        with self._update_configuration() as config:
+            config.navigation_visible = enabled
+
+    def _resolve_layout_state(
+        self,
+        *,
+        navigation_override: bool | None = None,
+        mode_override: LayoutMode | None = None,
+        sidebar_content_width: int | None = None,
+    ) -> LayoutState:
+        """Resolve the effective layout state for the current terminal size."""
+        configuration = self._configuration()
+        return effective_layout_state(
+            configuration,
+            terminal_width=self.size.width,
+            navigation_override=navigation_override,
+            mode_override=mode_override,
+            sidebar_content_width=sidebar_content_width,
+            current_sidebar_width=self._layout_state.sidebar_width,
+            policy=layout_policy(configuration),
+        )
+
+    def _refresh_layout_state(self, *, navigation_override: bool | None = None) -> None:
+        """Recompute and apply the current layout state."""
+        self._apply_layout_state(
+            self._resolve_layout_state(
+                navigation_override=navigation_override,
+                mode_override=self._mode_override,
+                sidebar_content_width=self._navigation().content_width_hint(),
+            )
+        )
+
+    def _apply_layout_state(self, layout_state: LayoutState) -> None:
+        """Apply the computed layout state to the mounted widgets."""
+        self._layout_state = layout_state
+        self.set_class(layout_state.mode is LayoutMode.SPLIT, "layout-split")
+        self.set_class(
+            layout_state.mode is LayoutMode.CONTENT_ONLY, "layout-content-only"
+        )
+        self.set_class(
+            layout_state.mode is LayoutMode.SIDEBAR_ONLY, "layout-sidebar-only"
+        )
+        self._navigation().apply_layout_state(layout_state)
+        self._command_line().dock_top = layout_state.command_line_on_top
+        if (
+            layout_state.mode is LayoutMode.CONTENT_ONLY
+            and self._navigation().has_focus_within
+        ):
+            self.call_after_refresh(self._viewer().focus)
+
+    def _set_navigation_visible(
+        self, visible: bool, *, persist_navigation: bool = True
+    ) -> Navigation:
+        """Update navigation visibility through the layout policy."""
+        if persist_navigation:
+            self._store_navigation_enabled(visible)
+        if self._is_narrow_layout():
+            self._mode_override = (
+                LayoutMode.SIDEBAR_ONLY if visible else LayoutMode.CONTENT_ONLY
+            )
+            self._refresh_layout_state()
+            return self._navigation()
+        self._mode_override = None
+        self._refresh_layout_state(navigation_override=visible)
+        return self._navigation()
+
+    def _show_navigation(
+        self, jump_to: Callable[[Navigation], None] | None = None
+    ) -> Navigation:
+        """Ensure the navigation panel is visible and optionally jump within it."""
+        navigation = self._set_navigation_visible(True)
+        if jump_to is not None:
+            jump_to(navigation)
+        return navigation
+
+    def _show_document(self, *, focus: bool = True) -> None:
+        """Ensure the document pane is visible in responsive layouts."""
+        if self._is_narrow_layout():
+            self._set_navigation_visible(False, persist_navigation=False)
+        if focus:
+            self._viewer().focus()
+
+    def _show_sidebar_view(self) -> None:
+        """Ensure the active sidebar view is visible and focused."""
+        navigation = self._show_navigation()
+        navigation.call_after_refresh(navigation.run_action, "move_into_panel")
 
     def compose(self) -> ComposeResult:
         """Compose the content of the screen."""
         yield Header()
         with VerticalGroup():
             with Horizontal(id="workspace"):
-                yield Navigation(classes="panel")
+                yield Navigation(
+                    classes="panel",
+                    local_root=self._startup_plan.local_root,
+                    local_options=self._local_options,
+                    local_browser_mode=self._initial_configuration.local_browser_view_mode,
+                )
                 yield Viewer(classes="panel")
             yield CommandLine(classes="panel")
         yield Footer()
 
     def on_mount(self) -> None:
         """Configure the screen once the DOM is mounted."""
-        config = load_configuration()
-        self.navigation_visible = (
-            config.navigation_visible
-            if self._arguments.navigation is None
-            else self._arguments.navigation
-        )
-        self.query_one(Navigation).dock_right = config.navigation_on_right
-        self.query_one(Navigation).bookmarks = (bookmarks := load_bookmarks())
+        if self._arguments.navigation is not None:
+            self._store_navigation_enabled(self._arguments.navigation)
+        self._refresh_layout_state()
+        self._navigation().bookmarks = (bookmarks := load_bookmarks())
         BookmarkCommands.bookmarks = bookmarks
-        self.query_one(Viewer).history = load_history()
-        self.query_one(CommandLine).history = load_command_history()
-        self.query_one(CommandLine).dock_top = config.command_line_on_top
-        if self._arguments.command:
-            self.post_message(HandleInput(" ".join(self._arguments.command)))
+        self._viewer().history = load_history()
+        self._command_line().history = load_command_history()
+        self.call_after_refresh(self._handle_startup_input)
 
-    def _watch_navigation_visible(self) -> None:
-        """React to the navigation visible property being set."""
-        self.set_class(self.navigation_visible, "navigation")
-        with update_configuration() as config:
-            config.navigation_visible = self.navigation_visible
+    def on_resize(self) -> None:
+        """Keep the layout state in sync with terminal width changes."""
+        if self.is_mounted:
+            if not self._is_narrow_layout():
+                self._mode_override = None
+            self._refresh_layout_state()
+
+    def _handle_startup_input(self) -> None:
+        """Handle any startup target or startup command."""
+        if self._startup_handled:
+            return
+        startup_plan = self._startup_plan
+        if startup_plan.command_input is not None:
+            self.post_message(HandleInput(startup_plan.command_input))
+            self._startup_handled = True
+            return
+        if startup_plan.error_message is not None:
+            self.notify(
+                startup_plan.error_message,
+                title="Startup target error",
+                severity="error",
+                timeout=8,
+            )
+            self._startup_handled = True
+            return
+        if startup_plan.selected_path is not None:
+            self._navigation().highlight_local_path(startup_plan.selected_path)
+        if startup_plan.open_target is not None:
+            self.post_message(OpenLocation(startup_plan.open_target))
+            self._startup_handled = True
+            return
+        if startup_plan.resolve_from_index:
+            if self._navigation().local_index_loading():
+                return
+            if candidate := self._navigation().preferred_local_startup_path(
+                tuple(self._configuration().startup_auto_open_patterns)
+            ):
+                self._navigation().highlight_local_path(candidate)
+                self.post_message(OpenLocation(candidate))
+                self._startup_handled = True
+                return
+            self._show_navigation(Navigation.jump_to_local)
+            self._startup_handled = True
+            return
+        if startup_plan.focus_local_browser:
+            self._show_navigation(Navigation.jump_to_local)
+            self._startup_handled = True
+            return
+
+    @on(LocalBrowser.SnapshotUpdated)
+    def _local_index_updated(self, _: LocalBrowser.SnapshotUpdated) -> None:
+        """Retry deferred startup handling when the shared local index updates."""
+        self.call_after_refresh(self._handle_startup_input)
 
     @on(Help)
     async def _show_help(self) -> None:
@@ -253,14 +409,18 @@ class Main(EnhancedScreen[None]):
         Args:
             message: The message requesting the file be opened.
         """
-        if maybe_markdown(message.to_open) or await can_be_negotiated_to_markdown(
-            message.to_open
+        configuration = self._configuration()
+        if maybe_markdown(
+            message.to_open,
+            markdown_extensions_from_configuration(configuration),
+        ) or await can_be_negotiated_to_markdown(
+            message.to_open,
+            markdown_content_types_from_configuration(configuration),
         ):
             self.query_one(Viewer).goto_anchor_after_load(
                 message.anchor
             ).location = message.to_open
-            if load_configuration().focus_viewer_on_load:
-                self.query_one(Viewer).focus()
+            self._show_document(focus=configuration.focus_viewer_on_load)
         else:
             view_in_browser(message.to_open)
 
@@ -278,7 +438,12 @@ class Main(EnhancedScreen[None]):
                 filters=Filters(
                     (
                         "Markdown",
-                        maybe_markdown,
+                        lambda path: maybe_markdown(
+                            path,
+                            markdown_extensions_from_configuration(
+                                self._configuration()
+                            ),
+                        ),
                     ),
                     ("All files", lambda _: True),
                 ),
@@ -295,6 +460,7 @@ class Main(EnhancedScreen[None]):
             message: The message requesting the history open.
         """
         self.query_one(Viewer).goto(message.location)
+        self._show_document()
 
     @on(OpenFromForge)
     @work
@@ -304,7 +470,7 @@ class Main(EnhancedScreen[None]):
         Args:
             message: The message requesting the operation.
         """
-        if (url := await message.url()) is None:
+        if (url := await message.url(self._configuration().main_branches)) is None:
             self.notify(
                 "The file you were after could not be located.\n\n"
                 "Check the spelling of the owner, repository and file; "
@@ -355,6 +521,11 @@ class Main(EnhancedScreen[None]):
         """
         self.query_one(Navigation).table_of_contents = message.table_of_contents
 
+    @on(Navigation.LayoutHintChanged)
+    def _refresh_navigation_width(self, _: Navigation.LayoutHintChanged) -> None:
+        """Recompute the sidebar width from the active navigation content."""
+        self._refresh_layout_state()
+
     @on(Markdown.TableOfContentsSelected)
     def _jump_to_content(self, message: Markdown.TableOfContentsSelected) -> None:
         """Jump to a specific location in the current document.
@@ -363,6 +534,7 @@ class Main(EnhancedScreen[None]):
             message: The message request the jump.
         """
         self.query_one(Viewer).jump_to_content(message.block_id)
+        self._show_document()
 
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
         """Check if an action is possible to perform right now.
@@ -402,6 +574,7 @@ class Main(EnhancedScreen[None]):
 
     def action_reload_command(self) -> None:
         """Reload the current document."""
+        self._show_document()
         self.query_one(Viewer).reload()
 
     def action_search_bookmarks_command(self) -> None:
@@ -414,21 +587,36 @@ class Main(EnhancedScreen[None]):
 
     def action_toggle_navigation_command(self) -> None:
         """Toggle the display of the navigation panel."""
-        self.navigation_visible = not self.navigation_visible
+        if self._is_narrow_layout():
+            showing_sidebar = self._layout_state.mode is LayoutMode.SIDEBAR_ONLY
+            self._set_navigation_visible(
+                not showing_sidebar,
+                persist_navigation=False,
+            )
+            if showing_sidebar:
+                self._viewer().focus()
+            else:
+                navigation = self._navigation()
+                navigation.call_after_refresh(navigation.run_action, "move_into_panel")
+            return
+        self._set_navigation_visible(not self._configuration().navigation_visible)
+
+    def action_toggle_local_browser_mode_command(self) -> None:
+        """Toggle the local browser between tree and flat-list modes."""
+        navigation = self._show_navigation(Navigation.jump_to_local)
+        navigation.toggle_local_browser_mode()
 
     def action_change_navigation_side_command(self) -> None:
         """Change the side that the navigation panel lives on."""
-        navigation = self.query_one(Navigation)
-        navigation.dock_right = not navigation.dock_right
-        with update_configuration() as config:
-            config.navigation_on_right = navigation.dock_right
+        with self._update_configuration() as config:
+            config.navigation_on_right = not config.navigation_on_right
+        self._refresh_layout_state()
 
     def action_change_command_line_location_command(self) -> None:
         """Change the location of the command line."""
-        command_line = self.query_one(CommandLine)
-        command_line.dock_top = not command_line.dock_top
-        with update_configuration() as config:
-            config.command_line_on_top = command_line.dock_top
+        with self._update_configuration() as config:
+            config.command_line_on_top = not config.command_line_on_top
+        self._refresh_layout_state()
 
     def action_jump_to_command_line_command(self) -> None:
         """Jump to the command line."""
@@ -437,14 +625,16 @@ class Main(EnhancedScreen[None]):
 
     def action_jump_to_document_command(self) -> None:
         """Jump to the document."""
-        self.query_one(Viewer).focus()
+        self._show_document()
 
     def action_backward_command(self) -> None:
         """Move backward through history."""
+        self._show_document()
         self.query_one(Viewer).backward()
 
     def action_forward_command(self) -> None:
         """Move forward through history."""
+        self._show_document()
         self.query_one(Viewer).forward()
 
     @work
@@ -466,15 +656,6 @@ class Main(EnhancedScreen[None]):
             self.query_one(Navigation).add_bookmark(title, location)
             self.notify("Bookmark added")
 
-    def _with_navigation_visible(self) -> Navigation:
-        """Ensure navigation is visible.
-
-        Returns:
-            The navigation widget.
-        """
-        self.navigation_visible = True
-        return self.query_one(Navigation)
-
     @on(Quit)
     def action_quit_command(self) -> None:
         """Quit the application."""
@@ -483,22 +664,27 @@ class Main(EnhancedScreen[None]):
     @on(JumpToTableOfContents)
     def action_jump_to_table_of_contents_command(self) -> None:
         """Jump to the table of contents."""
-        self._with_navigation_visible().jump_to_content()
+        self._show_navigation(Navigation.jump_to_content)
 
     @on(JumpToLocalBrowser)
     def action_jump_to_local_browser_command(self) -> None:
         """Jump to the local browser."""
-        self._with_navigation_visible().jump_to_local()
+        self._show_navigation(Navigation.jump_to_local)
+
+    @on(JumpToSidebarView)
+    def action_jump_to_sidebar_view_command(self) -> None:
+        """Jump to the currently active sidebar view."""
+        self._show_sidebar_view()
 
     @on(JumpToBookmarks)
     def action_jump_to_bookmarks_command(self) -> None:
         """Jump to the bookmarks."""
-        self._with_navigation_visible().jump_to_bookmarks()
+        self._show_navigation(Navigation.jump_to_bookmarks)
 
     @on(JumpToHistory)
     def action_jump_to_history_command(self) -> None:
         """Jump to the history."""
-        self._with_navigation_visible().jump_to_history()
+        self._show_navigation(Navigation.jump_to_history)
 
     def action_copy_location_to_clipboard_command(self) -> None:
         """Copy the current location to the clipboard."""
@@ -510,6 +696,7 @@ class Main(EnhancedScreen[None]):
 
     def action_edit_command(self) -> None:
         """Edit the current markdown document, if possible."""
+        self._show_document()
         self.query_one(Viewer).edit()
 
     @work

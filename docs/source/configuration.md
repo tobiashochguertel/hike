@@ -5,16 +5,31 @@ section will describe what can be configured and how.
 
 !!! note
 
-    At the moment some configuration can be done via Hike's UI; other things
-    require that you edit the configuration file using your preferred text
-    editor. Eventually I aim to make everything that can be configured
-    configurable within Hike itself.
+At the moment some configuration can be done via Hike's UI; other things
+require that you edit the configuration file using your preferred text
+editor. Hike now ships a typed CLI for this too, so the most useful starting
+points are:
 
-The location of the configuration file will depend on how your operating
-system and its settings; but by default it is looked for in
-[`$XDG_CONFIG_HOME`](https://specifications.freedesktop.org/basedir-spec/latest/),
-in a `hike` subdirectory. Mostly this will translate to the file being
-called `~/.config/hike/configuration.json`.
+```sh
+hike config init
+hike config show --format yaml
+hike bindings list
+hike bindings sets
+```
+
+The active configuration file is resolved in this order:
+
+1. A path passed with `--config` / `HIKE_CONFIG_PATH`
+2. `./hike.config.yaml` in the current working directory, if it exists
+3. `~/.config/hike/config.yaml`
+4. Legacy config files such as `~/.config/hike/configuration.json`
+
+If you want to use a different configuration file for a specific workflow, you
+can point Hike at it with:
+
+```sh
+hike --config ~/.config/hike/work-docs.yaml open
+```
 
 ## Command line location
 
@@ -44,12 +59,42 @@ Hike allows for a degree of configuration of its keyboard bindings;
 providing a method for setting up replacement bindings for the commands that
 appear in the [command palette](index.md#the-command-palette).
 
+You can choose a named keybinding set with `binding_set`, and you can define
+your own named sets in `binding_sets`. The built-in sets are:
+
+```bash exec="on" result="ansi" width=120
+hike bindings sets
+```
+
+The default configuration keeps Hike's original bindings:
+
+```yaml
+binding_set: default
+```
+
+If you would prefer the built-in non-function-key preset:
+
+```yaml
+binding_set: mnemonic
+```
+
+You can also define project- or user-specific sets and then activate them:
+
+```yaml
+binding_set: work
+binding_sets:
+  work:
+    ToggleNavigation: ctrl+shift+n
+    Edit: ctrl+e
+    Quit: ctrl+q
+```
+
 ### Bindable commands
 
 The following commands can have their keyboard bindings set:
 
-```bash exec="on"
-hike --bindings | sed -e 's/^\([A-Z].*\) - \(.*\)$/- `\1` - *\2*/' -e 's/^    \(Default:\) \(.*\)$/    - *\1* `\2`/'
+```bash exec="on" result="ansi" width=120
+hike bindings list
 ```
 
 ### Changing a binding
@@ -61,12 +106,21 @@ change the binding used to create a bookmark, changing it from
 <kbd>Shift</kbd>+<kbd>F6</kbd> to jump to the bookmarks, you would set
 `bindings` to this:
 
-```json
-"bindings": {
-    "BookmarkLocation": "f6",
-    "JumpToBookmarks": "shift+f6"
-}
+```yaml
+bindings:
+  BookmarkLocation: f6
+  JumpToBookmarks: shift+f6
 ```
+
+You can also update a single binding from the CLI:
+
+```sh
+hike config set bindings.BookmarkLocation f6
+```
+
+Per-command `bindings` overrides are applied after the selected `binding_set`,
+so they are the right place for one-off tweaks on top of a built-in or custom
+preset.
 
 The designations used for keys is based on the internal system used by
 [Textual](https://textual.textualize.io); as such [its caveats about what
@@ -95,33 +149,84 @@ Because Hike is built with Textual, and some of Textual's widgets use
 situations <kbd>ctrl</kbd>+<kbd>c</kbd> will pop up a notification reminding
 you what the actual binding is to quit the application.
 
-For those who really need to lean into their muscle memory you can enable
-<kbd>ctrl</kbd>+<kbd>c</kbd> as a quit key combination:
+Hike now enables the traditional quit behaviour by default, so
+<kbd>ctrl</kbd>+<kbd>c</kbd> exits immediately unless a widget is handling copy
+selection itself. The default configuration value is:
 
-```json
-"allow_traditional_quit": true
+```yaml
+allow_traditional_quit: true
 ```
 
-If this is set *and* if you aren't in a widget with marked text that can be
-copied, Hike will quit. If set to `false` (the default) the default
-behaviour for Hike (and most Textual applications) will happen.
+If you would prefer Textual's default reminder/help behaviour instead, set it to
+`false`:
+
+```yaml
+allow_traditional_quit: false
+```
+
+With that setting disabled, Hike falls back to Textual's normal
+<kbd>ctrl</kbd>+<kbd>c</kbd> handling, including copy-friendly behaviour in
+widgets that support text selection.
 
 ## Local file system start location
 
 By default Hike's local file system browser (the tree that appears in the
-navigation panel) will always start out browsing the user's home directory.
-If you prefer that it starts viewing somewhere else, you can change this
-value in the configuration file.
-
-```json
-"local_start_location": "~",
-```
-
-For example, if you wanted it to always start with the current directory, you could change it to this:
+navigation panel) starts from the current working directory when you launch
+`hike open` without an explicit target. If you prefer that it starts somewhere
+else, you can change this value in the configuration file.
 
 ```json
 "local_start_location": ".",
 ```
+
+For example, if you wanted it to always start in a dedicated docs directory, you
+could change it to this:
+
+```json
+"local_start_location": "~/notes/docs",
+```
+
+## Startup auto-open
+
+When Hike starts from a directory (including `hike open` with no target), it
+can automatically open a preferred Markdown file and select it in the local
+browser.
+
+```json
+"startup_auto_open": true,
+"startup_auto_open_patterns": [
+    "INDEX.md",
+    "README.md",
+    "getting-started*.md"
+],
+```
+
+Patterns are checked in order. Plain filenames are matched against each file's
+basename; patterns containing a slash are matched against the file's path
+relative to the local browser root. If no configured pattern matches, Hike
+falls back to the first visible Markdown file in local-browser order. Set
+`"startup_auto_open": false` if you want startup to stay in the sidebar instead
+of auto-opening a document.
+```
+
+## Local file browser discovery
+
+The local browser's discovery defaults can also be configured. The following
+settings control whether ignore files are used, whether dotfiles are shown,
+and which extra exclude globs should always be applied:
+
+```json
+"local_use_ignore_files": true,
+"local_show_hidden": false,
+"local_exclude_patterns": [
+    "generated/",
+    "node_modules/"
+],
+```
+
+When you're browsing locally, press <kbd>Backspace</kbd> to move the browser
+root to the parent directory. In flat-list mode Hike also shows a `../` entry
+at the top whenever the current root has a parent.
 
 ## Main forge branches
 
@@ -207,9 +312,8 @@ You can show or hide the navigation panel. This can be done in Hike with the
 
 !!! tip
 
-    You can force navigation [visible](index.md#-navigation) or
-    [hidden](index.md#-no-navigation) via [the command
-    line](index.md#command-line-options).
+    You can force navigation visible or hidden via
+    [`hike open --navigation` / `--no-navigation`](cli.md).
     Note that this *also* configures the visibility of the navigation panel
     for future runs of Hike.
 
@@ -235,6 +339,55 @@ Here is Hike with the navigation panel visible on the right:
 ```{.textual path="docs/screenshots/basic_app.py" title="Navigation panel on the right" lines=40 columns=120 press="tab,d,ctrl+t,shift+f2"}
 ```
 
+### Responsive layout and sidebar sizing
+
+The navigation panel can also be tuned so it takes less room on wider screens
+and automatically switches to a single-pane layout on narrower terminals.
+
+```json
+"sidebar_default_width_percent": 22,
+"sidebar_min_width": 24,
+"sidebar_max_width": 80,
+"sidebar_max_width_percent": 45,
+"sidebar_auto_fit": true,
+"responsive_auto_switch_narrow": true,
+"responsive_narrow_width": 100,
+"responsive_narrow_mode": "content-only"
+```
+
+- `sidebar_default_width_percent` controls the normal split-view width.
+- `sidebar_min_width` and `sidebar_max_width` clamp the sidebar when auto-fit is active.
+- `sidebar_max_width_percent` prevents the sidebar from consuming too much of the
+  terminal even when deep trees or long flat-list entries need more room.
+- `sidebar_auto_fit` enables content-aware sizing for the active navigation pane.
+- `responsive_auto_switch_narrow` enables the narrow-terminal single-pane mode.
+- `responsive_narrow_width` is the width threshold where the single-pane layout kicks in.
+- `responsive_narrow_mode` controls the default narrow-screen pane; valid values are
+  `"content-only"` and `"sidebar-only"`.
+
+When Hike is in single-pane mode, use `JumpToSidebarView`
+([`JumpToSidebarView`](#bindable-commands), bound to <kbd>Ctrl</kbd>+<kbd>N</kbd>
+by default) to switch to the active sidebar view, and `JumpToDocument`
+([`JumpToDocument`](#bindable-commands), bound to <kbd>Ctrl</kbd>+<kbd>G</kbd>
+by default) to return to the markdown content.
+
+## Local browser mode
+
+The local browser can render either as a directory tree or as a flat list of
+relative paths rooted at the current local browser directory.
+
+```json
+"local_browser_view_mode": "flat-list"
+```
+
+Valid values are `"tree"` and `"flat-list"`.
+
+Use `ToggleLocalBrowserMode`
+([`ToggleLocalBrowserMode`](#bindable-commands), bound to
+<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> by default) to switch between the
+two modes. When the flat list is active, selecting a directory changes the root
+of the local browser to that directory.
+
 ## Obsidian vaults location
 
 The command for quickly browsing [Obsidian](https://obsidian.md) vaults in
@@ -258,13 +411,13 @@ Hike has a number of themes available. You can select a theme using the
 `Change Theme` ([`ChangeTheme`](#bindable-commands), bound to <kbd>F9</kbd>
 by default) command. The available themes include:
 
-```bash exec="on"
-hike --theme=? | sed 's/^/- /'
+```bash exec="on" result="ansi" width=120
+hike themes list
 ```
 
 !!! tip
 
-    You can also [set the theme via the command line](index.md#-t-theme). This can
+    You can also [set the theme via the command line](cli.md). This can
     be useful if you want to ensure that Hike runs up with a specific theme.
     Note that this *also* configures the theme for future runs of Hike.
 

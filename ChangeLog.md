@@ -1,5 +1,94 @@
 # Hike ChangeLog
 
+## Unreleased
+
+- Fixed the docs site so executable CLI examples render ANSI-colored terminal
+  output correctly, split the external CLI reference from the in-app command
+  line docs, updated fork-specific install instructions to use `main`, and
+  added explicit fork attribution to the license and package metadata.
+- Added a GitHub Pages workflow for this fork, switched docs/site metadata to the
+  fork URLs, and made the MkDocs screenshot harness explicit and reproducible via
+  a docs-specific runtime configuration and validation test.
+- Added `.gitignore` and `.ignore` support to the local file browser.
+- Added CLI options for controlling local browser discovery, including root,
+  hidden-file, ignore and exclude-glob handling.
+- Added persistent discovery defaults to the configuration file, plus support
+  for selecting an alternate config file with `--config`.
+- Added explicit startup target handling so `hike <file>`, `hike <directory>`
+  and `hike <url>` behave directly at launch.
+- Added a `--command` option for preserving the old "run an internal command on
+  startup" workflow.
+- Refactored layout/state handling so screen orchestration and sidebar layout
+  policy are separated.
+- Added a smaller, auto-fitting navigation sidebar with width caps and
+  responsive single-pane behaviour for narrow terminals.
+- Added an explicit sidebar-view command and command-line shortcut to pair with
+  the document/content jump commands.
+- Added persistent configuration for sidebar sizing and responsive layout
+  defaults.
+- Added a switchable local browser flat-list mode with relative paths and
+  persistent mode configuration.
+- Stabilised the initial local browser root display so opening a directory does
+  not briefly flash the absolute path before settling.
+- Improved local tree sidebar sizing so deep nested paths can grow the sidebar
+  up to the configured percentage-based cap.
+- Added a `Taskfile.yml` workflow for validating, merging feature branches into
+  `main`, and reinstalling the host tool from that branch.
+- Migrated the CLI from ad hoc `argparse` handling to a structured Typer-based
+  command tree with `open`, `config`, `schema`, `env`, `bindings`, and `themes`
+  commands.
+- Replaced the old dataclass/JSON configuration handling with typed
+  `pydantic`/`pydantic-settings` models, YAML configuration files, schema
+  export/validation commands, and environment-file support.
+- Fixed sidebar focus handoff so the visible local browser receives focus
+  instead of a hidden widget when opening directory-centric workflows.
+- Flat-list local browser mode now hides empty directories that do not contain
+  visible Markdown descendants.
+- Removed the implicit `hike <target>` / `hike --command ...` TUI launch
+  shortcut so launching the TUI now requires the explicit `hike open ...`
+  command.
+- Fixed the `Taskfile.yml` install verification step to use the new
+  `hike bindings list` subcommand instead of the removed legacy flag.
+- Fixed `hike config init --force` so legacy `configuration.json` files are
+  migrated to the modern YAML config path instead of being overwritten with
+  commented YAML content.
+- Fixed CLI startup so root help/version and non-TUI commands no longer import
+  the full Textual application stack at module import time.
+- Added compatibility loading for broken legacy `.json` config files that
+  contain YAML content from earlier typed-config builds.
+- Changed the default `Ctrl+C` behavior so the TUI quits immediately instead of
+  trapping users inside a broken raw terminal session.
+- Extracted CLI runtime/config initialization work into dedicated services so
+  Typer command handlers stay thin and avoid importing screen logic directly.
+- Replaced the temporary signal-env/runtime shim with a dedicated runtime
+  bootstrap seam, a static theme catalog for metadata commands, and Textual
+  `Load` lifecycle setup for theme/keymap initialization.
+- Replaced ambient CLI config/env path overrides with an explicit runtime
+  context layer so command invocations no longer leak path selection into later
+  commands while the TUI still sees the intended config/env files.
+- Moved screen and widget configuration access behind the running Hike
+  application so UI code no longer reaches directly into config persistence
+  helpers.
+- Removed the last ambient config reads from non-UI runtime helpers by passing
+  explicit Markdown/content-type and forge-branch inputs into location and
+  remote-opening flows.
+- Added end-to-end coverage for the Typer CLI and the Textual TUI using
+  `CliRunner` and Textual's `run_test()` / `Pilot` APIs.
+- Moved shared `--config` and `--env-file` handling to root-level CLI options,
+  added a root `--license` flag, and trimmed `hike open` back to TUI launch
+  concerns.
+- Expanded `hike --version` output with build metadata when available,
+  including git commit, branch, and build/install timestamp details.
+- Fixed file startup so `hike open README.md` roots the local browser beside the
+  requested document instead of scanning the configured home-directory default
+  during startup.
+- Centralized `hike open` startup resolution behind a single startup-planning
+  service so file, directory, URL, command, and no-target launches share one
+  path.
+- `hike open` without a target now starts from the current working directory by
+  default, auto-opens preferred files such as `INDEX.md` / `README.md`, and
+  highlights the selected file in both flat-list and tree browser modes.
+
 ## v1.4.0
 
 **Released: 2026-03-25**

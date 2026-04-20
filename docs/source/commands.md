@@ -1,9 +1,13 @@
-# Introduction
+# In-App Command Line
 
 Central to Hike's user interface is a command line; similar to a shell's
 command line. It has a history (use the <kbd>up</kbd> and <kbd>down</kbd>
 keys to navigate) as well as history auto-completion (use <kbd>right</kbd>
 to accept a suggestion).
+
+If you want to run one of these commands at startup, use
+`hike open --command "..."`. To launch the TUI against a file, directory, or
+URL, use the explicit `open` subcommand as well.
 
 !!! tip
 
@@ -48,6 +52,10 @@ and after you get <kbd>Enter</kbd> the dialog will open:
 ### Navigation panel
 
 There are some commands that interact with the navigation panel. These are:
+
+The local browser filters out ignored paths using `.gitignore` and `.ignore`
+files found in the browser root and its ancestors. You can override that
+behavior at startup with `--no-ignore`, `--hidden` and `--exclude`.
 
 #### `bookmarks`
 
@@ -138,22 +146,22 @@ specifying the file to view are supported:
 | `<owner>/<repo>:<branch> <file>` | Open a specific file from a specific branch of a repository |
 | `<owner> <repo>:<branch> <file>` | Open a specific file from a specific branch of a repository |
 
-So, for example, if you want to view Hike's README:
+So, for example, if you want to view this fork's README:
 
 ```
-gh davep/hike
+gh tobiashochguertel/hike
 ```
 
-Or if you want to view Hike's change-log:
+Or if you want to view this fork's change log:
 
 ```
-gh davep/hike ChangeLog.md
+gh tobiashochguertel/hike ChangeLog.md
 ```
 
 If you wanted to view the README file but in a feature branch called `revamp-readme`:
 
 ```
-gh davep/hike:revamp-readme
+gh tobiashochguertel/hike:revamp-readme
 ```
 
 etc.

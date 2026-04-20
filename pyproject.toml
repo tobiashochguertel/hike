@@ -1,9 +1,13 @@
 [project]
 name = "hike"
-version = "1.4.0"
+version = "1.5.0"
 description = "A Markdown browser for the terminal"
 authors = [
-    { name = "Dave Pearson", email = "davep@davep.org" }
+    { name = "Dave Pearson", email = "davep@davep.org" },
+    { name = "Tobias Hochguertel" },
+]
+maintainers = [
+    { name = "Tobias Hochguertel" },
 ]
 dependencies = [
     "textual>=5.3.0",
@@ -11,8 +15,14 @@ dependencies = [
     "textual-fspicker>=0.4.1",
     "xdg-base-dirs>=6.0.2",
     "httpx>=0.28.1",
+    "pathspec>=0.12.1",
     "typing-extensions>=4.12.2",
     "pyperclip>=1.9.0",
+    "typer>=0.24.1",
+    "pydantic>=2.13.2",
+    "pydantic-settings>=2.13.1",
+    "ruamel-yaml>=0.19.1",
+    "python-dotenv>=1.2.2",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"
@@ -54,12 +64,12 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://hike.davep.dev/"
-Repository = "https://github.com/davep/hike"
-Documentation = "https://hike.davep.dev/"
-Source = "https://github.com/davep/hike"
-Issues = "https://github.com/davep/hike/issues"
-Discussions = "https://github.com/davep/hike/discussions"
+Homepage = "https://tobiashochguertel.github.io/hike/"
+Repository = "https://github.com/tobiashochguertel/hike"
+Documentation = "https://tobiashochguertel.github.io/hike/"
+Source = "https://github.com/tobiashochguertel/hike"
+Issues = "https://github.com/tobiashochguertel/hike/issues"
+Upstream = "https://github.com/davep/hike"
 
 [project.scripts]
 hike = "hike.__main__:main"
@@ -79,8 +89,11 @@ dev = [
     "pytest>=8.3.4",
     "mkdocs-material>=9.6.11",
     "markdown-exec>=1.10.3",
+    "pygments-ansi-color>=0.3.0",
     "codespell>=2.4.1",
     "ruff>=0.12.9",
+    "libtmux>=0.55.0",
+    "hypothesis>=6.152.1",
 ]
 
 [[tool.uv.index]]
@@ -93,6 +106,11 @@ explicit = true
 venvPath="."
 venv=".venv"
 exclude=[".venv"]
+
+[tool.pytest.ini_options]
+markers = [
+    "tmux: end-to-end tests that drive Hike inside an isolated tmux server",
+]
 
 [tool.ruff.lint]
 select = [
@@ -113,6 +131,9 @@ ignore = [
     # I think try...expect...pass reads far better.
     "SIM105",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"src/hike/cli/*.py" = ["B008"]
 
 [tool.ruff.lint.pycodestyle]
 max-line-length = 120

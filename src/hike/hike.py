@@ -2,11 +2,13 @@
 
 ##############################################################################
 # Python imports.
-from argparse import Namespace
+from contextlib import AbstractContextManager
+from typing import Any
 
 ##############################################################################
 # Textual imports.
-from textual.app import InvalidThemeError, ScreenStackError
+from textual import events
+from textual.app import InvalidThemeError
 
 ##############################################################################
 # Textual enhanced imports.
@@ -14,45 +16,33 @@ from textual_enhanced.app import EnhancedApp
 
 ##############################################################################
 # Local imports.
-from . import __version__
+from .app_info import HELP_ABOUT, HELP_LICENSE, HELP_TITLE
 from .data import (
-    load_configuration,
-    update_configuration,
+    Configuration,
 )
+from .data import (
+    load_configuration as load_runtime_configuration,
+)
+from .data import (
+    update_configuration as update_runtime_configuration,
+)
+from .keybinding_catalog import resolve_keybindings
 from .screens import Main
+from .startup import OpenOptions
+from .widgets.navigation.local_browser import LocalBrowser
 
 
 ##############################################################################
 class Hike(EnhancedApp[None]):
     """The main application class."""
 
-    HELP_TITLE = f"Hike v{__version__}"
-    HELP_ABOUT = """
-    `Hike` is a terminal-based Markdown viewer; it was created
-    by and is maintained by [Dave Pearson](https://www.davep.org/); it is
-    Free Software and can be [found on
-    GitHub](https://github.com/davep/hike).
-    """
-    HELP_LICENSE = """
-    Hike - A Markdown viewer for the terminal.  \n    Copyright (C) 2025 Dave Pearson
-
-    This program is free software: you can redistribute it and/or modify it
-    under the terms of the GNU General Public License as published by the Free
-    Software Foundation, either version 3 of the License, or (at your option)
-    any later version.
-
-    This program is distributed in the hope that it will be useful, but WITHOUT
-    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-    FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-    more details.
-
-    You should have received a copy of the GNU General Public License along with
-    this program. If not, see <https://www.gnu.org/licenses/>.
-    """
+    HELP_TITLE = HELP_TITLE
+    HELP_ABOUT = HELP_ABOUT
+    HELP_LICENSE = HELP_LICENSE
 
     COMMANDS = set()
 
-    def __init__(self, arguments: Namespace) -> None:
+    def __init__(self, arguments: OpenOptions) -> None:
         """Initialise the application.
 
         Args:
@@ -61,20 +51,36 @@ class Hike(EnhancedApp[None]):
         self._arguments = arguments
         """The command line arguments passed to the application."""
         super().__init__()
-        configuration = load_configuration()
-        if configuration.theme is not None:
+
+    def on_load(self, event: events.Load) -> None:
+        """Apply config-backed runtime settings before application mode starts."""
+        del event
+        configuration = self.configuration()
+        theme_name = self._arguments.theme or configuration.theme
+        if theme_name is not None:
             try:
-                self.theme = arguments.theme or configuration.theme
+                self.theme = theme_name
             except InvalidThemeError:
                 pass
-        try:
-            self.update_keymap(configuration.bindings)
-        except ScreenStackError:  # https://github.com/Textualize/textual/issues/5742
-            pass
+        keymap = resolve_keybindings(
+            self._arguments.binding_set or configuration.binding_set,
+            custom_sets=configuration.binding_sets,
+            overrides=configuration.bindings,
+        )
+        if keymap:
+            self.set_keymap(keymap)
+
+    def configuration(self) -> Configuration:
+        """Return the active configuration for this app instance."""
+        return load_runtime_configuration(self._arguments.runtime_context)
+
+    def update_configuration(self) -> AbstractContextManager[Configuration]:
+        """Return a context manager for updating this app's configuration."""
+        return update_runtime_configuration(self._arguments.runtime_context)
 
     def watch_theme(self) -> None:
         """Save the application's theme when it's changed."""
-        with update_configuration() as config:
+        with self.update_configuration() as config:
             config.theme = self.theme
 
     def get_default_screen(self) -> Main:
@@ -83,14 +89,25 @@ class Hike(EnhancedApp[None]):
         Returns:
             The main screen.
         """
-        return Main(self._arguments)
+        return Main(self._arguments, configuration=self.configuration())
 
     def action_help_quit(self) -> None:
         """Override Textual's default handling of ctrl+c."""
-        if load_configuration().allow_traditional_quit:
+        if self.configuration().allow_traditional_quit:
             self.exit()
         else:
             super().action_help_quit()
+
+    def exit(
+        self,
+        result: None = None,
+        return_code: int = 0,
+        message: Any = None,
+    ) -> None:
+        """Cancel background browser indexing before handing shutdown to Textual."""
+        for local_browser in self.query(LocalBrowser):
+            local_browser.cancel_pending_work()
+        super().exit(result=result, return_code=return_code, message=message)
 
 
 ### hike.py ends here

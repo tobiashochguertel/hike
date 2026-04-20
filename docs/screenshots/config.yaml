@@ -1,0 +1,38 @@
+theme: dracula
+navigation_visible: true
+navigation_on_right: true
+sidebar_default_width_percent: 22
+sidebar_min_width: 24
+sidebar_max_width: 60
+sidebar_max_width_percent: 45
+sidebar_auto_fit: true
+markdown_extensions:
+  - .md
+  - .markdown
+markdown_content_types:
+  - text/plain
+  - text/markdown
+  - text/x-markdown
+command_line_on_top: true
+responsive_auto_switch_narrow: true
+responsive_narrow_width: 100
+responsive_narrow_mode: content-only
+main_branches:
+  - main
+  - master
+obsidian_vaults: ~/Library/Mobile Documents/iCloud~md~obsidian/Documents
+local_start_location: .
+startup_auto_open: true
+startup_auto_open_patterns:
+  - INDEX.md
+  - README.md
+local_use_ignore_files: true
+local_show_hidden: false
+local_exclude_patterns: []
+local_browser_view_mode: flat-list
+binding_set: default
+binding_sets: {}
+bindings: {}
+focus_viewer_on_load: false
+show_front_matter: true
+allow_traditional_quit: true

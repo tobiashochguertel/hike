@@ -1,0 +1,95 @@
+version: "3"
+
+vars:
+  RELEASE_BRANCH: main
+  INSTALL_REPO: https://github.com/tobiashochguertel/hike.git
+
+tasks:
+  check:
+    desc: Run the full validation suite
+    cmds:
+      - make checkall
+
+  merge-main:
+    desc: Merge SOURCE_BRANCH into main, validate, and push
+    requires:
+      vars:
+        - SOURCE_BRANCH
+    cmds:
+      - |
+        bash -euo pipefail <<'EOF'
+        current_branch="$(git branch --show-current)"
+        source_branch="{{.SOURCE_BRANCH}}"
+        target_branch="{{.RELEASE_BRANCH}}"
+
+        if [ -n "$(git status --short)" ]; then
+          echo "Working tree must be clean before merging." >&2
+          exit 1
+        fi
+
+        if [ "$source_branch" = "$target_branch" ]; then
+          echo "SOURCE_BRANCH must differ from $target_branch." >&2
+          exit 1
+        fi
+
+        trap 'git switch "$current_branch" >/dev/null' EXIT
+
+        git fetch origin "$target_branch" "$source_branch"
+        git switch "$target_branch"
+        git merge --no-ff "$source_branch" \
+          -m "merge: add $source_branch" \
+          -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+        make checkall
+        git push origin "$target_branch"
+        EOF
+
+  install-main:
+    desc: Install hike from main with uv tool
+    cmds:
+      - |
+        bash -euo pipefail <<'EOF'
+        install_ref="git+{{.INSTALL_REPO}}@{{.RELEASE_BRANCH}}"
+
+        if uv tool list | grep -q '^hike '; then
+          uv tool uninstall hike
+        fi
+
+        uv tool install "$install_ref"
+        hike bindings list | grep -E 'ToggleLocalBrowserMode|JumpToSidebarView|JumpToDocument'
+        EOF
+
+  refresh-main:
+    desc: Merge SOURCE_BRANCH into main, validate, push, and install
+    requires:
+      vars:
+        - SOURCE_BRANCH
+    cmds:
+      - task: merge-main
+        vars:
+          SOURCE_BRANCH: "{{.SOURCE_BRANCH}}"
+      - task: install-main
+
+  merge-all-requested-features:
+    desc: Deprecated alias for merge-main
+    requires:
+      vars:
+        - SOURCE_BRANCH
+    cmds:
+      - task: merge-main
+        vars:
+          SOURCE_BRANCH: "{{.SOURCE_BRANCH}}"
+
+  install-all-requested-features:
+    desc: Deprecated alias for install-main
+    cmds:
+      - task: install-main
+
+  refresh-all-requested-features:
+    desc: Deprecated alias for refresh-main
+    requires:
+      vars:
+        - SOURCE_BRANCH
+    cmds:
+      - task: refresh-main
+        vars:
+          SOURCE_BRANCH: "{{.SOURCE_BRANCH}}"

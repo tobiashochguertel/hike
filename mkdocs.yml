@@ -1,13 +1,23 @@
 site_name: Hike
 docs_dir: docs/source/
-repo_url: https://github.com/davep/hike
+site_url: https://tobiashochguertel.github.io/hike/
+repo_url: https://github.com/tobiashochguertel/hike
+repo_name: tobiashochguertel/hike
 
 nav:
   - "Getting Started": index.md
+  - "CLI Reference": cli.md
+  - "In-App Command Line": commands.md
   - "Configuration": configuration.md
-  - "Commands": commands.md
   - "License": license.md
   - "Change Log": changelog.md
+
+plugins:
+  - search
+  - markdown-exec:
+      ansi: required
+      languages:
+        - bash
 
 markdown_extensions:
   - admonition
@@ -18,10 +28,6 @@ markdown_extensions:
         - name: textual
           class: textual
           format: !!python/name:textual._doc.format_svg
-        - name: bash
-          class: bash
-          validator: !!python/name:markdown_exec.validator
-          format: !!python/name:markdown_exec.formatter
 
 theme:
   name: material
@@ -48,18 +54,6 @@ theme:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/davep
-    - icon: fontawesome/brands/python
-      link: https://pypi.org/user/davepearson/
-    - icon: fontawesome/brands/mastodon
-      link: https://fosstodon.org/@davep
-    - icon: fontawesome/brands/bluesky
-      link: https://bsky.app/profile/davep.org
-    - icon: fontawesome/brands/threads
-      link: https://www.threads.net/@davepdotorg
-    - icon: fontawesome/brands/youtube
-      link: https://www.youtube.com/@DavePearson
-    - icon: fontawesome/brands/steam
-      link: https://steamcommunity.com/id/davepdotorg
+      link: https://github.com/tobiashochguertel/hike
 
 ### mkdocs.yml ends here

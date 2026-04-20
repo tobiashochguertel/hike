@@ -36,6 +36,13 @@ class JumpToLocalBrowser(Command):
 
 
 ##############################################################################
+class ToggleLocalBrowserMode(Command):
+    """Toggle the local browser between tree and flat-list modes"""
+
+    BINDING_KEY = "ctrl+shift+l"
+
+
+##############################################################################
 class JumpToBookmarks(Command):
     """Jump to the bookmarks in the navigation panel"""
 
@@ -47,6 +54,13 @@ class JumpToHistory(Command):
     """Jump to the history in the navigation panel"""
 
     BINDING_KEY = "ctrl+y"
+
+
+##############################################################################
+class JumpToSidebarView(Command):
+    """Jump to the active sidebar view"""
+
+    BINDING_KEY = "ctrl+n"
 
 
 ### navigation.py ends here

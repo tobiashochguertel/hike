@@ -26,11 +26,13 @@ from ..commands import (
     JumpToDocument,
     JumpToHistory,
     JumpToLocalBrowser,
+    JumpToSidebarView,
     JumpToTableOfContents,
     Reload,
     SaveCopy,
     SearchBookmarks,
     SearchHistory,
+    ToggleLocalBrowserMode,
     ToggleNavigation,
 )
 
@@ -60,12 +62,14 @@ class MainCommands(CommandsProvider):
         yield JumpToDocument()
         yield JumpToHistory()
         yield JumpToLocalBrowser()
+        yield JumpToSidebarView()
         yield JumpToTableOfContents()
         yield Quit()
         yield from self.maybe(Reload)
         yield from self.maybe(SaveCopy)
         yield SearchBookmarks()
         yield SearchHistory()
+        yield ToggleLocalBrowserMode()
         yield ToggleNavigation()
 
 
