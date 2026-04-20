@@ -1,0 +1,59 @@
+---
+title: Files, Environment & Schemas
+description: Manage the YAML config file, the runtime env file, and exported schemas.
+---
+
+## Configuration file workflows
+
+```bash
+hike config init
+hike config show --format yaml
+hike config validate
+hike config path
+```
+
+## Environment file workflows
+
+```bash
+hike env init
+hike env show
+hike env validate
+hike env path
+```
+
+## Supported environment variables
+
+The most important env variables are:
+
+- `HIKE_CONFIG_PATH`
+- `HIKE_ENV_PATH`
+- `HIKE_DEBUG`
+- `HIKE_SCHEMA_STORE_PATH`
+
+## Schema workflows
+
+```bash
+hike schema list
+hike schema show config
+hike schema validate --type config hike.config.yaml
+hike schema export --out .schemas
+```
+
+## Example split
+
+```yaml
+# hike.config.yaml
+theme: nord
+binding_set: mnemonic
+startup_auto_open: true
+local_browser_view_mode: flat-list
+```
+
+```dotenv
+# .env
+HIKE_DEBUG=1
+HIKE_SCHEMA_STORE_PATH=.schemas
+```
+
+If you still have a legacy `configuration.json`, `hike config init --force`
+migrates it to the modern YAML path.

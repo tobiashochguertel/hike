@@ -1,0 +1,26 @@
+---
+title: CLI `schema`
+description: Inspect, export, and validate the JSON schemas for Hike config and env files.
+---
+
+## Subcommands
+
+| Command | Purpose | Important options / arguments |
+| --- | --- | --- |
+| `hike schema list` | List the available schema types. | No extra options. |
+| `hike schema show` | Print a JSON schema to stdout. | `&lt;config|env&gt;` |
+| `hike schema validate` | Validate a file against one of Hike's schema types. | `&lt;file&gt; --type config|env` |
+| `hike schema export` | Export all supported schemas as JSON files. | `--out PATH` |
+| `hike schema path` | Print the default export path for a schema type. | `&lt;config|env&gt;` |
+
+## Typical workflows
+
+```bash
+hike schema list
+hike schema show config
+hike schema validate --type config hike.config.yaml
+hike schema export --out .schemas
+```
+
+Schema support is especially useful for editor integration and CI validation of
+configuration files.

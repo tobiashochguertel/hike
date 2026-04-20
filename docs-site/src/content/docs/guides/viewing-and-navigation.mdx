@@ -1,0 +1,78 @@
+---
+title: Viewing & Navigation
+description: Understand how Hike opens documents, how the sidebar behaves, and how to move around the interface.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import ScreenshotFigure from '../../../components/ScreenshotFigure.astro';
+import helpShot from '../../../assets/generated/screenshots/hike-help.svg?url';
+import markdownHelpShot from '../../../assets/generated/screenshots/markdown-help.svg?url';
+import paletteShot from '../../../assets/generated/screenshots/command-palette.svg?url';
+
+## Help and discovery
+
+The fastest way to learn Hike from inside the app is to use the built-in help
+screen and command palette.
+
+<ScreenshotFigure
+  src={helpShot}
+  alt="The main Hike help screen."
+  caption="Press F1 while focus is in the command line to see context-aware help."
+/>
+
+<ScreenshotFigure
+  src={markdownHelpShot}
+  alt="Help for the Markdown viewer inside Hike."
+  caption="Help changes with focus, so the Markdown pane exposes its own movement and document commands."
+/>
+
+<ScreenshotFigure
+  src={paletteShot}
+  alt="The Hike command palette."
+  caption="The command palette is another good way to discover actions and their keybindings."
+/>
+
+## Responsive navigation
+
+On narrower terminals Hike can switch to a single-pane layout automatically.
+The practical movement model is:
+
+- <kbd>Ctrl</kbd>+<kbd>N</kbd> jumps to the active sidebar view
+- <kbd>Ctrl</kbd>+<kbd>G</kbd> returns to the Markdown content
+- <kbd>F2</kbd> still toggles navigation visibility
+
+When the terminal grows wide enough again, Hike restores the normal split view.
+
+## Local browser behavior
+
+The local browser now supports two modes:
+
+- **tree** — the original hierarchical directory tree
+- **flat list** — a relative-path list optimized for quick scanning
+
+Use <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> or `m` while the local browser
+has focus to toggle modes.
+
+In flat-list mode:
+
+- selecting a directory changes the local browser root
+- empty directories without visible Markdown descendants are hidden
+- `../` appears when a parent directory is available
+- <kbd>Backspace</kbd> moves to the parent directory directly
+
+## Startup selection
+
+When Hike starts from a directory, it can auto-open a preferred file and select
+it in the sidebar. The default order is:
+
+1. `INDEX.md`
+2. `README.md`
+3. the first visible Markdown file in local-browser order
+
+You can override that order in the configuration file. See
+[Configuration → File Browser & Startup](../configuration/file-browser-and-startup/).
+
+<Aside type="tip">
+  If you mostly think in terms of shell commands, start with
+  [CLI Overview](../cli/) and then come back here for the in-app behavior.
+</Aside>

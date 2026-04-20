@@ -1,0 +1,55 @@
+---
+title: Hike Overview
+description: A guided starting point for the Hike terminal Markdown browser and this fork's documentation.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import ScreenshotFigure from '../../components/ScreenshotFigure.astro';
+import hikeOverview from '../../assets/generated/screenshots/hike-overview.svg?url';
+
+Hike is a terminal-first Markdown browser with a local file browser, forge
+shortcuts, a responsive TUI, and a command-driven workflow. This repository is
+the Tobias Hochguertel fork of the original
+[davep/hike](https://github.com/davep/hike) project.
+
+<ScreenshotFigure
+  src={hikeOverview}
+  alt="The Hike TUI showing the fork's current interface."
+  caption="The current fork keeps the Markdown viewer, command line, and sidebar tightly integrated."
+/>
+
+## What this docs site covers
+
+This site is organized around the workflows people actually need:
+
+- [Getting Started](./guides/getting-started/) for installation and first commands
+- [Viewing & Navigation](./guides/viewing-and-navigation/) for the TUI interaction model
+- [CLI Reference](./cli/) for the external Typer command tree
+- [In-App Command Line](./commands/) for the command line inside the TUI
+- [Configuration](./configuration/) for YAML, env files, schemas, and UI behavior
+- [Project pages](./license/) for licensing and [release history](./changelog/)
+
+## Why this fork is different
+
+Compared with upstream, this fork focuses on:
+
+- a typed Typer CLI with `open`, `config`, `schema`, `env`, `bindings`, and `themes`
+- YAML configuration plus `.env` and schema workflows
+- a configurable local browser with tree and flat-list modes
+- responsive navigation behavior on narrow terminals
+- keybinding sets and richer startup behavior
+
+## Quick orientation
+
+| Start here if you want to… | Read this next |
+| --- | --- |
+| install or update Hike | [Getting Started](./guides/getting-started/) |
+| understand `hike open` | [CLI Overview](./cli/) then [open](./cli/open/) |
+| learn how the sidebar and startup selection work | [Viewing & Navigation](./guides/viewing-and-navigation/) |
+| customize startup, keybindings, or layout | [Configuration Overview](./configuration/) |
+| inspect the in-app command language | [In-App Command Line](./commands/) |
+
+<Aside type="tip">
+  The existing repository command `make docs` now builds this Astro/Starlight
+  site and refreshes the generated Textual screenshots before building.
+</Aside>

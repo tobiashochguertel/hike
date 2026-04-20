@@ -1,8 +1,8 @@
-"""Checks for the documentation screenshot harness."""
+"""Checks for the documentation screenshot harness and Astro docs site."""
 
 ##############################################################################
 # Python imports.
-import re
+import json
 from pathlib import Path
 from runpy import run_path
 
@@ -12,7 +12,8 @@ from hike.startup import OpenOptions
 
 ##############################################################################
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_DOCS_SOURCE = _REPO_ROOT / "docs" / "source"
+_DOCS_SITE = _REPO_ROOT / "docs-site"
+_DOCS_CONTENT = _DOCS_SITE / "src" / "content" / "docs"
 
 
 ##############################################################################
@@ -33,53 +34,75 @@ def test_basic_app_uses_explicit_runtime_context() -> None:
 
 
 ##############################################################################
-def test_all_executed_bash_blocks_render_as_ansi() -> None:
-    """Executable bash blocks should opt into ANSI rendering on the docs site."""
-    for path in _DOCS_SOURCE.rglob("*.md"):
+def test_docs_asset_renderer_defines_expected_screenshots() -> None:
+    """The Astro docs asset renderer should keep the expected screenshot set."""
+    module_globals = run_path(str(_DOCS_SITE / "scripts" / "render_docs_assets.py"))
+    screenshot_specs = module_globals["SCREENSHOT_SPECS"]
+
+    assert len(screenshot_specs) == 8
+    assert {spec.slug for spec in screenshot_specs} == {
+        "hike-overview",
+        "hike-help",
+        "markdown-help",
+        "command-palette",
+        "commands-enter-file",
+        "commands-enter-url",
+        "commands-enter-directory",
+        "commands-browse-file",
+    }
+
+
+##############################################################################
+def test_docs_asset_renderer_restores_screenshot_config(tmp_path: Path) -> None:
+    """Rendering docs assets should not persist config changes back to the repo."""
+    module_globals = run_path(str(_DOCS_SITE / "scripts" / "render_docs_assets.py"))
+    render_screenshots = module_globals["render_screenshots"]
+    screenshot_config = _REPO_ROOT / "docs" / "screenshots" / "config.yaml"
+    before = screenshot_config.read_bytes()
+
+    render_screenshots(tmp_path)
+
+    assert screenshot_config.read_bytes() == before
+
+
+##############################################################################
+def test_docs_site_uses_astro_starlight_and_base_path() -> None:
+    """The docs site should target Astro/Starlight on the GitHub Pages subpath."""
+    package = json.loads((_DOCS_SITE / "package.json").read_text(encoding="utf-8"))
+    astro_config = (_DOCS_SITE / "astro.config.mjs").read_text(encoding="utf-8")
+
+    assert package["dependencies"]["astro"].startswith("^6.1.")
+    assert "@astrojs/starlight" in package["dependencies"]
+    assert "base: '/hike'" in astro_config
+    assert "Start Here" in astro_config
+    assert "CLI Reference" in astro_config
+    assert "Configuration" in astro_config
+
+
+##############################################################################
+def test_docs_content_no_longer_uses_mkdocs_exec_or_textual_fences() -> None:
+    """The Starlight content should not depend on MkDocs-only fenced extensions."""
+    for path in _DOCS_CONTENT.rglob("*.mdx"):
         contents = path.read_text(encoding="utf-8")
-        for match in re.finditer(
-            r'^```bash exec="on".*$', contents, flags=re.MULTILINE
-        ):
-            assert 'result="ansi"' in match.group(0), (
-                f'Executable bash block in {path.name} must declare result="ansi"'
-            )
-            if "width=" in match.group(0):
-                assert re.search(r'width="\d+"', match.group(0)), (
-                    f"Executable bash block in {path.name} must quote width="
-                )
-
-
-##############################################################################
-def test_command_docs_do_not_use_alias_admonitions() -> None:
-    """Alias metadata should stay inline instead of rendering weak admonitions."""
-    contents = (_DOCS_SOURCE / "commands.md").read_text(encoding="utf-8")
-
-    assert "!!! alias" not in contents
-    assert "!!! aliases" not in contents
-
-
-##############################################################################
-def test_configuration_nav_includes_split_guides() -> None:
-    """The docs nav should expose the focused configuration sub-pages."""
-    mkdocs = (_REPO_ROOT / "mkdocs.yml").read_text(encoding="utf-8")
-
-    for entry in (
-        '"Overview": configuration.md',
-        '"Files, Environment & Schemas": configuration-files-and-environment.md',
-        '"Keybindings": configuration-keybindings.md',
-        '"File Browser & Startup": configuration-file-browser-and-startup.md',
-        '"UI, Layout & Content": configuration-ui-and-content.md',
-    ):
-        assert entry in mkdocs
+        assert '```bash exec="on"' not in contents, path.name
+        assert "```{.textual" not in contents, path.name
 
 
 ##############################################################################
 def test_getting_started_installs_from_fork_main() -> None:
-    """The getting started page should install the fork from main."""
-    contents = (_DOCS_SOURCE / "index.md").read_text(encoding="utf-8")
+    """The getting started guide should install the fork from main."""
+    contents = (_DOCS_CONTENT / "guides" / "getting-started.mdx").read_text(
+        encoding="utf-8"
+    )
 
     assert "mise use -g python@3.13 uv@latest" in contents
     assert (
         'uv tool install --force "git+https://github.com/tobiashochguertel/hike.git@main"'
         in contents
     )
+
+
+##############################################################################
+def test_mkdocs_config_has_been_removed() -> None:
+    """MkDocs should no longer be the source-of-truth docs site."""
+    assert not (_REPO_ROOT / "mkdocs.yml").exists()

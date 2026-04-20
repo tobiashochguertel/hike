@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-No unreleased changes yet.
+- Migrated the published docs site from MkDocs to an Astro 6.1 / Starlight
+  setup, restructured the docs into grouped sidebar sections, and replaced the
+  old exec-fence/Textual-fence pipeline with a dedicated docs asset renderer for
+  generated screenshots.
 
 ## v1.5.0
 

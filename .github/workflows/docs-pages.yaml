@@ -35,25 +35,31 @@ jobs:
         with:
           version: "latest"
 
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Set up Pages
         uses: actions/configure-pages@v6
         with:
           enablement: true
 
-      - name: Install Dependencies
+      - name: Install Python dependencies
         run: uv sync --group dev
+
+      - name: Install docs-site dependencies
+        run: bun install --cwd docs-site --frozen-lockfile
 
       - name: Validate screenshot harness
         run: uv run pytest tests/unit/test_docs_screenshots.py -q
 
       - name: Build documentation
-        run: uv run mkdocs build --strict
+        run: make docs
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v5
         with:
-          path: site
+          path: docs-site/dist
 
   deploy-pages:
     name: Deploy Pages

@@ -1,0 +1,75 @@
+---
+title: File Browser & Startup
+description: Control where Hike starts, how it chooses the first file, and how local discovery behaves.
+---
+
+## Local browser root
+
+When you run `hike open` without an explicit target, Hike starts from the
+current working directory by default. To change that:
+
+```yaml
+local_start_location: ~/notes/docs
+```
+
+## Startup auto-open
+
+```yaml
+startup_auto_open: true
+startup_auto_open_patterns:
+  - INDEX.md
+  - README.md
+  - getting-started*.md
+```
+
+Patterns are checked in order. Plain filenames match a file's basename.
+Patterns containing a slash match paths relative to the local browser root.
+
+To keep startup in the sidebar instead of auto-opening a document:
+
+```yaml
+startup_auto_open: false
+```
+
+## Discovery defaults
+
+```yaml
+local_use_ignore_files: true
+local_show_hidden: false
+local_exclude_patterns:
+  - generated/
+  - node_modules/
+```
+
+At launch time, the matching CLI flags are:
+
+- `--ignore` / `--no-ignore`
+- `--hidden` / `--no-hidden`
+- `--exclude`
+- `--root`
+
+## Browser mode
+
+```yaml
+local_browser_view_mode: flat-list
+```
+
+or:
+
+```yaml
+local_browser_view_mode: tree
+```
+
+Flat-list mode shows relative paths, hides empty directories that do not lead
+to visible Markdown, and supports parent navigation through `../` and
+<kbd>Backspace</kbd>.
+
+## Forge fallback branches
+
+```yaml
+main_branches:
+  - main
+  - master
+  - staging
+  - production
+```

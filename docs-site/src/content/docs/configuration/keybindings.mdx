@@ -1,0 +1,60 @@
+---
+title: Keybindings
+description: Select a named keybinding set or override individual commands.
+---
+
+## Built-in binding sets
+
+Hike currently ships two built-in sets:
+
+- `default` — keeps the original Hike layout
+- `mnemonic` — moves toward more mnemonic, non-function-key defaults
+
+You can inspect them with:
+
+```bash
+hike bindings sets
+```
+
+## Bindable commands
+
+```bash
+hike bindings list
+```
+
+## Selecting a set
+
+```yaml
+binding_set: default
+```
+
+or:
+
+```yaml
+binding_set: mnemonic
+```
+
+## Defining your own set
+
+```yaml
+binding_set: work
+binding_sets:
+  work:
+    ToggleNavigation: ctrl+shift+n
+    Edit: ctrl+e
+    Quit: ctrl+q
+```
+
+## One-off overrides
+
+```yaml
+bindings:
+  BookmarkLocation: f6
+  JumpToBookmarks: shift+f6
+```
+
+Or from the CLI:
+
+```bash
+hike config set bindings.BookmarkLocation f6
+```
