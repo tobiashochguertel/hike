@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added a GitHub Pages workflow for this fork, switched docs/site metadata to the
+  fork URLs, and made the MkDocs screenshot harness explicit and reproducible via
+  a docs-specific runtime configuration and validation test.
 - Added `.gitignore` and `.ignore` support to the local file browser.
 - Added CLI options for controlling local browser discovery, including root,
   hidden-file, ignore and exclude-glob handling.

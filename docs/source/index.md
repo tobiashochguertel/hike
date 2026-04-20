@@ -68,7 +68,7 @@ x install hike
 Once you've installed Hike using one of the [above methods](#installation),
 you can run the application using the `hike` command.
 
-### CLI commands
+### CLI commands { #command-line-options }
 
 Hike now exposes a structured CLI. The most useful entry points are:
 
@@ -101,28 +101,28 @@ Prints a summary of Hike's license.
 hike license
 ```
 
-#### `open --navigation`
+#### `open --navigation` { #open-navigation }
 
 Starts Hike with the navigation panel visible; this overrides and modifies
 the saved state of the navigation panel.
 
-#### `open --no-navigation`
+#### `open --no-navigation` { #open-no-navigation }
 
 Starts Hike with the navigation panel hidden; this overrides and modifies
 the saved state of the navigation panel.
 
-#### `open -t`, `open --theme`
+#### `open -t`, `open --theme` { #open-theme }
 
 Sets Hike's theme; this overrides and changes any previous theme choice made
 [via the user interface](configuration.md#theme).
 
-To see a list of available themes use `?` as the theme name:
+To see a list of available themes use the dedicated themes command:
 
 ```sh
-hike open --theme=?
+hike themes list
 ```
 ```bash exec="on" result="text"
-hike open --theme=?
+hike themes list
 ```
 
 #### `open --binding-set`
@@ -274,14 +274,12 @@ palette (by default you can call it with <kbd>ctrl</kbd>+<kbd>p</kbd> or
 ## Questions and feedback
 
 If you have any questions about Hike, or you have ideas for how it might be
-improved, do please feel free to [visit the discussion
-area](https://github.com/davep/hike/discussions) and [ask your
-question](https://github.com/davep/hike/discussions/categories/q-a) or
-[suggest an
-improvement](https://github.com/davep/hike/discussions/categories/ideas).
+improved in this fork, please [open an
+issue](https://github.com/tobiashochguertel/hike/issues) on GitHub.
 
-When doing so, please do search past discussions and also [issues current
-and previous](https://github.com/davep/hike/issues) to make sure I've not
+When doing so, please do search [issues current
+and previous](https://github.com/tobiashochguertel/hike/issues) to make sure
+I've not
 already dealt with this, or don't have your proposed change already flagged
 as something to do.
 

@@ -60,12 +60,12 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://hike.davep.dev/"
-Repository = "https://github.com/davep/hike"
-Documentation = "https://hike.davep.dev/"
-Source = "https://github.com/davep/hike"
-Issues = "https://github.com/davep/hike/issues"
-Discussions = "https://github.com/davep/hike/discussions"
+Homepage = "https://tobiashochguertel.github.io/hike/"
+Repository = "https://github.com/tobiashochguertel/hike"
+Documentation = "https://tobiashochguertel.github.io/hike/"
+Source = "https://github.com/tobiashochguertel/hike"
+Issues = "https://github.com/tobiashochguertel/hike/issues"
+Upstream = "https://github.com/davep/hike"
 
 [project.scripts]
 hike = "hike.__main__:main"

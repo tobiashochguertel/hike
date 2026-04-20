@@ -312,8 +312,8 @@ You can show or hide the navigation panel. This can be done in Hike with the
 
 !!! tip
 
-    You can force navigation [visible](index.md#-navigation) or
-    [hidden](index.md#-no-navigation) via [the command
+    You can force navigation [visible](index.md#open-navigation) or
+    [hidden](index.md#open-no-navigation) via [the command
     line](index.md#command-line-options).
     Note that this *also* configures the visibility of the navigation panel
     for future runs of Hike.
@@ -413,12 +413,12 @@ Hike has a number of themes available. You can select a theme using the
 by default) command. The available themes include:
 
 ```bash exec="on"
-hike --theme=? | sed 's/^/- /'
+hike themes list
 ```
 
 !!! tip
 
-    You can also [set the theme via the command line](index.md#-t-theme). This can
+    You can also [set the theme via the command line](index.md#open-theme). This can
     be useful if you want to ensure that Hike runs up with a specific theme.
     Note that this *also* configures the theme for future runs of Hike.
 
