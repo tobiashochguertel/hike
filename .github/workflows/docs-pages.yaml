@@ -9,7 +9,7 @@ on:
   pull_request:
   push:
     branches:
-      - feature/all-requested-features
+      - main
   workflow_dispatch:
 
 concurrency:

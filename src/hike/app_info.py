@@ -17,7 +17,9 @@ HELP_ABOUT = """
 [found on GitHub](https://github.com/tobiashochguertel/hike).
 """
 HELP_LICENSE = """
-Hike - A Markdown viewer for the terminal.  \n    Copyright (C) 2025 Dave Pearson
+Hike - A Markdown viewer for the terminal.  \n
+Original project Copyright (C) 2025 Dave Pearson  \n
+Fork-specific changes Copyright (C) 2026 Tobias Hochguertel
 
 This program is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free

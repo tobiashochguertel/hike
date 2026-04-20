@@ -1,3 +1,16 @@
+Fork notice for this repository
+================================
+
+This repository is a fork of Hike, originally created by Dave Pearson:
+https://github.com/davep/hike
+
+Original project Copyright (C) 2025 Dave Pearson.
+Fork-specific changes Copyright (C) 2026 Tobias Hochguertel.
+
+This fork continues to be distributed under the GNU General Public License,
+version 3 or, at your option, any later version. The GPL text below is kept
+verbatim.
+
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 

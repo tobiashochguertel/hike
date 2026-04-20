@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fixed the docs site so executable CLI examples render ANSI-colored terminal
+  output correctly, split the external CLI reference from the in-app command
+  line docs, updated fork-specific install instructions to use `main`, and
+  added explicit fork attribution to the license and package metadata.
 - Added a GitHub Pages workflow for this fork, switched docs/site metadata to the
   fork URLs, and made the MkDocs screenshot harness explicit and reproducible via
   a docs-specific runtime configuration and validation test.
@@ -29,8 +33,7 @@
 - Improved local tree sidebar sizing so deep nested paths can grow the sidebar
   up to the configured percentage-based cap.
 - Added a `Taskfile.yml` workflow for validating, merging feature branches into
-  `feature/all-requested-features`, and reinstalling the host tool from that
-  branch.
+  `main`, and reinstalling the host tool from that branch.
 - Migrated the CLI from ad hoc `argparse` handling to a structured Typer-based
   command tree with `open`, `config`, `schema`, `env`, `bindings`, and `themes`
   commands.

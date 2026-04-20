@@ -3,7 +3,11 @@ name = "hike"
 version = "1.5.0"
 description = "A Markdown browser for the terminal"
 authors = [
-    { name = "Dave Pearson", email = "davep@davep.org" }
+    { name = "Dave Pearson", email = "davep@davep.org" },
+    { name = "Tobias Hochguertel" },
+]
+maintainers = [
+    { name = "Tobias Hochguertel" },
 ]
 dependencies = [
     "textual>=5.3.0",
@@ -85,6 +89,7 @@ dev = [
     "pytest>=8.3.4",
     "mkdocs-material>=9.6.11",
     "markdown-exec>=1.10.3",
+    "pygments-ansi-color>=0.3.0",
     "codespell>=2.4.1",
     "ruff>=0.12.9",
     "libtmux>=0.55.0",
