@@ -12,10 +12,9 @@ APP_VERSION = __version__
 APP_BUILD_INFO = build_info()
 HELP_TITLE = f"{APP_NAME} v{APP_VERSION}"
 HELP_ABOUT = """
-`Hike` is a terminal-based Markdown viewer; it was created
-by and is maintained by [Dave Pearson](https://www.davep.org/); it is
-Free Software and can be [found on
-GitHub](https://github.com/davep/hike).
+`Hike` is a terminal-based Markdown viewer originally created by
+[Dave Pearson](https://www.davep.org/). This fork is Free Software and can be
+[found on GitHub](https://github.com/tobiashochguertel/hike).
 """
 HELP_LICENSE = """
 Hike - A Markdown viewer for the terminal.  \n    Copyright (C) 2025 Dave Pearson

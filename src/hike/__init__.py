@@ -16,7 +16,9 @@ __version__ = version("hike")
 __licence__ = "GPLv3+"
 
 ##############################################################################
-USER_AGENT: Final[str] = f"Hike v{__version__} (https://github.com/davep/hike)"
+USER_AGENT: Final[str] = (
+    f"Hike v{__version__} (https://github.com/tobiashochguertel/hike)"
+)
 """The user agent string for the viewer."""
 
 ### __init__.py ends here

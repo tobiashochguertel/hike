@@ -1,14 +1,21 @@
-from argparse import Namespace
+from pathlib import Path
 
-from hike.data.config import update_configuration
+from hike.data.runtime_context import resolve_runtime_context
 from hike.hike import Hike
+from hike.startup import OpenOptions
 
-# Ensure that Hike's configuration starts out the same way each time.
-with update_configuration() as config:
-    config.navigation_on_right = False
-    config.command_line_on_top = False
-    config.focus_viewer_on_load = False
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_SCREENSHOT_CONFIG = _REPO_ROOT / "docs" / "screenshots" / "config.yaml"
 
-app = Hike(Namespace(theme="textual-mono", navigation=False, command=["README.md"]))
+app = Hike(
+    OpenOptions(
+        target=str((_REPO_ROOT / "README.md").resolve()),
+        navigation=False,
+        runtime_context=resolve_runtime_context(
+            cwd=_REPO_ROOT,
+            config_path=_SCREENSHOT_CONFIG,
+        ),
+    )
+)
 if __name__ == "__main__":
     app.run()

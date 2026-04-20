@@ -1,13 +1,13 @@
 # Hike
 
-[![Hike](https://raw.githubusercontent.com/davep/hike/refs/heads/main/.images/hike-social-banner.png)](https://hike.davep.dev/)
+[![Hike](https://raw.githubusercontent.com/davep/hike/refs/heads/main/.images/hike-social-banner.png)](https://tobiashochguertel.github.io/hike/)
 
-[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/davep/hike/style-lint-and-test.yaml)](https://github.com/davep/hike/actions)
-[![GitHub commits since latest release](https://img.shields.io/github/commits-since/davep/hike/latest)](https://github.com/davep/hike/commits/main/)
-[![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/davep/hike)](https://github.com/davep/hike/issues)
-[![GitHub Release Date](https://img.shields.io/github/release-date/davep/hike)](https://github.com/davep/hike/releases)
-[![PyPI - License](https://img.shields.io/pypi/l/hike)](https://github.com/davep/hike/blob/main/LICENSE)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/hike)](https://github.com/davep/hike/blob/main/pyproject.toml)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/tobiashochguertel/hike/style-lint-and-test.yaml)](https://github.com/tobiashochguertel/hike/actions)
+[![GitHub commits since latest release](https://img.shields.io/github/commits-since/tobiashochguertel/hike/latest)](https://github.com/tobiashochguertel/hike/commits/main/)
+[![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/tobiashochguertel/hike)](https://github.com/tobiashochguertel/hike/issues)
+[![GitHub Release Date](https://img.shields.io/github/release-date/tobiashochguertel/hike)](https://github.com/tobiashochguertel/hike/releases)
+[![PyPI - License](https://img.shields.io/pypi/l/hike)](https://github.com/tobiashochguertel/hike/blob/main/LICENSE)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/hike)](https://github.com/tobiashochguertel/hike/blob/main/pyproject.toml)
 [![PyPI - Version](https://img.shields.io/pypi/v/hike)](https://pypi.org/project/hike/)
 
 ## Introduction
@@ -136,7 +136,9 @@ browser root to the parent directory; in flat-list mode the first entry also
 becomes `../` when a parent directory is available.
 
 For more information and details on configuring Hike, see [the online
-documentation](https://hike.davep.dev/).
+documentation](https://tobiashochguertel.github.io/hike/). The documentation's
+Textual screenshots are rendered automatically during `make docs` and the
+GitHub Pages workflow.
 
 ## Taskfile workflow
 
@@ -190,7 +192,7 @@ task refresh-all-requested-features SOURCE_BRANCH=feat/local-browser-modes
   Codeberg and Bitbucket.
 - A command palette to make it easy to discover commands and their keys.
 - A rich help screen to make it easy to discover commands and their keys.
-- [Possibly more as time goes on](https://github.com/davep/hike/issues?q=is%3Aissue+is%3Aopen+label%3ATODO).
+- [Possibly more as time goes on](https://github.com/tobiashochguertel/hike/issues?q=is%3Aissue+is%3Aopen+label%3ATODO).
 
 ### Editing
 
@@ -219,13 +221,12 @@ Expanding for the common locations, the files normally created are:
 ## Getting help
 
 If you need help, or have any ideas, please feel free to [raise an
-issue](https://github.com/davep/hike/issues) or [start a
-discussion](https://github.com/davep/hike/discussions).
+issue](https://github.com/tobiashochguertel/hike/issues).
 
 ## TODO
 
 See [the TODO tag in
-issues](https://github.com/davep/hike/issues?q=is%3Aissue+is%3Aopen+label%3ATODO)
+issues](https://github.com/tobiashochguertel/hike/issues?q=is%3Aissue+is%3Aopen+label%3ATODO)
 to see what I'm planning.
 
 [//]: # (README.md ends here)
