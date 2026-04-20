@@ -14,9 +14,25 @@ URL, use the explicit `open` subcommand as well.
     Full help for all of the commands is [available inside Hike itself](index.md#getting-help) by
     pressing <kbd>F1</kbd> while the command line has focus.
 
-## The commands
+## Command overview
 
-### Opening a file
+| Command | Aliases | Area | Purpose |
+| --- | --- | --- | --- |
+| `bookmarks` | `b`, `bm` | Navigation | Jump to bookmarks and open the navigation panel if needed. |
+| `contents` | `c`, `toc` | Navigation | Jump to the current document's table of contents. |
+| `history` | `h` | Navigation | Jump to document history. |
+| `local` | `l` | Navigation | Jump to the local file browser. |
+| `bitbucket` | `bb` | Forges | Open Markdown from Bitbucket. |
+| `codeberg` | `cb` | Forges | Open Markdown from Codeberg. |
+| `github` | `gh` | Forges | Open Markdown from GitHub. |
+| `gitlab` | `gl` | Forges | Open Markdown from GitLab. |
+| `chdir <dir>` | `cd`, `dir`, `ls` | Local files | Change the local browser root. |
+| `changelog` | `cl` | Help | Open Hike's change log. |
+| `help` | `?` | Help | Open the in-app help dialog. |
+| `obsidian` | `obs` | Local files | Jump to the configured Obsidian vault root. |
+| `readme` | — | Help | Open Hike's README. |
+
+## Opening content
 
 There are three different ways to open a file for viewing, from the command
 line; they are:
@@ -49,9 +65,7 @@ and after you get <kbd>Enter</kbd> the dialog will open:
 ```{.textual path="docs/screenshots/basic_app.py" title="Browsing for a file to open" lines=40 columns=120 press="~,/,d,e,v,e,l,o,p,/,p,y,t,h,o,n,/,h,i,k,e,/,d,o,c,s,/,s,o,u,r,c,e,enter"}
 ```
 
-### Navigation panel
-
-There are some commands that interact with the navigation panel. These are:
+## Navigation panel commands
 
 The local browser filters out ignored paths using `.gitignore` and `.ignore`
 files found in the browser root and its ancestors. You can override that
@@ -59,76 +73,43 @@ behavior at startup with `--no-ignore`, `--hidden` and `--exclude`.
 
 #### `bookmarks`
 
-!!! aliases
-
-    `b` `bm`
+**Aliases:** `b`, `bm`
 
 Ensures that the navigation panel is opened and then jumps to the bookmarks.
 
 #### `contents`
 
-!!! aliases
-
-    `c` `toc`
+**Aliases:** `c`, `toc`
 
 Ensures that the navigation panel is opened and then jumps to the Markdown
 document's table of contents.
 
 #### `history`
 
-!!! aliases
-
-    `h`
+**Alias:** `h`
 
 Ensures that the navigation panel is opened and then jumps to the document
 history.
 
 #### `local`
 
-!!! aliases
-
-    `l`
+**Alias:** `l`
 
 Ensures that the navigation panel is opened and then jumps to the local file
 system browser.
 
-### Viewing files on forges
+## Viewing files on forges
 
 Hike supports quickly viewing Markdown documents hosted on popular forges, the available commands are:
 
-#### Forge commands
+| Command | Alias | Host |
+| --- | --- | --- |
+| `bitbucket` | `bb` | [Bitbucket](https://bitbucket.org/) |
+| `codeberg` | `cb` | [Codeberg](https://codeberg.org/) |
+| `github` | `gh` | [GitHub](https://github.com/) |
+| `gitlab` | `gl` | [GitLab](https://gitlab.com/) |
 
-##### `bitbucket`
-
-!!! alias
-
-    `bb`
-
-Loads and views a file hosted on [Bitbucket](https://bitbucket.org/).
-
-##### `codeberg`
-
-!!! alias
-
-    `cb`
-
-Loads and views a file hosted on [Codeberg](https://codeberg.org/).
-
-##### `github`
-
-!!! alias
-
-    `gh`
-
-Loads and views a file hosted on [GitHub](https://github.com/).
-
-##### `gitlab`
-
-!!! alias
-
-    `gl`
-
-Loads and views a file hosted on [GitLab](https://gitlab.com/).
+Each command loads and views a Markdown file from the corresponding forge.
 
 #### Specifying the file to view
 
@@ -166,15 +147,13 @@ gh tobiashochguertel/hike:revamp-readme
 
 etc.
 
-### Other commands
+## Other commands
 
 Other useful commands include:
 
 #### `chdir <dir>`
 
-!!! aliases
-
-    `cd`, `dir`, `ls`
+**Aliases:** `cd`, `dir`, `ls`
 
 Where `<dir>` is the path to a directory. This will change the root
 directory of the tree in the local file system browser in the navigation
@@ -182,25 +161,19 @@ panel.
 
 #### `changelog`
 
-!!! aliases
-
-    `cl`
+**Alias:** `cl`
 
 Loads and views Hike's [ChangeLog](changelog.md).
 
 #### `help`
 
-!!! aliases
-
-    `?`
+**Alias:** `?`
 
 Shows Hike's help dialog.
 
 #### `obsidian`
 
-!!! aliases
-
-    `obs`
+**Alias:** `obs`
 
 Changes the root directory of the tree in the local file system browser in
 the navigation panel so that it points to the root directory of your

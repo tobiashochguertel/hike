@@ -2,10 +2,16 @@
 
 ## Unreleased
 
+No unreleased changes yet.
+
+## v1.5.0
+
+**Released: 2026-04-20**
+
 - Fixed the docs site so executable CLI examples render ANSI-colored terminal
-  output correctly, split the external CLI reference from the in-app command
-  line docs, updated fork-specific install instructions to use `main`, and
-  added explicit fork attribution to the license and package metadata.
+  output correctly, completed the external CLI reference, rewrote the
+  configuration docs into focused pages, cleaned up the in-app command docs,
+  and added clearer fork-aware license and changelog pages.
 - Added a GitHub Pages workflow for this fork, switched docs/site metadata to the
   fork URLs, and made the MkDocs screenshot harness explicit and reproducible via
   a docs-specific runtime configuration and validation test.

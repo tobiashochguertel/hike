@@ -35,7 +35,7 @@ def test_basic_app_uses_explicit_runtime_context() -> None:
 ##############################################################################
 def test_all_executed_bash_blocks_render_as_ansi() -> None:
     """Executable bash blocks should opt into ANSI rendering on the docs site."""
-    for path in _DOCS_SOURCE.glob("*.md"):
+    for path in _DOCS_SOURCE.rglob("*.md"):
         contents = path.read_text(encoding="utf-8")
         for match in re.finditer(
             r'^```bash exec="on".*$', contents, flags=re.MULTILINE
@@ -43,6 +43,34 @@ def test_all_executed_bash_blocks_render_as_ansi() -> None:
             assert 'result="ansi"' in match.group(0), (
                 f'Executable bash block in {path.name} must declare result="ansi"'
             )
+            if "width=" in match.group(0):
+                assert re.search(r'width="\d+"', match.group(0)), (
+                    f"Executable bash block in {path.name} must quote width="
+                )
+
+
+##############################################################################
+def test_command_docs_do_not_use_alias_admonitions() -> None:
+    """Alias metadata should stay inline instead of rendering weak admonitions."""
+    contents = (_DOCS_SOURCE / "commands.md").read_text(encoding="utf-8")
+
+    assert "!!! alias" not in contents
+    assert "!!! aliases" not in contents
+
+
+##############################################################################
+def test_configuration_nav_includes_split_guides() -> None:
+    """The docs nav should expose the focused configuration sub-pages."""
+    mkdocs = (_REPO_ROOT / "mkdocs.yml").read_text(encoding="utf-8")
+
+    for entry in (
+        '"Overview": configuration.md',
+        '"Files, Environment & Schemas": configuration-files-and-environment.md',
+        '"Keybindings": configuration-keybindings.md',
+        '"File Browser & Startup": configuration-file-browser-and-startup.md',
+        '"UI, Layout & Content": configuration-ui-and-content.md',
+    ):
+        assert entry in mkdocs
 
 
 ##############################################################################
