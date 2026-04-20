@@ -3,10 +3,10 @@
 ##############################################################################
 # Python imports.
 from dataclasses import dataclass, field
-from enum import StrEnum
 
 ##############################################################################
 # Local imports.
+from ..compat import StrEnum
 from .config import Configuration
 
 

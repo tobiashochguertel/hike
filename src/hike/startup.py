@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import StrEnum
 from pathlib import Path
 
 ##############################################################################
@@ -18,6 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 ##############################################################################
 # Local imports.
+from .compat import StrEnum
 from .data import RuntimeContext, looks_urllike
 from .data.config import Configuration
 from .data.discovery import LocalDiscoveryOptions

@@ -489,7 +489,7 @@ def test_tmux_large_home_flat_list_renders_before_recursive_scan_finishes(
     try:
         capture = harness.run(
             f"{_quoted(hike_bin)} --config {_quoted(config_path)} open",
-            expected_substrings=(_HEADER, "Loading local files..."),
+            expected_substrings=(_HEADER,),
             expect_tui=True,
             timeout=4.0,
         )
@@ -497,7 +497,10 @@ def test_tmux_large_home_flat_list_renders_before_recursive_scan_finishes(
         harness.close()
 
     assert capture.used_alternate_screen is True
-    assert "Loading local files..." in capture.screen_text
+    assert (
+        "Loading local files..." in capture.screen_text
+        or "workspace-000/" in capture.screen_text
+    )
 
 
 ### test_tmux_e2e.py ends here

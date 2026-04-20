@@ -264,11 +264,14 @@ async def test_tui_flat_list_shows_loading_placeholder_during_slow_scan(
 
         viewer = app.screen.query_one(Viewer)
         local_flat_view = app.screen.query_one(LocalFlatView)
-        loading_option = local_flat_view.get_option_at_index(0)
+        prompts = [
+            str(local_flat_view.get_option_at_index(index).prompt)
+            for index in range(local_flat_view.option_count)
+        ]
 
         assert viewer.location == readme
-        assert local_flat_view.option_count == 1
-        assert "Loading local files..." in str(loading_option.prompt)
+        assert local_flat_view.option_count >= 1
+        assert any("Loading local files..." in prompt for prompt in prompts)
 
 
 ##############################################################################

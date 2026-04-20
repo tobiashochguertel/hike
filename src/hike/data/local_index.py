@@ -9,7 +9,6 @@ from concurrent.futures import ThreadPoolExecutor
 ##############################################################################
 # Python imports.
 from dataclasses import dataclass
-from enum import StrEnum
 from fnmatch import fnmatch
 from os import cpu_count
 from pathlib import Path
@@ -21,6 +20,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 ##############################################################################
 # Local imports.
+from ..compat import StrEnum
 from .discovery import LocalDiscoveryOptions, should_include_path
 
 

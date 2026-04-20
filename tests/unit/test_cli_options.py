@@ -2,6 +2,7 @@
 
 ##############################################################################
 # Python imports.
+import re
 from pathlib import Path
 from typing import Any, cast
 
@@ -22,6 +23,13 @@ from hike.startup import OpenOptions
 
 ##############################################################################
 _RUNNER = CliRunner()
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+##############################################################################
+def _plain_output(output: str) -> str:
+    """Strip ANSI escape sequences from CLI output for stable assertions."""
+    return _ANSI_RE.sub("", output)
 
 
 ##############################################################################
@@ -111,7 +119,7 @@ def test_open_command_rejects_missing_root_directory(
     result = _RUNNER.invoke(app, ["open", "--root", str(tmp_path / "missing")])
 
     assert result.exit_code != 0
-    assert "--root must point to an existing directory" in result.output
+    assert "--root must point to an existing directory" in _plain_output(result.output)
 
 
 ##############################################################################
@@ -228,11 +236,12 @@ def test_root_cli_help_lists_commands_without_launching_tui(
     captured = _install_open_spy(monkeypatch)
 
     result = _RUNNER.invoke(app, ["--help"])
+    plain_output = _plain_output(result.output)
 
     assert result.exit_code == 0
-    assert "Usage: hike [OPTIONS] COMMAND [ARGS]..." in result.output
-    assert "open" in result.output
-    assert "config" in result.output
+    assert "Usage: hike [OPTIONS] COMMAND [ARGS]..." in plain_output
+    assert "open" in plain_output
+    assert "config" in plain_output
     assert "ran" not in captured
 
 
