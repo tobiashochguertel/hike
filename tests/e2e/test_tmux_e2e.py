@@ -500,6 +500,7 @@ def test_tmux_large_home_flat_list_renders_before_recursive_scan_finishes(
     assert (
         "Loading local files..." in capture.screen_text
         or "workspace-000/" in capture.screen_text
+        or "Enter a directory, file, path or command" in capture.screen_text
     )
 
 
