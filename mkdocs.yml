@@ -8,7 +8,12 @@ nav:
   - "Getting Started": index.md
   - "CLI Reference": cli.md
   - "In-App Command Line": commands.md
-  - "Configuration": configuration.md
+  - "Configuration":
+      - "Overview": configuration.md
+      - "Files, Environment & Schemas": configuration-files-and-environment.md
+      - "Keybindings": configuration-keybindings.md
+      - "File Browser & Startup": configuration-file-browser-and-startup.md
+      - "UI, Layout & Content": configuration-ui-and-content.md
   - "License": license.md
   - "Change Log": changelog.md
 

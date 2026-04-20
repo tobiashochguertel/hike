@@ -1,13 +1,14 @@
 # CLI Reference
 
-This page documents Hike's external Typer-based CLI. For the in-app command
-line inside the TUI, see [In-App Command Line](commands.md).
+This page documents Hike's external Typer CLI. For the command line that lives
+inside the TUI itself, see [In-App Command Line](commands.md).
 
 ## `hike`
 
-The root command exposes global options and the main command groups.
+The root command exposes shared runtime options plus the top-level command
+groups.
 
-```bash exec="on" result="ansi" width=120
+```bash exec="on" result="ansi" width="120"
 hike --help
 ```
 
@@ -17,15 +18,17 @@ hike --help
 | --- | --- |
 | `--config PATH` | Use an alternate configuration file for this invocation. |
 | `--env-file PATH` | Use an alternate `.env` file for runtime settings. |
-| `--version` | Print version/build metadata and exit. |
-| `--license`, `--licence` | Print license and fork attribution information and exit. |
+| `--version` | Print version and build metadata, then exit. |
+| `--license`, `--licence` | Print fork-aware license information, then exit. |
+| `--install-completion` | Install shell completion for the current shell. |
+| `--show-completion` | Print the completion script for the current shell. |
 | `--help` | Show root help. |
 
 ### Root commands
 
 | Command | Purpose |
 | --- | --- |
-| `hike license` | Show the fork-aware license summary. |
+| `hike license` | Show Hike's full license text in the terminal. |
 | `hike open` | Launch the TUI against a file, directory, URL, or startup command. |
 | `hike config` | Manage configuration files and values. |
 | `hike schema` | Inspect and export schemas for config and env files. |
@@ -33,11 +36,19 @@ hike --help
 | `hike bindings` | Inspect configurable keybindings and keybinding sets. |
 | `hike themes` | List available Textual themes. |
 
-## Hike open
+### Fast metadata commands
+
+The root metadata flags do **not** launch the TUI:
+
+- `hike --version`
+- `hike --license`
+- `hike license`
+
+## `hike open`
 
 `open` is the main TUI launcher and accepts the most startup options.
 
-```bash exec="on" result="ansi" width=120
+```bash exec="on" result="ansi" width="120"
 hike open --help
 ```
 
@@ -51,7 +62,7 @@ hike open --help
 | `hike open https://example.com/file.md` | Open a remote Markdown URL directly. |
 | `hike open --command "gh tobiashochguertel/hike"` | Run an in-app command at startup. |
 
-### Key `open` options
+### Important `open` options
 
 | Option | Purpose |
 | --- | --- |
@@ -64,11 +75,20 @@ hike open --help
 | `--hidden`, `--no-hidden` | Show or hide dotfiles in the local browser. |
 | `--exclude TEXT` | Add one or more exclude globs. |
 
+## `hike license`
+
+The dedicated `license` command prints the full GPL text plus the fork-specific
+attribution summary. Use it when you want the actual license body, not just the
+short root metadata flag.
+
+See also the separate [License](license.md) page for a short web-friendly
+summary and links back to the repository license file.
+
 ## `hike config`
 
 The configuration command group manages the active YAML configuration file.
 
-```bash exec="on" result="ansi" width=120
+```bash exec="on" result="ansi" width="120"
 hike config --help
 ```
 
@@ -76,19 +96,19 @@ hike config --help
 
 | Command | Purpose | Important options / arguments |
 | --- | --- | --- |
-| `hike config init` | Create a commented default config file. | `--force` overwrites after creating a backup. |
-| `hike config show` | Print the current config. | `--format yaml|json` |
-| `hike config get` | Read one config value. | `<property-path>` |
-| `hike config set` | Update one config value. | `<property-path> <value>` |
-| `hike config unset` | Remove one config value. | `<property-path>` |
-| `hike config validate` | Validate the active config file. | No extra options. |
-| `hike config path` | Print the effective config path. | No extra options. |
+| `hike config init` | Create a commented default configuration file. | `--force` overwrites after creating a backup. |
+| `hike config show` | Display the current configuration. | `--format yaml|json` |
+| `hike config get` | Read a single configuration property. | `<property-path>` |
+| `hike config set` | Set a configuration property. | `<property-path> <value>` |
+| `hike config unset` | Unset a configuration property. | `<property-path>` |
+| `hike config validate` | Validate the active configuration file. | No extra options. |
+| `hike config path` | Print the effective configuration file path. | No extra options. |
 
 ## `hike schema`
 
 The schema command group works with JSON schemas for config and env files.
 
-```bash exec="on" result="ansi" width=120
+```bash exec="on" result="ansi" width="120"
 hike schema --help
 ```
 
@@ -96,18 +116,18 @@ hike schema --help
 
 | Command | Purpose | Important options / arguments |
 | --- | --- | --- |
-| `hike schema list` | List supported schema types. | No extra options. |
-| `hike schema show` | Print a schema to stdout. | `<config|env>` |
-| `hike schema validate` | Validate a file against a schema type. | `<file> --type config|env` |
-| `hike schema export` | Write schema files to disk. | `--out PATH` |
-| `hike schema path` | Print the default export path. | `<config|env>` |
+| `hike schema list` | List the available schema types. | No extra options. |
+| `hike schema show` | Print a JSON schema to stdout. | `<config|env>` |
+| `hike schema validate` | Validate a file against one of Hike's schema types. | `<file> --type config|env` |
+| `hike schema export` | Export all supported schemas as JSON files. | `--out PATH` |
+| `hike schema path` | Print the default export path for a schema type. | `<config|env>` |
 
 ## `hike env`
 
 The env command group manages the optional `.env` file used for runtime
 overrides.
 
-```bash exec="on" result="ansi" width=120
+```bash exec="on" result="ansi" width="120"
 hike env --help
 ```
 
@@ -115,21 +135,21 @@ hike env --help
 
 | Command | Purpose | Important options / arguments |
 | --- | --- | --- |
-| `hike env init` | Create a commented `.env` file. | `--force`, `--example` |
-| `hike env show` | Print the current env file contents. | `--reveal` to show raw values |
+| `hike env init` | Create a commented environment file. | `--force`, `--example` |
+| `hike env show` | Display the current environment file contents. | `--reveal` to show raw values |
 | `hike env list` | List supported environment variables. | No extra options. |
-| `hike env get` | Read one environment variable. | `<VARIABLE>` |
-| `hike env set` | Update one environment variable. | `<VARIABLE> <VALUE>` |
-| `hike env unset` | Remove one environment variable. | `<VARIABLE>` |
-| `hike env validate` | Validate the current env file. | No extra options. |
-| `hike env path` | Print the effective env-file path. | No extra options. |
+| `hike env get` | Get a value from the environment file. | `<VARIABLE>` |
+| `hike env set` | Set a value in the environment file. | `<VARIABLE> <VALUE>` |
+| `hike env unset` | Unset a value in the environment file. | `<VARIABLE>` |
+| `hike env validate` | Validate the current environment file. | No extra options. |
+| `hike env path` | Print the effective environment-file path. | No extra options. |
 
 ## `hike bindings`
 
 The bindings command group shows configurable commands and named keybinding
 sets.
 
-```bash exec="on" result="ansi" width=120
+```bash exec="on" result="ansi" width="120"
 hike bindings --help
 ```
 
@@ -137,14 +157,14 @@ hike bindings --help
 
 | Command | Purpose | Important options / arguments |
 | --- | --- | --- |
-| `hike bindings list` | List commands with configurable bindings. | No extra options. |
-| `hike bindings sets` | List built-in and custom binding sets. | No extra options. |
+| `hike bindings list` | List commands that support keybinding overrides. | No extra options. |
+| `hike bindings sets` | List the built-in and custom keybinding sets. | No extra options. |
 
 ## `hike themes`
 
 The themes command group prints the available Textual themes.
 
-```bash exec="on" result="ansi" width=120
+```bash exec="on" result="ansi" width="120"
 hike themes --help
 ```
 
@@ -152,6 +172,6 @@ hike themes --help
 
 | Command | Purpose | Important options / arguments |
 | --- | --- | --- |
-| `hike themes list` | Print the available themes. | No extra options. |
+| `hike themes list` | List available themes. | No extra options. |
 
 [//]: # (cli.md ends here)
