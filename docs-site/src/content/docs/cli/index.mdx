@@ -1,0 +1,47 @@
+---
+title: CLI Overview
+description: The external Typer CLI for Hike and how the command tree is organized.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The external `hike` command is a Typer-based CLI. It exposes runtime
+configuration flags, metadata commands, and the TUI launcher.
+
+## Root options
+
+| Option | Purpose |
+| --- | --- |
+| `--config PATH` | Use an alternate configuration file for this invocation. |
+| `--env-file PATH` | Use an alternate `.env` file for runtime settings. |
+| `--version` | Print version and build metadata, then exit. |
+| `--license`, `--licence` | Print license information, then exit. |
+| `--install-completion` | Install completion for the current shell. |
+| `--show-completion` | Print the completion script for the current shell. |
+
+## Root commands
+
+| Command | Purpose |
+| --- | --- |
+| `hike open` | Launch the TUI against a file, directory, URL, or startup command. |
+| `hike config` | Manage the YAML configuration file. |
+| `hike schema` | Inspect and export config and env schemas. |
+| `hike env` | Manage runtime environment values. |
+| `hike bindings` | Inspect configurable keybindings and named binding sets. |
+| `hike themes` | List available Textual themes. |
+| `hike license` | Print the full license text. |
+
+## Reading the CLI docs
+
+The detailed command pages are split by responsibility:
+
+- [`open`](./open/) for TUI startup
+- [`config`](./config/) for persistent YAML settings
+- [`schema`](./schema/) for JSON schema workflows
+- [`env`](./env/) for `.env` management
+- [`bindings & themes`](./bindings-and-themes/) for lookups and customization
+
+<Aside type="tip">
+  The command line *inside* the TUI is documented separately on
+  [In-App Command Line](../../commands/).
+</Aside>

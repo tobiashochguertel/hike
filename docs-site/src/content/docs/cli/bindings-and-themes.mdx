@@ -1,0 +1,42 @@
+---
+title: CLI `bindings` and `themes`
+description: Inspect built-in keybinding sets, bindable commands, and available Textual themes.
+---
+
+## `hike bindings`
+
+| Command | Purpose |
+| --- | --- |
+| `hike bindings list` | List commands that support keybinding overrides. |
+| `hike bindings sets` | List the built-in and custom keybinding sets. |
+
+Typical usage:
+
+```bash
+hike bindings list
+hike bindings sets
+```
+
+## `hike themes`
+
+| Command | Purpose |
+| --- | --- |
+| `hike themes list` | List available themes. |
+
+Typical usage:
+
+```bash
+hike themes list
+hike open --theme nord README.md
+```
+
+## Metadata commands
+
+These root-level flags are also useful when you want information without
+launching the TUI:
+
+```bash
+hike --version
+hike --license
+hike license
+```

@@ -1,0 +1,51 @@
+---
+title: CLI `open`
+description: Launch the Hike TUI against local files, directories, URLs, or a startup command.
+---
+
+## Startup targets
+
+| Form | Behavior |
+| --- | --- |
+| `hike open` | Start in the configured local browser root and auto-open a preferred document if possible. |
+| `hike open README.md` | Open a local file directly. |
+| `hike open docs/` | Root the local browser at a directory and auto-open from there. |
+| `hike open https://example.com/file.md` | Open a remote Markdown URL directly. |
+| `hike open --command "gh tobiashochguertel/hike"` | Run an in-app command at startup. |
+
+## Important options
+
+| Option | Purpose |
+| --- | --- |
+| `--command`, `-c` | Run an in-app command instead of opening a direct target. |
+| `--navigation`, `--no-navigation` | Force the sidebar visible or hidden at startup. |
+| `--theme`, `-t` | Override the configured theme for this launch. |
+| `--binding-set` | Override the active named keybinding set for this launch. |
+| `--root PATH` | Override the initial local browser root. |
+| `--ignore`, `--no-ignore` | Enable or disable `.gitignore` / `.ignore` filtering. |
+| `--hidden`, `--no-hidden` | Show or hide dotfiles in the local browser. |
+| `--exclude TEXT` | Add one or more exclude globs. |
+
+## Default startup behavior
+
+When Hike starts from a directory, it uses the same startup planner for:
+
+- no explicit target
+- direct directory targets
+- file targets that should also anchor the local browser
+- config-driven startup priorities
+
+By default Hike prefers `INDEX.md`, then `README.md`, then the first visible
+Markdown file in local-browser order.
+
+## Common examples
+
+```bash
+hike open
+hike open .
+hike open README.md
+hike open docs/
+hike open --root ~/notes/docs
+hike open --binding-set mnemonic README.md
+hike open --command "gh tobiashochguertel/hike"
+```

@@ -1,0 +1,91 @@
+---
+title: Getting Started
+description: Install this fork of Hike, launch it, and learn the first commands worth knowing.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+## Recommended install methods
+
+<Steps>
+
+1. Install Python 3.13 and `uv` with [`mise`](https://mise.jdx.dev/) or ensure
+   you already have `uv` available.
+
+2. Install this fork from the `main` branch:
+
+   ```bash
+   uv tool install --force "git+https://github.com/tobiashochguertel/hike.git@main"
+   ```
+
+3. Confirm the CLI is available:
+
+   ```bash
+   hike --version
+   ```
+
+</Steps>
+
+### `mise` + `uv`
+
+```bash
+mise use -g python@3.13 uv@latest
+uv tool install --force "git+https://github.com/tobiashochguertel/hike.git@main"
+```
+
+### Direct `uv`
+
+```bash
+uv tool install --force "git+https://github.com/tobiashochguertel/hike.git@main"
+```
+
+### Alternatives
+
+If you prefer `pipx`:
+
+```bash
+pipx install "git+https://github.com/tobiashochguertel/hike.git@main"
+```
+
+If you are working from source:
+
+```bash
+git clone https://github.com/tobiashochguertel/hike.git
+cd hike
+git switch main
+uv sync --group dev
+uv run hike --help
+```
+
+## First commands
+
+These are the most useful first invocations:
+
+```bash
+hike open
+hike open README.md
+hike open docs/
+hike open https://example.com/README.md
+hike config init
+hike bindings sets
+hike themes list
+hike --version
+```
+
+## What `hike open` does
+
+`hike open` is the main entry point into the TUI:
+
+- with a **file**, Hike opens that file immediately
+- with a **directory**, Hike roots the local browser there and auto-opens a preferred document
+- with a **URL**, Hike loads the remote Markdown document directly
+- with **no target**, Hike starts from the configured local browser root, which is the current working directory by default
+
+By default Hike prefers `INDEX.md`, then `README.md`, then the first visible
+Markdown file in local-browser order.
+
+<Aside type="note">
+  The detailed option reference for `hike open` lives in
+  [CLI → open](../cli/open/). The runtime behavior inside the TUI is covered in
+  [Viewing & Navigation](./viewing-and-navigation/).
+</Aside>

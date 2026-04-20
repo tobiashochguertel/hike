@@ -1,0 +1,42 @@
+---
+title: Configuration Overview
+description: How Hike resolves settings across CLI flags, YAML config files, env files, and schemas.
+---
+
+The current Hike configuration model has three main layers:
+
+1. **CLI runtime overrides** such as `--config` and `--env-file`
+2. **A YAML configuration file** for persistent defaults
+3. **An optional `.env` file plus JSON schemas** for runtime-only values and validation
+
+## Resolution order
+
+The active configuration file is resolved in this order:
+
+1. a path passed with `--config`
+2. the `HIKE_CONFIG_PATH` environment variable
+3. `./hike.config.yaml` in the current working directory, if it exists
+4. `~/.config/hike/config.yaml`
+5. legacy config files such as `~/.config/hike/configuration.json`
+
+The environment file follows the same pattern via `--env-file` and
+`HIKE_ENV_PATH`.
+
+## Read next
+
+- [Files, Environment & Schemas](./files-and-environment/)
+- [Keybindings](./keybindings/)
+- [File Browser & Startup](./file-browser-and-startup/)
+- [UI, Layout & Content](./ui-and-content/)
+
+## A small example
+
+```yaml
+theme: textual-dark
+binding_set: mnemonic
+local_browser_view_mode: flat-list
+startup_auto_open: true
+startup_auto_open_patterns:
+  - INDEX.md
+  - README.md
+```

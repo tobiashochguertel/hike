@@ -1,0 +1,114 @@
+---
+title: In-App Command Line
+description: The command language available inside the Hike TUI.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import ScreenshotFigure from '../../components/ScreenshotFigure.astro';
+import enterFileShot from '../../assets/generated/screenshots/commands-enter-file.svg?url';
+import enterUrlShot from '../../assets/generated/screenshots/commands-enter-url.svg?url';
+import enterDirectoryShot from '../../assets/generated/screenshots/commands-enter-directory.svg?url';
+import browseFileShot from '../../assets/generated/screenshots/commands-browse-file.svg?url';
+
+The command line inside Hike behaves like a focused shell for Markdown-centric
+navigation. It supports history, completion, forge shortcuts, and sidebar
+jumps.
+
+<Aside type="tip">
+  To run one of these commands at startup, use
+  <code>hike open --command "..."</code>.
+</Aside>
+
+## Command overview
+
+| Command | Aliases | Area | Purpose |
+| --- | --- | --- | --- |
+| `bookmarks` | `b`, `bm` | Navigation | Jump to bookmarks and open the navigation panel if needed. |
+| `contents` | `c`, `toc` | Navigation | Jump to the current document's table of contents. |
+| `history` | `h` | Navigation | Jump to document history. |
+| `local` | `l` | Navigation | Jump to the local file browser. |
+| `bitbucket` | `bb` | Forges | Open Markdown from Bitbucket. |
+| `codeberg` | `cb` | Forges | Open Markdown from Codeberg. |
+| `github` | `gh` | Forges | Open Markdown from GitHub. |
+| `gitlab` | `gl` | Forges | Open Markdown from GitLab. |
+| `chdir &lt;dir&gt;` | `cd`, `dir`, `ls` | Local files | Change the local browser root. |
+| `changelog` | `cl` | Help | Open Hike's change log. |
+| `help` | `?` | Help | Open the in-app help dialog. |
+| `obsidian` | `obs` | Local files | Jump to the configured Obsidian vault root. |
+| `readme` | — | Help | Open Hike's README. |
+
+## Opening content
+
+### Open a local file
+
+<ScreenshotFigure
+  src={enterFileShot}
+  alt="Typing a file path into the Hike command line."
+  caption="A local file path opens directly when you press Enter."
+/>
+
+### Open a remote URL
+
+<ScreenshotFigure
+  src={enterUrlShot}
+  alt="Typing a remote URL into the Hike command line."
+  caption="URLs can be entered directly when they point at Markdown content."
+/>
+
+### Start from a directory and browse
+
+<ScreenshotFigure
+  src={enterDirectoryShot}
+  alt="Typing a directory path into the Hike command line."
+  caption="Entering a directory path opens a file picker rooted there."
+/>
+
+<ScreenshotFigure
+  src={browseFileShot}
+  alt="The file browsing dialog opened from the Hike command line."
+  caption="After pressing Enter on a directory path, Hike opens a browsing dialog."
+/>
+
+## Navigation commands
+
+### Sidebar jumps
+
+- `bookmarks` / `b` / `bm`
+- `contents` / `c` / `toc`
+- `history` / `h`
+- `local` / `l`
+
+These commands all ensure the navigation panel is open and then move focus to
+the requested sidebar view.
+
+### Forge shortcuts
+
+| Command | Alias | Host |
+| --- | --- | --- |
+| `bitbucket` | `bb` | [Bitbucket](https://bitbucket.org/) |
+| `codeberg` | `cb` | [Codeberg](https://codeberg.org/) |
+| `github` | `gh` | [GitHub](https://github.com/) |
+| `gitlab` | `gl` | [GitLab](https://gitlab.com/) |
+
+Supported formats include:
+
+- `&lt;owner&gt;/&lt;repo&gt;`
+- `&lt;owner&gt;/&lt;repo&gt; &lt;file&gt;`
+- `&lt;owner&gt;/&lt;repo&gt;:&lt;branch&gt;`
+- `&lt;owner&gt;/&lt;repo&gt;:&lt;branch&gt; &lt;file&gt;`
+
+Examples:
+
+```text
+gh tobiashochguertel/hike
+gh tobiashochguertel/hike ChangeLog.md
+gh tobiashochguertel/hike:revamp-readme
+```
+
+## Other useful commands
+
+- `chdir &lt;dir&gt;` / `cd` / `dir` / `ls` — change the local browser root
+- `changelog` / `cl` — open the fork change log
+- `help` / `?` — show the help dialog
+- `obsidian` / `obs` — jump to the configured Obsidian vault root
+- `readme` — open the README

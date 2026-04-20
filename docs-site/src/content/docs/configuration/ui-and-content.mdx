@@ -1,0 +1,68 @@
+---
+title: UI, Layout & Content
+description: Configure themes, responsive layout, sidebar sizing, front matter, and Markdown detection.
+---
+
+## Theme
+
+Choose a default Textual theme:
+
+```yaml
+theme: nord
+```
+
+Inspect the available names with:
+
+```bash
+hike themes list
+```
+
+## Navigation and command line placement
+
+```yaml
+navigation_visible: true
+navigation_on_right: false
+command_line_on_top: false
+```
+
+## Sidebar sizing
+
+```yaml
+sidebar_default_width_percent: 22
+sidebar_min_width: 24
+sidebar_max_width: 80
+sidebar_max_width_percent: 45
+sidebar_auto_fit: true
+```
+
+## Responsive narrow-terminal behavior
+
+```yaml
+responsive_auto_switch_narrow: true
+responsive_narrow_width: 100
+responsive_narrow_mode: content-only
+```
+
+Use `sidebar-only` if you want the navigation panel to take focus first on
+smaller terminals.
+
+## Front matter and quit behavior
+
+```yaml
+show_front_matter: true
+allow_traditional_quit: true
+```
+
+## Markdown detection
+
+```yaml
+markdown_extensions:
+  - .md
+  - .markdown
+  - .mkdn
+
+markdown_content_types:
+  - text/plain
+  - text/markdown
+  - text/x-markdown
+```

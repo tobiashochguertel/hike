@@ -15,3 +15,7 @@ wheels/
 # Docs
 site/
 .screenshot_cache/
+docs-site/.astro/
+docs-site/dist/
+docs-site/node_modules/
+docs-site/src/assets/generated/screenshots/*.svg

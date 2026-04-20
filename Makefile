@@ -2,17 +2,18 @@ app     := hike
 src     := src/
 tests   := tests/
 docs    := docs/
+site    := docs-site/
 run     := uv run
 sync    := uv sync
 build   := uv build
 publish := uv publish --username=__token__ --keyring-provider=subprocess
 test    := $(run) pytest
 python  := $(run) python
+bun     := cd $(site) && bun
 ruff    := $(run) ruff
 lint    := $(ruff) check
 fmt     := $(ruff) format
 mypy    := $(run) mypy
-mkdocs  := $(run) mkdocs
 spell   := $(run) codespell
 
 ##############################################################################
@@ -38,11 +39,13 @@ console:			# Run the textual console
 .PHONY: setup
 setup:				# Set up the repository for development
 	$(sync)
+	$(bun) install
 	$(run) pre-commit install
 
 .PHONY: update
 update:				# Update all dependencies
 	$(sync) --upgrade
+	$(bun) update
 
 .PHONY: resetup
 resetup: realclean		# Recreate the virtual environment from scratch
@@ -72,7 +75,7 @@ test:				# Run the unit tests
 
 .PHONY: spellcheck
 spellcheck:			# Spell check the code
-	$(spell) *.md $(src) $(docs) $(tests)
+	$(spell) *.md $(src) $(docs) $(site)/src/content $(site)/src/components $(site)/src/styles $(site)/scripts $(site)/package.json $(site)/astro.config.mjs $(site)/tsconfig.json $(tests)
 
 .PHONY: checkall
 checkall: spellcheck codestyle lint stricttypecheck test # Check all the things
@@ -82,15 +85,16 @@ checkall: spellcheck codestyle lint stricttypecheck test # Check all the things
 .PHONY: docs
 docs:                           # Generate the system documentation
 	$(test) tests/unit/test_docs_screenshots.py -q
-	$(mkdocs) build --strict
+	$(bun) run check
+	$(bun) run build
 
 .PHONY: rtfm
 rtfm:				# Locally read the library documentation
-	$(mkdocs) serve
+	$(bun) run dev
 
 .PHONY: publishdocs
 publishdocs: clean-docs	# Set up the docs for publishing
-	$(mkdocs) gh-deploy
+	$(bun) run build
 
 ##############################################################################
 # Package/publish.
@@ -133,7 +137,7 @@ clean-packaging:		# Clean the package building files
 
 .PHONY: clean-docs
 clean-docs:			# Clean up the documentation building files
-	rm -rf site .screenshot_cache
+	rm -rf site .screenshot_cache $(site)/dist $(site)/.astro $(site)/src/assets/generated/screenshots
 
 .PHONY: clean
 clean: clean-packaging clean-docs # Clean the build directories

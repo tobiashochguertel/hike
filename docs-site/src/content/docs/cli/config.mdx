@@ -1,0 +1,38 @@
+---
+title: CLI `config`
+description: Manage the persistent YAML configuration file that controls Hike defaults.
+---
+
+## Subcommands
+
+| Command | Purpose | Important options / arguments |
+| --- | --- | --- |
+| `hike config init` | Create a commented default configuration file. | `--force` overwrites after creating a backup. |
+| `hike config show` | Display the current configuration. | `--format yaml|json` |
+| `hike config get` | Read a single configuration property. | `&lt;property-path&gt;` |
+| `hike config set` | Set a configuration property. | `&lt;property-path&gt; &lt;value&gt;` |
+| `hike config unset` | Unset a configuration property. | `&lt;property-path&gt;` |
+| `hike config validate` | Validate the active configuration file. | No extra options. |
+| `hike config path` | Print the effective configuration file path. | No extra options. |
+
+## Typical workflows
+
+```bash
+hike config init
+hike config show --format yaml
+hike config get theme
+hike config set binding_set mnemonic
+hike config validate
+```
+
+## When to use `config`
+
+Use `hike config` when you want persistent defaults for:
+
+- startup behavior
+- local browser mode and discovery rules
+- UI/layout preferences
+- keybinding sets and one-off key overrides
+
+For the detailed setting reference, move on to
+[Configuration Overview](../../configuration/).

@@ -139,7 +139,8 @@ becomes `../` when a parent directory is available.
 For more information and details on configuring Hike, see [the online
 documentation](https://tobiashochguertel.github.io/hike/). The documentation's
 Textual screenshots are rendered automatically during `make docs` and the
-GitHub Pages workflow.
+GitHub Pages workflow, and the published site is now built with Astro /
+Starlight instead of MkDocs.
 
 ## Taskfile workflow
 

@@ -1,0 +1,28 @@
+:root {
+  --sl-color-accent-low: #231942;
+  --sl-color-accent: #7c3aed;
+  --sl-color-accent-high: #c4b5fd;
+}
+
+.hike-screenshot {
+  margin: 1.75rem 0;
+}
+
+.hike-screenshot img {
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.75rem;
+  display: block;
+  height: auto;
+  max-width: 100%;
+}
+
+.hike-screenshot figcaption {
+  color: var(--sl-color-gray-3);
+  font-size: 0.95rem;
+  margin-top: 0.65rem;
+  text-align: center;
+}
+
+.hike-summary-table td:first-child {
+  white-space: nowrap;
+}
