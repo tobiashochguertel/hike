@@ -62,7 +62,7 @@ appear in the [command palette](index.md#the-command-palette).
 You can choose a named keybinding set with `binding_set`, and you can define
 your own named sets in `binding_sets`. The built-in sets are:
 
-```bash exec="on"
+```bash exec="on" result="ansi" width=120
 hike bindings sets
 ```
 
@@ -93,7 +93,7 @@ binding_sets:
 
 The following commands can have their keyboard bindings set:
 
-```bash exec="on"
+```bash exec="on" result="ansi" width=120
 hike bindings list
 ```
 
@@ -312,9 +312,8 @@ You can show or hide the navigation panel. This can be done in Hike with the
 
 !!! tip
 
-    You can force navigation [visible](index.md#open-navigation) or
-    [hidden](index.md#open-no-navigation) via [the command
-    line](index.md#command-line-options).
+    You can force navigation visible or hidden via
+    [`hike open --navigation` / `--no-navigation`](cli.md).
     Note that this *also* configures the visibility of the navigation panel
     for future runs of Hike.
 
@@ -412,13 +411,13 @@ Hike has a number of themes available. You can select a theme using the
 `Change Theme` ([`ChangeTheme`](#bindable-commands), bound to <kbd>F9</kbd>
 by default) command. The available themes include:
 
-```bash exec="on"
+```bash exec="on" result="ansi" width=120
 hike themes list
 ```
 
 !!! tip
 
-    You can also [set the theme via the command line](index.md#open-theme). This can
+    You can also [set the theme via the command line](cli.md). This can
     be useful if you want to ensure that Hike runs up with a specific theme.
     Note that this *also* configures the theme for future runs of Hike.
 

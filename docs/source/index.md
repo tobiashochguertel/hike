@@ -1,203 +1,81 @@
-# Introduction
+# Getting Started
 
 ```{.textual path="docs/screenshots/basic_app.py" title="Hike" lines=40 columns=120 press="tab,d,ctrl+t"}
 ```
 
 Hike is a [Markdown](https://commonmark.org/help/) browser for the terminal.
-It provides the ability to browse for and view local Markdown files, as well
-as Markdown files that can be downloaded from the web. It also has shortcuts
-that make it easy to view Markdown files on popular
-[git](https://git-scm.com/doc)
-[forges](https://en.wikipedia.org/wiki/Forge_(software)) such as
-[GitHub](https://github.com/), [GitLab](https://about.gitlab.com),
-[Codeberg](https://codeberg.org) and [Bitbucket](https://bitbucket.org).
+This repository is the Tobias Hochguertel fork of the original
+[davep/hike](https://github.com/davep/hike) project, and the canonical install
+target for this fork is now the `main` branch of
+[`tobiashochguertel/hike`](https://github.com/tobiashochguertel/hike).
 
-## Installation
+## Install this fork
 
-### pipx
+### Recommended: `mise` + `uv`
 
-The application can be installed using [`pipx`](https://pypa.github.io/pipx/):
+Use [`mise`](https://mise.jdx.dev/) to manage Python and `uv`, then install
+the CLI from this fork's `main` branch:
 
 ```sh
-pipx install hike
+mise use -g python@3.13 uv@latest
+uv tool install --force "git+https://github.com/tobiashochguertel/hike.git@main"
 ```
 
-### uv
+### Recommended: `uv`
 
-The package can be install using [`uv`](https://docs.astral.sh/uv/getting-started/installation/):
+If you already have [`uv`](https://docs.astral.sh/uv/getting-started/installation/),
+install the tool directly from GitHub:
 
 ```sh
-uv tool install hike
+uv tool install --force "git+https://github.com/tobiashochguertel/hike.git@main"
 ```
 
-If you don't have `uv` installed you can use [uvx.sh](https://uvx.sh) to
-perform the installation. For GNU/Linux or macOS or similar:
+### Alternatives
+
+#### `pipx`
+
+If you prefer [`pipx`](https://pypa.github.io/pipx/), install the fork from
+GitHub instead of PyPI:
 
 ```sh
-curl -LsSf uvx.sh/hike/install.sh | sh
+pipx install "git+https://github.com/tobiashochguertel/hike.git@main"
 ```
 
-or on Windows:
+#### From a local checkout
+
+If you want to work from source:
 
 ```sh
-powershell -ExecutionPolicy ByPass -c "irm https://uvx.sh/hike/install.ps1 | iex"
+git clone https://github.com/tobiashochguertel/hike.git
+cd hike
+git switch main
+uv sync --group dev
+uv run hike --help
 ```
 
-### Other installation methods
+## First commands
 
-The following installation methods have been provided by third parties.
-
-!!! warning
-
-    Please note that I don't maintain any of these installation
-    methods and so can't vouch for them myself. I can't guarantee that they
-    are up-to-date, neither can I guarantee that they install the original code.
-
-    **Use them at your own risk**.
-
-#### X-CMD
-
-The application can be installed using [`x-cmd`](https://x-cmd.com):
+Once installed, these are good starting points:
 
 ```sh
-x install hike
-```
-
-## Running Hike
-
-Once you've installed Hike using one of the [above methods](#installation),
-you can run the application using the `hike` command.
-
-### CLI commands { #command-line-options }
-
-Hike now exposes a structured CLI. The most useful entry points are:
-
-```sh
+hike open
 hike open README.md
-hike bindings list
-hike bindings sets
+hike open docs/
+hike open https://example.com/README.md
 hike themes list
+hike bindings sets
 hike config init
-hike schema list
-hike env init
-```
-
-#### `-h`, `--help`
-
-Prints the help for the `hike` command.
-
-```sh
-hike --help
-```
-```bash exec="on" result="text"
-hike --help
-```
-
-#### `license`
-
-Prints a summary of Hike's license.
-
-```sh
-hike license
-```
-
-#### `open --navigation` { #open-navigation }
-
-Starts Hike with the navigation panel visible; this overrides and modifies
-the saved state of the navigation panel.
-
-#### `open --no-navigation` { #open-no-navigation }
-
-Starts Hike with the navigation panel hidden; this overrides and modifies
-the saved state of the navigation panel.
-
-#### `open -t`, `open --theme` { #open-theme }
-
-Sets Hike's theme; this overrides and changes any previous theme choice made
-[via the user interface](configuration.md#theme).
-
-To see a list of available themes use the dedicated themes command:
-
-```sh
-hike themes list
-```
-```bash exec="on" result="text"
-hike themes list
-```
-
-#### `open --binding-set`
-
-Use a named keybinding set for this launch only.
-
-To see the available built-in and custom keybinding sets:
-
-```sh
-hike bindings sets
-```
-
-#### `--version`
-
-Prints the version number of Hike.
-
-When build metadata is available, the output also includes the git commit,
-branch, and build/install timestamp.
-
-```sh
-hike --version
-```
-```bash exec="on" result="text"
 hike --version
 ```
 
-#### `open --config`
+For the full command tree, subcommands, and option reference, see
+[CLI Reference](cli.md).
 
-Use an alternate configuration file.
+## What `hike open` does
 
-Prefer the root-level form:
-
-```sh
-hike --config ~/.config/hike/work-docs.yaml open
-```
-
-#### `open --root`
-
-Sets the initial root directory for the local browser.
-
-#### `open --ignore`
-
-Enables ignore-file filtering in the local browser.
-
-#### `open --no-ignore`
-
-Disables ignore-file filtering in the local browser.
-
-#### `open --hidden`
-
-Shows dotfiles in the local browser.
-
-#### `open --no-hidden`
-
-Hides dotfiles in the local browser.
-
-#### `open --exclude`
-
-Adds an exclude glob for the local browser. The option can be repeated.
-
-#### `open -c`, `open --command`
-
-Run a command through Hike's [internal command line](commands.md) on startup.
-Use this when you want startup behavior that is richer than opening a local
-file, directory or URL.
-
-```sh
-hike open --command "gh davep/org-davep-2bit"
-```
-
-#### Startup targets
-
-Use the `open` subcommand for startup targets. If the target is a file, it is
-opened immediately. If it is a directory, the local browser is rooted there and
-Hike will try to auto-open a preferred document. If it is a URL, it is loaded
+`hike open` is the main entry point into the TUI. If the target is a file, it
+opens immediately. If it is a directory, the local browser is rooted there and
+Hike tries to auto-open a preferred document. If it is a URL, it is loaded
 directly. With no target, `hike open` starts from the configured local browser
 root (the current working directory by default) and uses the same auto-open
 rules.
@@ -205,30 +83,6 @@ rules.
 By default Hike prefers `INDEX.md`, then `README.md`, then the first visible
 Markdown file in local-browser order. You can change or disable that behavior
 through the configuration file.
-
-To start from the current directory and let Hike choose the initial document:
-
-```sh
-hike open
-```
-
-To open a file:
-
-```sh
-hike open view-this.md
-```
-
-To start in a specific directory:
-
-```sh
-hike open docs/source/
-```
-
-To open a URL directly:
-
-```sh
-hike open https://example.com/README.md
-```
 
 ### Responsive navigation
 
@@ -256,7 +110,7 @@ application you can see this by pressing <kbd>F1</kbd>.
 
 The help will adapt to which part of the screen has focus, providing extra
 detail where appropriate; so while the example shown above shows the help
-related to [Hike's command line](commands.md), here's the help when the
+related to [Hike's in-app command line](commands.md), here's the help when the
 markdown document has focus:
 
 ```{.textual path="docs/screenshots/basic_app.py" title="Markdown Document Help" press="tab,f1" lines=50 columns=120}

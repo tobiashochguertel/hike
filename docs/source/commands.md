@@ -1,4 +1,4 @@
-# Introduction
+# In-App Command Line
 
 Central to Hike's user interface is a command line; similar to a shell's
 command line. It has a history (use the <kbd>up</kbd> and <kbd>down</kbd>
@@ -146,22 +146,22 @@ specifying the file to view are supported:
 | `<owner>/<repo>:<branch> <file>` | Open a specific file from a specific branch of a repository |
 | `<owner> <repo>:<branch> <file>` | Open a specific file from a specific branch of a repository |
 
-So, for example, if you want to view Hike's README:
+So, for example, if you want to view this fork's README:
 
 ```
-gh davep/hike
+gh tobiashochguertel/hike
 ```
 
-Or if you want to view Hike's change-log:
+Or if you want to view this fork's change log:
 
 ```
-gh davep/hike ChangeLog.md
+gh tobiashochguertel/hike ChangeLog.md
 ```
 
 If you wanted to view the README file but in a feature branch called `revamp-readme`:
 
 ```
-gh davep/hike:revamp-readme
+gh tobiashochguertel/hike:revamp-readme
 ```
 
 etc.

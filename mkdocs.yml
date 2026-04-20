@@ -6,10 +6,18 @@ repo_name: tobiashochguertel/hike
 
 nav:
   - "Getting Started": index.md
+  - "CLI Reference": cli.md
+  - "In-App Command Line": commands.md
   - "Configuration": configuration.md
-  - "Commands": commands.md
   - "License": license.md
   - "Change Log": changelog.md
+
+plugins:
+  - search
+  - markdown-exec:
+      ansi: required
+      languages:
+        - bash
 
 markdown_extensions:
   - admonition
@@ -20,10 +28,6 @@ markdown_extensions:
         - name: textual
           class: textual
           format: !!python/name:textual._doc.format_svg
-        - name: bash
-          class: bash
-          validator: !!python/name:markdown_exec.validator
-          format: !!python/name:markdown_exec.formatter
 
 theme:
   name: material

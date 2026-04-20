@@ -19,46 +19,44 @@ that make it easy to view Markdown files on popular git forges.
 
 ## Installing
 
-### pipx
+This fork is currently distributed from GitHub, with `main` as the canonical
+branch.
 
-The application can be installed using [`pipx`](https://pypa.github.io/pipx/):
+### Recommended: mise + uv
+
+Use [`mise`](https://mise.jdx.dev/) to manage Python and `uv`, then install the
+fork from GitHub:
 
 ```sh
-pipx install hike
+mise use -g python@3.13 uv@latest
+uv tool install --force "git+https://github.com/tobiashochguertel/hike.git@main"
 ```
 
-### uv
+### Recommended: uv
 
-The package can be install using [`uv`](https://docs.astral.sh/uv/getting-started/installation/):
+If [`uv`](https://docs.astral.sh/uv/getting-started/installation/) is already
+installed, install directly from the fork:
 
 ```sh
-uv tool install hike
+uv tool install --force "git+https://github.com/tobiashochguertel/hike.git@main"
 ```
 
-If you don't have `uv` installed you can use [uvx.sh](https://uvx.sh) to
-perform the installation. For GNU/Linux or macOS or similar:
+### Alternatives
+
+#### pipx
 
 ```sh
-curl -LsSf uvx.sh/hike/install.sh | sh
+pipx install "git+https://github.com/tobiashochguertel/hike.git@main"
 ```
 
-or on Windows:
+#### From source
 
 ```sh
-powershell -ExecutionPolicy ByPass -c "irm https://uvx.sh/hike/install.ps1 | iex"
-```
-
-### Other installation methods
-
-The following installation methods have been provided by third parties;
-please note that I can't vouch for them myself so use them at your own risk.
-
-#### X-CMD
-
-The application can be installed using [`x-cmd`](https://x-cmd.com):
-
-```sh
-x install hike
+git clone https://github.com/tobiashochguertel/hike.git
+cd hike
+git switch main
+uv sync --group dev
+uv run hike --help
 ```
 
 ## Using Hike
@@ -70,7 +68,7 @@ Common startup patterns include:
 
 ```sh
 hike open
-hike open --command "gh davep/hike"
+hike open --command "gh tobiashochguertel/hike"
 hike open README.md
 hike open docs/
 hike open https://example.com/README.md
@@ -104,6 +102,9 @@ hike schema export
 hike env init
 hike env validate
 ```
+
+For the full CLI structure and subcommand reference, see the published
+[CLI Reference](https://tobiashochguertel.github.io/hike/cli/).
 
 `hike --version` now includes the package version plus the best available build
 metadata, including git commit, branch, and build/install timestamp.
@@ -142,7 +143,7 @@ GitHub Pages workflow.
 
 ## Taskfile workflow
 
-This fork includes a `Taskfile.yml` for the "all requested features" workflow.
+This fork includes a `Taskfile.yml` for the default release workflow on `main`.
 
 List the available tasks:
 
@@ -156,24 +157,26 @@ Run the full validation suite:
 task check
 ```
 
-Merge a feature branch into `feature/all-requested-features`, validate the
-merged branch, and push it:
+Merge a feature branch into `main`, validate the merged branch, and push it:
 
 ```sh
-task merge-all-requested-features SOURCE_BRANCH=feat/local-browser-modes
+task merge-main SOURCE_BRANCH=feat/local-browser-modes
 ```
 
-Install Hike from `feature/all-requested-features`:
+Install Hike from `main`:
 
 ```sh
-task install-all-requested-features
+task install-main
 ```
 
 Or do the full merge + validate + push + install flow in one step:
 
 ```sh
-task refresh-all-requested-features SOURCE_BRANCH=feat/local-browser-modes
+task refresh-main SOURCE_BRANCH=feat/local-browser-modes
 ```
+
+The old `*-all-requested-features` task names remain available as compatibility
+aliases.
 
 ## Features
 

@@ -8,9 +8,11 @@ from typing import Final
 ##############################################################################
 # Main app information.
 __author__ = "Dave Pearson"
-__copyright__ = "Copyright 2025, Dave Pearson"
-__credits__ = ["Dave Pearson"]
-__maintainer__ = "Dave Pearson"
+__copyright__ = (
+    "Copyright 2025, Dave Pearson; fork changes Copyright 2026, Tobias Hochguertel"
+)
+__credits__ = ["Dave Pearson", "Tobias Hochguertel"]
+__maintainer__ = "Tobias Hochguertel"
 __email__ = "davep@davep.org"
 __version__ = version("hike")
 __licence__ = "GPLv3+"
