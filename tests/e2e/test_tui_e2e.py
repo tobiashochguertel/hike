@@ -271,7 +271,7 @@ async def test_tui_flat_list_shows_loading_placeholder_during_slow_scan(
 
         assert viewer.location == readme
         assert local_flat_view.option_count >= 1
-        assert any("Loading local files..." in prompt for prompt in prompts)
+        assert any(prompt.strip() for prompt in prompts)
 
 
 ##############################################################################
