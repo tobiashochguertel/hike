@@ -6,6 +6,8 @@
   setup, restructured the docs into grouped sidebar sections, and replaced the
   old exec-fence/Textual-fence pipeline with a dedicated docs asset renderer for
   generated screenshots.
+- Fixed a typo in the help text for the document viewer.
+  ([#155](https://github.com/davep/hike/pull/155))
 
 ## v1.5.0
 
@@ -98,6 +100,7 @@
   default, auto-opens preferred files such as `INDEX.md` / `README.md`, and
   highlights the selected file in both flat-list and tree browser modes.
 
+||||||| c32daad
 ## v1.4.0
 
 **Released: 2026-03-25**
